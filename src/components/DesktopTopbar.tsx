@@ -14,9 +14,9 @@ const C = {
 };
 
 const TAB_LABELS: Record<string, { section: string; label: string }> = {
-  dashboard: { section: 'Accueil',    label: "Tableau de bord"   },
-  stock:     { section: 'Stock',      label: 'Inventaire'        },
-  sales:     { section: 'Ventes',     label: 'Point de vente'    },
+  dashboard: { section: 'Aperçu',     label: "Aujourd'hui"       },
+  sales:     { section: 'Caisse',     label: 'Point de vente'    },
+  stock:     { section: 'Inventaire', label: 'Stock & lots'      },
   gestion:   { section: 'Gestion',    label: 'Stock & produits'  },
   activite:  { section: 'Activité',   label: 'Journal du jour'   },
   carnet:    { section: 'Carnet',     label: 'Crédits clients'   },

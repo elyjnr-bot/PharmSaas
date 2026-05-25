@@ -1,10 +1,23 @@
 import { useState } from 'react';
-import {
-  Home, Package, TrendingUp, DollarSign, Users, Settings,
-  BarChart3, BookOpen, Search, ChevronDown, MoreHorizontal,
-} from 'lucide-react';
+import { Search, ChevronDown, MoreHorizontal } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { useSeller } from '../lib/sellerContext';
+
+// ── Reference Chalk Premium icon set (line, 1.5 stroke) ──────────
+type IconName = 'home' | 'cart' | 'box' | 'chart' | 'sparkles' | 'mone' | 'users' | 'settings';
+function NavIcon({ name, size = 15, color = 'currentColor', sw = 1.5 }: { name: IconName; size?: number; color?: string; sw?: number }) {
+  const p = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: color, strokeWidth: sw, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+  switch (name) {
+    case 'home':     return <svg {...p}><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1z" /></svg>;
+    case 'cart':     return <svg {...p}><circle cx="9" cy="20" r="1.2" /><circle cx="18" cy="20" r="1.2" /><path d="M3 4h2l3 11h11l2-7H7" /></svg>;
+    case 'box':      return <svg {...p}><path d="M3.5 8.5 12 4l8.5 4.5M3.5 8.5v7L12 20m-8.5-11.5L12 13m0 7 8.5-4.5v-7M12 13v7m0-7 8.5-4.5" /></svg>;
+    case 'chart':    return <svg {...p}><path d="M3 3v18h18M7 14l3-3 4 4 6-7" /></svg>;
+    case 'sparkles': return <svg {...p}><path d="M5 3v4M3 5h4M19 11v4m-2-2h4M11 4l2.4 5.6L19 12l-5.6 2.4L11 20l-2.4-5.6L3 12l5.6-2.4z" /></svg>;
+    case 'mone':     return <svg {...p}><circle cx="12" cy="12" r="9" /><path d="M12 7v10M9 9.5c0-1.4 1.3-2.5 3-2.5s3 1.1 3 2.5-1.3 2.5-3 2.5-3 1.1-3 2.5 1.3 2.5 3 2.5 3-1.1 3-2.5" /></svg>;
+    case 'users':    return <svg {...p}><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 11.5a3 3 0 0 0 0-6m6 14.5a5.5 5.5 0 0 0-4-5.3" /></svg>;
+    case 'settings': return <svg {...p}><circle cx="12" cy="12" r="3" /><path d="M19 12c0 .8-.1 1.5-.3 2.2l2 1.5-2 3.5-2.4-.9c-1.1.9-2.4 1.6-3.9 1.9L12 23l-.7-2.8a8.5 8.5 0 0 1-3.9-1.9l-2.4.9-2-3.5 2-1.5A8.5 8.5 0 0 1 5 12c0-.8.1-1.5.3-2.2l-2-1.5 2-3.5 2.4.9c1.1-.9 2.4-1.6 3.9-1.9L12 1l.7 2.8c1.5.3 2.8 1 3.9 1.9l2.4-.9 2 3.5-2 1.5c.2.7.3 1.4.3 2.2" /></svg>;
+  }
+}
 
 // ── Chalk Premium design tokens ──────────────────────────────────
 const C = {
@@ -57,14 +70,14 @@ interface SidebarProps {
   onSettingsClick: () => void;
 }
 
-const NAV_ITEMS = [
-  { id: 'dashboard', Icon: Home,       label: 'Accueil',    kbd: 'D' },
-  { id: 'stock',     Icon: Package,    label: 'Stock',      kbd: 'S' },
-  { id: 'sales',     Icon: DollarSign, label: 'Ventes',     kbd: 'V' },
-  { id: 'gestion',   Icon: BarChart3,  label: 'Gestion',    kbd: 'G' },
-  { id: 'activite',  Icon: TrendingUp, label: 'Activité',   kbd: 'A' },
-  { id: 'carnet',    Icon: BookOpen,   label: 'Carnet',     kbd: 'C' },
-  { id: 'equipe',    Icon: Users,      label: 'Équipe',     kbd: 'E' },
+const NAV_ITEMS: { id: string; icon: IconName; label: string; kbd: string }[] = [
+  { id: 'dashboard', icon: 'home',     label: 'Aperçu',     kbd: 'D' },
+  { id: 'sales',     icon: 'cart',     label: 'Caisse',     kbd: 'P' },
+  { id: 'stock',     icon: 'box',      label: 'Inventaire', kbd: 'I' },
+  { id: 'gestion',   icon: 'chart',    label: 'Gestion',    kbd: 'G' },
+  { id: 'activite',  icon: 'sparkles', label: 'Activité',   kbd: 'A' },
+  { id: 'carnet',    icon: 'mone',     label: 'Carnet',     kbd: 'C' },
+  { id: 'equipe',    icon: 'users',    label: 'Équipe',     kbd: 'E' },
 ];
 
 const FAVORITES = [
@@ -144,7 +157,7 @@ export default function Sidebar({ activeView, onNavigate, onSettingsClick }: Sid
 
       {/* ── Navigation ── */}
       <nav style={{ flex: 1, padding: '4px 8px', display: 'flex', flexDirection: 'column', gap: 1, overflowY: 'auto' }}>
-        {NAV_ITEMS.map(({ id, Icon, label, kbd }) => {
+        {NAV_ITEMS.map(({ id, icon, label, kbd }) => {
           const isActive = activeView === id;
           const isHov = hovered === id;
           return (
@@ -162,12 +175,9 @@ export default function Sidebar({ activeView, onNavigate, onSettingsClick }: Sid
                 border: 'none', width: '100%', textAlign: 'left',
               }}
             >
-              <Icon
-                size={15}
-                strokeWidth={isActive ? 1.8 : 1.5}
-                color={isActive ? C.brand : C.inkMute}
-                style={{ flexShrink: 0, transition: 'color 0.12s' }}
-              />
+              <span style={{ flexShrink: 0, display: 'flex', transition: 'color 0.12s' }}>
+                <NavIcon name={icon} size={15} sw={isActive ? 1.8 : 1.5} color={isActive ? C.brand : C.inkMute} />
+              </span>
               <span style={{
                 fontSize: 13,
                 fontWeight: isActive ? 600 : 450,
@@ -220,7 +230,7 @@ export default function Sidebar({ activeView, onNavigate, onSettingsClick }: Sid
             transition: 'background 0.12s',
           }}
         >
-          <Settings size={15} strokeWidth={1.5} color={C.inkMute} style={{ flexShrink: 0 }} />
+          <span style={{ flexShrink: 0, display: 'flex' }}><NavIcon name="settings" size={15} color={C.inkMute} /></span>
           <span style={{ fontSize: 13, fontWeight: 450, color: C.inkSoft, letterSpacing: '-0.01em', flex: 1 }}>Réglages</span>
           <Kbd>,</Kbd>
         </button>
