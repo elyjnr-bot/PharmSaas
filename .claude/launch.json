@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "JunglePharm Dev",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vite"],
+      "port": 5173
+    },
+    {
+      "name": "JunglePharm Preview (build)",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vite", "preview"],
+      "port": 4173
+    }
+  ]
+}

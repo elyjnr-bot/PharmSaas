@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import Navigation from './components/Navigation';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
+import DesktopTopbar from './components/DesktopTopbar';
 import Gestion from './components/Gestion';
 import Activite from './components/Activite';
 import Settings from './components/Settings';
@@ -151,9 +152,26 @@ function AppContent() {
             onSettingsClick={() => setShowSettings(true)}
           />
           <OfflineIndicator />
-          <div className="ml-64 h-screen overflow-y-auto smooth-scroll scrollbar-thin">
-            <div className="p-6 max-w-[1600px] mx-auto">
-              {renderContent()}
+          <div
+            style={{
+              marginLeft: 244,
+              height: '100vh',
+              display: 'flex',
+              flexDirection: 'column',
+              background: [
+                'radial-gradient(ellipse 65% 55% at 12% 8%, rgba(120,200,160,0.55), transparent 60%)',
+                'radial-gradient(ellipse 50% 45% at 88% 15%, rgba(100,180,220,0.40), transparent 55%)',
+                'radial-gradient(ellipse 45% 60% at 75% 85%, rgba(140,100,220,0.28), transparent 55%)',
+                'radial-gradient(ellipse 55% 50% at 20% 90%, rgba(60,160,130,0.30), transparent 55%)',
+                '#eef2ed',
+              ].join(', '),
+            }}
+          >
+            <DesktopTopbar activeTab={activeTab} onNewSale={() => handleTabChange('sales')} />
+            <div style={{ flex: 1, overflowY: 'auto' }} className="smooth-scroll scrollbar-thin">
+              <div style={{ padding: '24px 28px', maxWidth: 1600, margin: '0 auto' }}>
+                {renderContent()}
+              </div>
             </div>
           </div>
         </>
