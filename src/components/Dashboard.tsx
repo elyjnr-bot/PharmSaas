@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { AlertTriangle, Calendar, Package, Download, Share2, TrendingUp, TrendingDown, Minus, DollarSign, CreditCard } from 'lucide-react';
+import { AlertTriangle, Calendar, Package, Download, Share2, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { fetchAllMedications, Medication, supabase } from '../lib/supabase';
 import { isExpired, expiresInThreeMonths } from '../lib/dateUtils';
 import { useResponsive } from '../lib/useResponsive';
+import DashboardDesktop from './DashboardDesktop';
 
 interface DailyData {
   label: string;
@@ -77,14 +78,12 @@ export default function Dashboard() {
   const { isDesktop } = useResponsive();
   const [medications, setMedications] = useState<Medication[]>([]);
   const [dailyRevenue, setDailyRevenue] = useState<DailyData[]>([]);
-  const [monthlyExpenses, setMonthlyExpenses] = useState(0);
-  const [creditsTotal, setCreditsTotal] = useState(0);
-  const [creditsCount, setCreditsCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([loadMedications(), loadRevenue(), loadExpenses(), loadCredits()]).finally(() => setIsLoading(false));
-  }, []);
+    if (isDesktop) { setIsLoading(false); return; }
+    Promise.all([loadMedications(), loadRevenue()]).finally(() => setIsLoading(false));
+  }, [isDesktop]);
 
   const loadMedications = async () => {
     try {
@@ -120,33 +119,6 @@ export default function Dashboard() {
     } catch { /* silent */ }
   };
 
-  const loadExpenses = async () => {
-    try {
-      const now = new Date();
-      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-      const lastDay  = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
-      const { data } = await supabase
-        .from('expenses')
-        .select('amount')
-        .gte('expense_date', firstDay)
-        .lte('expense_date', lastDay);
-      if (data) setMonthlyExpenses(data.reduce((s, r) => s + (r.amount || 0), 0));
-    } catch { /* silent */ }
-  };
-
-  const loadCredits = async () => {
-    try {
-      const { data } = await supabase
-        .from('credits')
-        .select('total_amount')
-        .eq('status', 'unpaid');
-      if (data) {
-        setCreditsCount(data.length);
-        setCreditsTotal(data.reduce((s, r) => s + (r.total_amount || 0), 0));
-      }
-    } catch { /* silent */ }
-  };
-
   const outOfStock   = medications.filter(m => m.quantity === 0).length;
   const expiringSoon = medications.filter(m => expiresInThreeMonths(m.expiry_date) && !isExpired(m.expiry_date)).length;
   const expiredCount = medications.filter(m => isExpired(m.expiry_date)).length;
@@ -157,7 +129,6 @@ export default function Dashboard() {
   const prev7  = dailyRevenue.slice(-14, -7).reduce((s, d) => s + d.total, 0);
   const trendPct = prev7 === 0 ? 0 : ((last7 - prev7) / prev7) * 100;
   const sparkValues = dailyRevenue.map(d => d.total);
-  const netResult = totalRevenue30 - monthlyExpenses;
 
   const statusSegments = [
     { value: medications.filter(m => !isExpired(m.expiry_date) && m.quantity > 0 && m.quantity >= (m.minimum_stock || 0)).length, color: '#059669', label: 'Normal' },
@@ -208,9 +179,11 @@ export default function Dashboard() {
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
+  if (isDesktop) return <DashboardDesktop />;
+
   if (isLoading) {
     return (
-      <div className={`pb-20 ${isDesktop ? 'pt-2' : 'px-4 pt-6'} min-h-screen`} style={{ background: 'var(--color-bg)' }}>
+      <div className={`pb-20 px-4 pt-6 min-h-screen`} style={{ background: 'var(--color-bg)' }}>
         <div className="text-center py-16">
           <div className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin mx-auto" style={{ borderColor: '#059669', borderTopColor: 'transparent' }} />
           <p className="mt-3 font-medium" style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>Chargement...</p>
@@ -260,111 +233,6 @@ export default function Dashboard() {
       )}
     </>
   );
-
-  if (isDesktop) {
-    return (
-      <div className="pb-8 pt-2 space-y-5" style={{ background: 'var(--color-bg)' }}>
-        {/* Header */}
-        <div>
-          <h1 className="font-extrabold" style={{ fontSize: '26px', letterSpacing: '-0.03em', color: 'var(--color-text)' }}>Tableau de bord</h1>
-          <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginTop: 2 }}>
-            {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
-          </p>
-        </div>
-
-        {/* 4 KPI cards */}
-        <div className="grid grid-cols-4 gap-4">
-          {[
-            { label: 'CA 30 JOURS',          value: `${fmtCurrency(totalRevenue30)} FCFA`, sub: <TrendBadge pct={trendPct} />,                                                                                         icon: TrendingUp,                              iconBg: '#f0fdf4', iconColor: '#059669' },
-            { label: 'DÉPENSES DU MOIS',      value: `${fmtCurrency(monthlyExpenses)} FCFA`, sub: <span style={{ fontSize: '11px', color: 'var(--color-text-faint)' }}>ce mois-ci</span>,                              icon: DollarSign,                              iconBg: '#f8fafc', iconColor: '#64748b' },
-            { label: 'RÉSULTAT NET',           value: `${fmtCurrency(netResult)} FCFA`,       sub: <span style={{ fontSize: '11px', color: netResult >= 0 ? '#059669' : '#dc2626' }}>{netResult >= 0 ? 'bénéfice' : 'déficit'}</span>, icon: netResult >= 0 ? TrendingUp : TrendingDown, iconBg: netResult >= 0 ? '#f0fdf4' : '#fef2f2', iconColor: netResult >= 0 ? '#059669' : '#dc2626' },
-            { label: 'CRÉDITS EN ATTENTE',    value: `${fmtCurrency(creditsTotal)} FCFA`,    sub: <span style={{ fontSize: '11px', color: 'var(--color-text-faint)' }}>sur {creditsCount} crédit{creditsCount !== 1 ? 's' : ''}</span>, icon: CreditCard, iconBg: '#fffbeb', iconColor: '#d97706' },
-          ].map(({ label, value, sub, icon: Icon, iconBg, iconColor }) => (
-            <div key={label} className="rounded-xl p-4" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sm)' }}>
-              <div className="w-9 h-9 rounded-[10px] flex items-center justify-center mb-3" style={{ background: iconBg }}>
-                <Icon className="w-4 h-4" style={{ color: iconColor }} strokeWidth={2} />
-              </div>
-              <p className="kpi-label">{label}</p>
-              <p className="font-extrabold mt-1" style={{ fontSize: '22px', letterSpacing: '-0.04em', color: 'var(--color-text)', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>{value}</p>
-              <div className="mt-1">{sub}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* 2-col: sparkline (2/3) + alerts (1/3) */}
-        <div className="flex gap-4 items-start">
-          {/* Sparkline + donut */}
-          <div className="flex-[2] rounded-xl overflow-hidden" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sm)' }}>
-            <div className="px-5 pt-5 pb-1">
-              <p className="kpi-label">CHIFFRE D'AFFAIRES · 30 JOURS</p>
-              <div className="flex items-end gap-3 mt-1.5">
-                <span className="font-extrabold" style={{ fontSize: '32px', letterSpacing: '-0.04em', color: 'var(--color-text)', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
-                  {fmtCurrency(totalRevenue30)}&thinsp;FCFA
-                </span>
-                <div className="mb-1"><TrendBadge pct={trendPct} /></div>
-              </div>
-              <p style={{ fontSize: '11px', color: 'var(--color-text-faint)', marginTop: 2 }}>7j vs 7j précédents</p>
-            </div>
-            <div className="px-3 pb-2" style={{ height: 80 }}>
-              {sparkValues.some(v => v > 0)
-                ? <Sparkline data={sparkValues} height={72} />
-                : <div className="flex items-center justify-center h-full"><p style={{ fontSize: '12px', color: 'var(--color-text-faint)' }}>Aucune vente enregistrée</p></div>
-              }
-            </div>
-            {dailyRevenue.length > 0 && (
-              <div className="flex justify-between px-5 pb-3 pt-1" style={{ borderTop: '1px solid var(--color-border-light)' }}>
-                {[dailyRevenue[0], dailyRevenue[Math.floor(dailyRevenue.length / 2)], dailyRevenue[dailyRevenue.length - 1]].map((d, i) => (
-                  <p key={i} style={{ fontSize: '10px', color: 'var(--color-text-faint)', textAlign: i === 2 ? 'right' : i === 1 ? 'center' : 'left' }}>{d.label}</p>
-                ))}
-              </div>
-            )}
-            {statusSegments.length > 0 && (
-              <div className="px-5 py-4" style={{ borderTop: '1px solid var(--color-border-light)' }}>
-                <p className="kpi-label mb-3">SANTÉ DU STOCK</p>
-                <div className="flex items-center gap-5">
-                  <DonutChart segments={statusSegments} />
-                  <div className="flex-1 space-y-1.5">
-                    {statusSegments.map((seg) => (
-                      <div key={seg.label} className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full" style={{ background: seg.color }} />
-                          <span style={{ fontSize: '12px', color: 'var(--color-text-2)', fontWeight: 500 }}>{seg.label}</span>
-                        </div>
-                        <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-text)', fontVariantNumeric: 'tabular-nums' }}>{seg.value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Alerts + actions */}
-          <div className="flex-1 flex flex-col gap-4">
-            <div className="rounded-xl overflow-hidden" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sm)' }}>
-              <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--color-border-light)' }}>
-                <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.01em' }}>Alertes prioritaires</h3>
-                {priorityAlerts.length > 0 && <span className="pill-badge badge-danger" style={{ fontWeight: 700 }}>{priorityAlerts.length}</span>}
-              </div>
-              <AlertList alerts={priorityAlerts} maxH="18rem" />
-            </div>
-            <div className="space-y-2">
-              <button onClick={shareStockOutOnWhatsApp}
-                className="w-full text-white py-3 rounded-xl font-semibold active:scale-[0.97] transition-all flex items-center justify-center gap-2"
-                style={{ fontSize: '13px', background: '#059669', boxShadow: '0 1px 3px rgba(22,163,74,0.25)' }}>
-                <Share2 className="w-4 h-4" strokeWidth={2} />Partager ruptures WhatsApp
-              </button>
-              <button onClick={generateRestockReport} disabled={restockItems.length === 0}
-                className="w-full py-3 rounded-xl font-semibold active:scale-[0.97] transition-all disabled:opacity-40 flex items-center justify-center gap-2"
-                style={{ fontSize: '13px', background: 'var(--color-surface)', color: 'var(--color-text-2)', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-xs)' }}>
-                <Download className="w-4 h-4" strokeWidth={2} />Commande réappro ({restockItems.length})
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   /* Mobile layout */
   return (

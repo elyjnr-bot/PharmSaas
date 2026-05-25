@@ -1,5 +1,4 @@
 import { Bell, Filter, Download, Plus, ChevronRight } from 'lucide-react';
-import { useAuth } from '../lib/auth';
 
 // Design tokens — Chalk Premium
 const C = {
@@ -30,7 +29,6 @@ interface DesktopTopbarProps {
 }
 
 export default function DesktopTopbar({ activeTab, onNewSale }: DesktopTopbarProps) {
-  const { profile } = useAuth();
   const crumb = TAB_LABELS[activeTab] ?? { section: 'Aperçu', label: activeTab };
 
   return (
