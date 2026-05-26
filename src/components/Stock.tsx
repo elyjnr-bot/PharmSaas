@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Search, Plus, SlidersHorizontal, X, CheckCircle, PackageOpen, Package, ChevronRight, ShoppingCart, Printer } from 'lucide-react';
 import { Medication, supabase } from '../lib/supabase';
 import { useMedications } from '../lib/useMedications';
+import { useAuth } from '../lib/auth';
 import { useCart, InventoryUnit } from '../lib/cartContext';
 import AddMedicationModal, { AddMedicationResult } from './AddMedicationModal';
 import PrintUnitsModal from './PrintUnitsModal';
@@ -19,7 +20,7 @@ type StockStatus = 'out' | 'low' | 'expiring' | 'expired' | 'ok';
 function getMedStatus(med: Medication): StockStatus {
   if (isExpired(med.expiry_date)) return 'expired';
   if (med.quantity === 0) return 'out';
-  if (med.quantity < med.minimum_stock) return 'low';
+  if (med.quantity < (med.minimum_stock ?? 0)) return 'low';
   if (expiresInThreeMonths(med.expiry_date)) return 'expiring';
   return 'ok';
 }
@@ -58,6 +59,7 @@ function isUnitModeEnabled(): boolean {
 
 export default function Stock() {
   const { medications, isLoading, reload: loadMedications } = useMedications();
+  const { user } = useAuth();
   const { addUnitToCart, cart } = useCart();
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [searchQuery, setSearchQuery] = useState('');

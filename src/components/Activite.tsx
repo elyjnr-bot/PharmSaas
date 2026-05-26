@@ -1,11 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
-import { TrendingUp, Calendar, ChevronLeft, ChevronRight, Banknote, CreditCard, Smartphone, Clock, Package, Plus, Trash2, DollarSign, X, AlertTriangle, Tag, Percent, Check, FileText, Download, TrendingDown, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import { TrendingUp, Calendar, ChevronLeft, ChevronRight, Banknote, CreditCard, Smartphone, Clock, Package, Plus, Trash2, DollarSign, X, AlertTriangle, Tag, Percent, Check, FileText, Download, TrendingDown, ArrowUpCircle, ArrowDownCircle, Undo2 } from 'lucide-react';
 import { offlineStorage, SalesJournalEntry } from '../lib/offlineStorage';
 import { supabase, Expense, Medication, fetchAllMedications } from '../lib/supabase';
 import { insertWithUserId, updateWithUserId } from '../lib/supabaseHelpers';
+import { recordReturn } from '../lib/writeService';
 import { getDaysUntilExpiry } from '../lib/dateUtils';
 import { useResponsive } from '../lib/useResponsive';
 import ZReportModal from './ZReportModal';
+import ReturnModal, { ReturnableSale } from './ReturnModal';
 import { useAuth } from '../lib/auth';
 
 type PeriodType = 'week' | 'month' | 'year';
@@ -59,6 +61,7 @@ const PAYMENT_METHODS = [
   'Especes',
   'Carte Bancaire',
   'MTN Mobile Money',
+  'Airtel Money',
   'Cheque',
   'Virement',
 ];
@@ -86,6 +89,8 @@ export default function Activite({ onHideNavigationChange }: ActiviteProps = {})
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isLoadingExpenses, setIsLoadingExpenses] = useState(true);
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+  const [returnSale, setReturnSale] = useState<ReturnableSale | null>(null);
+  const [isReturnProcessing, setIsReturnProcessing] = useState(false);
   const [expenseForm, setExpenseForm] = useState({
     category: '',
     description: '',
@@ -249,6 +254,32 @@ export default function Activite({ onHideNavigationChange }: ActiviteProps = {})
     });
   };
 
+  const handleConfirmReturn = async (quantity: number, refundMethod: string, reason: string) => {
+    if (!returnSale) return;
+    setIsReturnProcessing(true);
+    try {
+      const res = await recordReturn({
+        medication_id: returnSale.medication_id,
+        medication_name: returnSale.medication_name,
+        unit_price: returnSale.unit_price,
+        quantity,
+        refund_method: refundMethod,
+        reason,
+      });
+      if (res.ok) {
+        setReturnSale(null);
+        loadJournalForDate(selectedDate);
+      } else {
+        alert('Le retour n\'a pas pu être enregistré.');
+      }
+    } catch (e) {
+      console.error('Return error:', e);
+      alert('Erreur lors du retour.');
+    } finally {
+      setIsReturnProcessing(false);
+    }
+  };
+
   const loadExpenses = async () => {
     setIsLoadingExpenses(true);
     try {
@@ -401,6 +432,33 @@ export default function Activite({ onHideNavigationChange }: ActiviteProps = {})
     });
   }, [medications]);
 
+  // Marge / bénéfice du jour : revenu net (sales_journal) - coût des produits vendus
+  // (cost_price). Les retours (quantités négatives) sont nettés automatiquement.
+  const dayProfit = useMemo(() => {
+    const costById = new Map<string, number | undefined>();
+    for (const m of medications) costById.set(m.id, m.cost_price);
+
+    let revenue = 0;
+    let cost = 0;
+    let missingCost = 0;
+    let linesWithSales = 0;
+
+    for (const e of entries) {
+      revenue += e.total_price;
+      const unitCost = costById.get(e.medication_id);
+      if (unitCost == null || unitCost <= 0) {
+        if (e.quantity_sold > 0) missingCost++;
+      } else {
+        cost += unitCost * e.quantity_sold;
+      }
+      if (e.quantity_sold > 0) linesWithSales++;
+    }
+
+    const profit = revenue - cost;
+    const margin = revenue > 0 ? (profit / revenue) * 100 : 0;
+    return { revenue, cost, profit, margin, missingCost, linesWithSales };
+  }, [entries, medications]);
+
   const createPromotion = () => {
     if (!selectedMedForPromo) return;
 
@@ -549,6 +607,8 @@ export default function Activite({ onHideNavigationChange }: ActiviteProps = {})
         return <CreditCard className="w-4 h-4 text-blue-600" />;
       case 'MTN Mobile Money':
         return <Smartphone className="w-4 h-4 text-yellow-600" />;
+      case 'Airtel Money':
+        return <Smartphone className="w-4 h-4 text-red-600" />;
       default:
         return <Banknote className="w-4 h-4 text-slate-500" />;
     }
@@ -825,6 +885,42 @@ export default function Activite({ onHideNavigationChange }: ActiviteProps = {})
               )}
             </div>
 
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Percent className="w-4 h-4" style={{ color: '#7c3aed' }} />
+                <h3 className="font-semibold text-slate-800">Bénéfice du jour</h3>
+              </div>
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                <div className="rounded-xl bg-slate-50 px-3 py-2.5 text-center">
+                  <p className="text-[11px] text-slate-400 font-medium">CA net</p>
+                  <p className="text-base font-bold font-mono-num text-slate-800">{Math.round(dayProfit.revenue).toLocaleString()}</p>
+                </div>
+                <div className="rounded-xl bg-slate-50 px-3 py-2.5 text-center">
+                  <p className="text-[11px] text-slate-400 font-medium">Coût</p>
+                  <p className="text-base font-bold font-mono-num text-slate-500">{Math.round(dayProfit.cost).toLocaleString()}</p>
+                </div>
+                <div className="rounded-xl px-3 py-2.5 text-center" style={{ background: 'rgba(124,58,237,0.08)' }}>
+                  <p className="text-[11px] font-medium" style={{ color: '#7c3aed' }}>Marge</p>
+                  <p className="text-base font-bold font-mono-num" style={{ color: '#7c3aed' }}>{dayProfit.margin.toFixed(0)}%</p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between rounded-xl px-3 py-2.5" style={{ background: dayProfit.profit >= 0 ? 'rgba(5,150,105,0.06)' : 'rgba(239,68,68,0.06)' }}>
+                <span className="text-sm font-semibold text-slate-700">Bénéfice estimé</span>
+                <span className="text-xl font-bold font-mono-num" style={{ color: dayProfit.profit >= 0 ? '#059669' : '#dc2626' }}>
+                  {dayProfit.profit >= 0 ? '+' : ''}{Math.round(dayProfit.profit).toLocaleString()}
+                  <span className="text-xs font-medium text-slate-400 ml-1">FCFA</span>
+                </span>
+              </div>
+              {dayProfit.missingCost > 0 && (
+                <div className="flex items-start gap-2 mt-3 rounded-xl bg-amber-50 px-3 py-2 border border-amber-100">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-amber-700">
+                    {dayProfit.missingCost} produit(s) vendu(s) sans prix d'achat renseigné — bénéfice sous-estimé. Complétez le coût dans la fiche produit.
+                  </p>
+                </div>
+              )}
+            </div>
+
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm">
               <div className="px-4 py-3 border-b border-slate-100">
                 <h3 className="font-semibold text-slate-800">Journal d'activité</h3>
@@ -864,22 +960,36 @@ export default function Activite({ onHideNavigationChange }: ActiviteProps = {})
                   <div className="divide-y divide-slate-50 max-h-[40vh] overflow-y-auto">
                     {combinedEntries.map((entry) => {
                       if (entry.type === 'sale') {
+                        const isReturn = entry.is_return || entry.total_price < 0;
                         return (
-                          <div key={`sale-${entry.id}`} className="px-4 py-3">
+                          <div key={`sale-${entry.id}`} className="px-4 py-3" style={isReturn ? { background: 'rgba(234,88,12,0.03)' } : undefined}>
                             <div className="flex items-start gap-3">
-                              <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'rgba(5,150,105,0.1)' }}>
-                                <ArrowUpCircle className="w-5 h-5" style={{ color: '#059669' }} />
+                              <div
+                                className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
+                                style={{ background: isReturn ? 'rgba(234,88,12,0.1)' : 'rgba(5,150,105,0.1)' }}
+                              >
+                                {isReturn
+                                  ? <Undo2 className="w-5 h-5" style={{ color: '#ea580c' }} />
+                                  : <ArrowUpCircle className="w-5 h-5" style={{ color: '#059669' }} />}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="font-medium text-slate-800 truncate">{entry.medication_name}</p>
+                                <p className="font-medium text-slate-800 truncate">
+                                  {entry.medication_name}
+                                  {isReturn && (
+                                    <span className="ml-2 text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded">Retour</span>
+                                  )}
+                                </p>
                                 <div className="flex items-center gap-2 mt-1 text-sm text-slate-400">
                                   <span className="flex items-center gap-1">
                                     <Clock className="w-3.5 h-3.5" />
                                     {formatTime(entry.sale_date)}
                                   </span>
-                                  <span>x{entry.quantity_sold}</span>
+                                  <span>x{Math.abs(entry.quantity_sold)}</span>
                                   <span className="font-mono-num">{entry.unit_price.toLocaleString()} FCFA</span>
                                 </div>
+                                {isReturn && entry.reason && (
+                                  <p className="text-xs text-slate-400 mt-0.5 italic truncate">Motif : {entry.reason}</p>
+                                )}
                                 <div className="flex items-center gap-2 mt-1">
                                   {getPaymentIcon(entry.payment_method)}
                                   <span className="text-xs text-slate-400">{entry.payment_method}</span>
@@ -888,10 +998,27 @@ export default function Activite({ onHideNavigationChange }: ActiviteProps = {})
                                       Non sync
                                     </span>
                                   )}
+                                  {!isReturn && (
+                                    <button
+                                      onClick={() => setReturnSale({
+                                        medication_id: entry.medication_id,
+                                        medication_name: entry.medication_name,
+                                        unit_price: entry.unit_price,
+                                        quantity_sold: entry.quantity_sold,
+                                        payment_method: entry.payment_method,
+                                      })}
+                                      className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 px-2 py-0.5 rounded transition-colors"
+                                    >
+                                      <Undo2 className="w-3 h-3" />
+                                      Retour
+                                    </button>
+                                  )}
                                 </div>
                               </div>
                               <div className="text-right">
-                                <p className="font-bold font-mono-num" style={{ color: '#059669' }}>+{entry.total_price.toLocaleString()}</p>
+                                <p className="font-bold font-mono-num" style={{ color: isReturn ? '#ea580c' : '#059669' }}>
+                                  {isReturn ? '' : '+'}{entry.total_price.toLocaleString()}
+                                </p>
                                 <p className="text-xs text-slate-400">FCFA</p>
                               </div>
                             </div>
@@ -1389,6 +1516,15 @@ export default function Activite({ onHideNavigationChange }: ActiviteProps = {})
         date={selectedDate}
         onConfirmClosure={closeDailyReport}
       />
+
+      {returnSale && (
+        <ReturnModal
+          sale={returnSale}
+          processing={isReturnProcessing}
+          onConfirm={handleConfirmReturn}
+          onCancel={() => setReturnSale(null)}
+        />
+      )}
     </div>
   );
 }

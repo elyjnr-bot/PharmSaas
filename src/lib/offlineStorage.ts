@@ -35,6 +35,10 @@ export interface SalesJournalEntry {
   stock_after_sale: number;
   seller_name?: string;
   synced: boolean;
+  /** true pour un retour/avoir (quantité et montant négatifs). */
+  is_return?: boolean;
+  /** Motif du retour (local, non synchronisé en base). */
+  reason?: string;
 }
 
 export const offlineStorage = {

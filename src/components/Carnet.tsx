@@ -39,6 +39,7 @@ const PAYMENT_METHODS = [
   { method: 'Especes', icon: Banknote, label: 'Especes' },
   { method: 'Carte Bancaire', icon: CreditCard, label: 'Carte' },
   { method: 'MTN Mobile Money', icon: Smartphone, label: 'MTN' },
+  { method: 'Airtel Money', icon: Smartphone, label: 'Airtel' },
 ] as const;
 
 // ── Client History Sheet ────────────────────────────────────────────────────

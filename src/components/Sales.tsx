@@ -3,6 +3,7 @@ import { ShoppingCart, Plus, Trash2, CreditCard, Banknote, Smartphone, Receipt, 
 import { supabase, fetchAllMedications, Medication } from '../lib/supabase';
 import { insertWithUserId, updateWithUserId } from '../lib/supabaseHelpers';
 import { offlineStorage } from '../lib/offlineStorage';
+import { getTaxRate } from '../lib/settings';
 
 interface CartItem {
   medication: Medication;
@@ -16,13 +17,11 @@ interface LowStockAlert {
   minimumStock: number;
 }
 
-const TAX_RATE = 0.189;
-
 export default function Sales() {
   const [medications, setMedications] = useState<Medication[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<'Espèces' | 'Carte Bancaire' | 'MTN Mobile Money'>('Espèces');
+  const [paymentMethod, setPaymentMethod] = useState<'Espèces' | 'Carte Bancaire' | 'MTN Mobile Money' | 'Airtel Money'>('Espèces');
   const [customerName, setCustomerName] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
@@ -170,7 +169,7 @@ export default function Sales() {
       const price = item.medication.price || 0;
       return sum + (price * item.quantity);
     }, 0);
-    const tax = subtotal * TAX_RATE;
+    const tax = subtotal * getTaxRate();
     const total = subtotal + tax;
     return { subtotal, tax, total };
   };
@@ -587,7 +586,7 @@ export default function Sales() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Mode de paiement
             </label>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => setPaymentMethod('Espèces')}
                 className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 active:scale-95 transition-all ${
@@ -620,6 +619,17 @@ export default function Sales() {
               >
                 <Smartphone className="w-7 h-7" />
                 <span className="text-xs font-semibold">MTN MM</span>
+              </button>
+              <button
+                onClick={() => setPaymentMethod('Airtel Money')}
+                className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 active:scale-95 transition-all ${
+                  paymentMethod === 'Airtel Money'
+                    ? 'border-blue-500 bg-blue-50 shadow-md'
+                    : 'border-gray-300 hover:border-gray-400'
+                }`}
+              >
+                <Smartphone className="w-7 h-7" />
+                <span className="text-xs font-semibold">Airtel</span>
               </button>
             </div>
           </div>

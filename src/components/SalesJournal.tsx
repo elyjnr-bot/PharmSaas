@@ -79,6 +79,8 @@ export default function SalesJournal() {
         return <CreditCard className="w-4 h-4 text-blue-600" />;
       case 'MTN Mobile Money':
         return <Smartphone className="w-4 h-4 text-yellow-600" />;
+      case 'Airtel Money':
+        return <Smartphone className="w-4 h-4 text-red-600" />;
       default:
         return <Banknote className="w-4 h-4 text-gray-600" />;
     }

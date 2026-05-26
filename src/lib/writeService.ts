@@ -306,3 +306,98 @@ export async function offlineSafePayCredit(
 
   return { status: isPaid ? 'paid' : 'unpaid', newAmountPaid, remaining };
 }
+
+// ── Retours / Avoirs ─────────────────────────────────────────────────────────
+
+export interface ReturnInput {
+  medication_id: string;
+  medication_name: string;
+  unit_price: number;
+  /** Quantité (positive) retournée. */
+  quantity: number;
+  /** Mode de remboursement (Espèces, MTN, Airtel, ...). */
+  refund_method: string;
+  reason?: string;
+}
+
+/**
+ * Enregistre un retour/avoir :
+ *  - restaure le stock du produit (+quantité),
+ *  - crée une entrée NÉGATIVE dans sales_journal (la source unique de reporting),
+ *    ce qui nette automatiquement le CA, le top ventes et la ventilation paiements.
+ * Fonctionne hors-ligne (entrée locale rejouée + maj stock en file).
+ */
+export async function recordReturn(input: ReturnInput): Promise<{ ok: boolean }> {
+  const now = new Date().toISOString();
+  const qty = Math.max(0, Math.floor(input.quantity || 0));
+  if (qty <= 0) return { ok: false };
+
+  const unitPrice = input.unit_price || 0;
+  const total = unitPrice * qty;
+
+  // 1) Restaurer le stock localement (Dexie) pour un affichage immédiat.
+  let localNewQty = qty;
+  try {
+    const local = await db.products.get(input.medication_id);
+    if (local) {
+      localNewQty = (local.quantity || 0) + qty;
+      await db.products.update(input.medication_id, { quantity: localNewQty, updated_at: now });
+    }
+  } catch {}
+
+  // 2) Tenter d'abord la persistance en base si en ligne. On marquera ensuite
+  //    l'entrée locale comme synchronisée pour éviter un double envoi.
+  let syncedRemotely = false;
+  if (navigator.onLine) {
+    try {
+      const { data: med } = await supabase
+        .from('medications')
+        .select('quantity')
+        .eq('id', input.medication_id)
+        .maybeSingle();
+      const remoteNewQty = (med?.quantity ?? 0) + qty;
+      await updateWithUserId('medications', { quantity: remoteNewQty }, { id: input.medication_id });
+
+      const { error } = await insertWithUserId('sales_journal', [{
+        sale_date: now,
+        medication_id: input.medication_id,
+        medication_name: input.medication_name,
+        quantity_sold: -qty,
+        unit_price: unitPrice,
+        total_price: -total,
+        payment_method: input.refund_method,
+        stock_after_sale: remoteNewQty,
+        synced: true,
+      }]);
+      syncedRemotely = !error;
+    } catch (e) {
+      console.error('recordReturn online error:', e);
+    }
+  }
+
+  // 3) Entrée journal négative en local (visible tout de suite dans l'Activité).
+  //    synced=false si non persistée → rejouée par syncOfflineJournal.
+  offlineStorage.addToSalesJournal({
+    sale_date: now,
+    medication_id: input.medication_id,
+    medication_name: input.medication_name,
+    quantity_sold: -qty,
+    unit_price: unitPrice,
+    total_price: -total,
+    payment_method: input.refund_method,
+    stock_after_sale: localNewQty,
+    synced: syncedRemotely,
+    is_return: true,
+    reason: input.reason,
+  });
+
+  // 4) Si non persistée en base, mettre la maj stock en file de synchro.
+  if (!syncedRemotely) {
+    offlineStorage.addToQueue({
+      type: 'update',
+      table: 'medications',
+      data: { id: input.medication_id, quantity: localNewQty },
+    });
+  }
+  return { ok: true };
+}

@@ -7,15 +7,15 @@ import { insertWithUserId, updateWithUserId } from '../lib/supabaseHelpers';
 import { offlineStorage } from '../lib/offlineStorage';
 import { db } from '../lib/db';
 import { offlineSafeInsertCredit } from '../lib/writeService';
+import { getTaxRate } from '../lib/settings';
 import CreditModal from './CreditModal';
 
-const TAX_RATE = 0.189;
 const QUICK_AMOUNTS = [5000, 10000, 20000, 50000];
 
 export default function Panier() {
   const { cart, removeUnitFromCart, clearCart, isUnitMode } = useCart();
   const { activeSeller } = useSeller();
-  const [paymentMethod, setPaymentMethod] = useState<'Especes' | 'Carte Bancaire' | 'MTN Mobile Money'>('Especes');
+  const [paymentMethod, setPaymentMethod] = useState<'Especes' | 'Carte Bancaire' | 'MTN Mobile Money' | 'Airtel Money'>('Especes');
   const [amountReceived, setAmountReceived] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -26,7 +26,7 @@ export default function Panier() {
   const paymentPanelRef = useRef<HTMLDivElement>(null);
 
   const subtotal = cart.reduce((sum, item) => sum + (item.medication.price || 0) * item.quantity, 0);
-  const tax = subtotal * TAX_RATE;
+  const tax = subtotal * getTaxRate();
   const total = subtotal + tax;
 
   const changeAmount = useMemo(() => {
@@ -404,11 +404,12 @@ export default function Panier() {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-1.5 mb-2.5">
+        <div className="grid grid-cols-4 gap-1.5 mb-2.5">
           {([
             { method: 'Especes' as const, icon: Banknote, label: 'Especes' },
             { method: 'Carte Bancaire' as const, icon: CreditCard, label: 'Carte' },
             { method: 'MTN Mobile Money' as const, icon: Smartphone, label: 'MTN' },
+            { method: 'Airtel Money' as const, icon: Smartphone, label: 'Airtel' },
           ]).map(({ method, icon: Icon, label }) => (
             <button
               key={method}

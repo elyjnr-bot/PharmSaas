@@ -71,7 +71,7 @@ export default function ManagerDashboard() {
     );
   }
 
-  const totalCaisse = (paymentBreakdown?.especes || 0) + (paymentBreakdown?.carte || 0) + (paymentBreakdown?.mtn || 0);
+  const totalCaisse = (paymentBreakdown?.especes || 0) + (paymentBreakdown?.carte || 0) + (paymentBreakdown?.mtn || 0) + (paymentBreakdown?.airtel || 0);
 
   const totalPotentialLoss = expiringProducts.reduce((sum, product) => sum + product.potential_loss, 0);
 
@@ -264,6 +264,18 @@ export default function ManagerDashboard() {
             </div>
             <span className="font-bold text-sm sm:text-base text-yellow-700">
               {paymentBreakdown?.mtn.toFixed(0) || 0}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between p-2 sm:p-3 bg-red-50 rounded-lg">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="bg-red-100 p-1.5 sm:p-2 rounded-lg">
+                <Smartphone className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
+              </div>
+              <span className="font-medium text-sm sm:text-base text-gray-900">Airtel</span>
+            </div>
+            <span className="font-bold text-sm sm:text-base text-red-700">
+              {paymentBreakdown?.airtel.toFixed(0) || 0}
             </span>
           </div>
         </div>

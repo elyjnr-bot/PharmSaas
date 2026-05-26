@@ -18,6 +18,7 @@ const PAYMENT_METHODS = [
   'Espèces',
   'Carte Bancaire',
   'MTN Mobile Money',
+  'Airtel Money',
   'Chèque',
   'Virement',
 ];

@@ -8,6 +8,7 @@ import InlineScanLink from './InlineScanLink';
 import { parseDataMatrix, parseGS1Code, generateSampleDataMatrix, playBeepSound, getMedicationInfoByGtin } from '../lib/dataMatrixParser';
 import { barcodeCache } from '../lib/barcodeCache';
 import { getDaysUntilExpiry } from '../lib/dateUtils';
+import { getTaxRate } from '../lib/settings';
 import { offlineStorage } from '../lib/offlineStorage';
 import { useAuth } from '../lib/auth';
 import { useWorkflow } from '../lib/workflowContext';
@@ -27,8 +28,6 @@ interface CartItem {
 
 type ScanMode = 'stock' | 'sale';
 
-const TAX_RATE = 0.189;
-
 export default function ScanPage() {
   const { isManager } = useAuth();
   const { isUnitMode } = useWorkflow();
@@ -44,7 +43,7 @@ export default function ScanPage() {
   const [showScanSuccess, setShowScanSuccess] = useState(false);
   const [scanNotification, setScanNotification] = useState<string | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [paymentMethod, setPaymentMethod] = useState<'Espèces' | 'Carte Bancaire' | 'MTN Mobile Money'>('Espèces');
+  const [paymentMethod, setPaymentMethod] = useState<'Espèces' | 'Carte Bancaire' | 'MTN Mobile Money' | 'Airtel Money'>('Espèces');
   const [customerName, setCustomerName] = useState('');
   const [showReceipt, setShowReceipt] = useState(false);
   const [lastSale, setLastSale] = useState<any>(null);
@@ -414,7 +413,7 @@ export default function ScanPage() {
       const price = item.medication.price || 0;
       return sum + (price * item.quantity);
     }, 0);
-    const tax = subtotal * TAX_RATE;
+    const tax = subtotal * getTaxRate();
     const total = subtotal + tax;
     return { subtotal, tax, total };
   };
@@ -642,6 +641,22 @@ export default function ScanPage() {
           }
         }
 
+        // Journal des ventes : source unique pour les tableaux de bord.
+        // ScanPage n'alimentait pas sales_journal → ses ventes étaient absentes
+        // des dashboards. On l'ajoute pour rester cohérent avec Panier/Sales.
+        const journalEntries = cart.map(item => ({
+          sale_date: new Date().toISOString(),
+          medication_id: item.medication.id,
+          medication_name: `${item.medication.name} ${item.medication.dosage}`,
+          quantity_sold: item.quantity,
+          unit_price: item.medication.price || 0,
+          total_price: (item.medication.price || 0) * item.quantity,
+          payment_method: paymentMethod,
+          stock_after_sale: Math.max(0, item.medication.quantity - item.quantity),
+          synced: true,
+        }));
+        await insertWithUserId('sales_journal', journalEntries);
+
         scannedUnitCodesRef.current = {};
         setLastSale({ ...saleData, items: saleItems });
       } else {
@@ -657,6 +672,22 @@ export default function ScanPage() {
             customer_name: customerName || null,
           },
         });
+
+        // Capture hors-ligne dans le journal local (rejoué par syncOfflineJournal)
+        const saleDate = new Date().toISOString();
+        for (const item of cart) {
+          offlineStorage.addToSalesJournal({
+            sale_date: saleDate,
+            medication_id: item.medication.id,
+            medication_name: `${item.medication.name} ${item.medication.dosage}`,
+            quantity_sold: item.quantity,
+            unit_price: item.medication.price || 0,
+            total_price: (item.medication.price || 0) * item.quantity,
+            payment_method: paymentMethod,
+            stock_after_sale: Math.max(0, item.medication.quantity - item.quantity),
+            synced: false,
+          });
+        }
 
         setLastSale({
           sale_date: new Date().toISOString(),
@@ -1295,6 +1326,24 @@ export default function ScanPage() {
                 </div>
                 <div className="flex-1 text-left">
                   <p className="font-bold text-gray-900">MTN Mobile Money</p>
+                  <p className="text-xs text-gray-600">Paiement mobile</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => {
+                  setPaymentMethod('Airtel Money');
+                  setShowPaymentModal(false);
+                  processSale();
+                }}
+                disabled={isProcessing}
+                className="w-full flex items-center gap-4 p-4 bg-red-50 hover:bg-red-100 border-2 border-red-200 rounded-xl transition-all active:scale-95 disabled:opacity-50"
+              >
+                <div className="bg-red-600 p-3 rounded-lg">
+                  <Smartphone className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="font-bold text-gray-900">Airtel Money</p>
                   <p className="text-xs text-gray-600">Paiement mobile</p>
                 </div>
               </button>

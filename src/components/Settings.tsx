@@ -43,7 +43,7 @@ export default function Settings() {
     localStorage.getItem('pharmacy_site') || 'Pharmacie Brazzaville'
   );
   const [taxRate, setTaxRate] = useState(() =>
-    parseFloat(localStorage.getItem('tax_rate') || '0.189')
+    parseFloat(localStorage.getItem('tax_rate') || '0')
   );
   const [wholesalers, setWholesalers] = useState<Wholesaler[]>(() => {
     const saved = localStorage.getItem('wholesalers');

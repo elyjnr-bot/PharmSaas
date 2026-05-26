@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { normalizePaymentMethod } from './paymentMethods';
 
 export interface SalesStats {
   totalAmount: number;
@@ -11,6 +12,7 @@ export interface PaymentMethodBreakdown {
   especes: number;
   carte: number;
   mtn: number;
+  airtel: number;
 }
 
 export interface TopSelling {
@@ -40,9 +42,11 @@ export const getSalesStats = async (period: 'today' | 'week' | 'month'): Promise
   try {
     const { start, end } = getDateRange(period);
 
+    // Source unique : sales_journal (alimenté par toutes les caisses, online + offline).
+    // total_price = montant net (HT) de la ligne ; le CA reporté est net de TVA.
     const { data, error } = await supabase
-      .from('sales')
-      .select('total_amount, tax_amount, grand_total')
+      .from('sales_journal')
+      .select('total_price, sale_date')
       .gte('sale_date', start)
       .lte('sale_date', end);
 
@@ -55,10 +59,9 @@ export const getSalesStats = async (period: 'today' | 'week' | 'month'): Promise
       count: data?.length || 0,
     };
 
-    data?.forEach((sale) => {
-      stats.totalAmount += sale.total_amount;
-      stats.taxAmount += sale.tax_amount;
-      stats.grandTotal += sale.grand_total;
+    data?.forEach((row) => {
+      stats.totalAmount += row.total_price || 0;
+      stats.grandTotal += row.total_price || 0;
     });
 
     return stats;
@@ -73,8 +76,8 @@ export const getPaymentMethodBreakdown = async (): Promise<PaymentMethodBreakdow
     const { start } = getDateRange('today');
 
     const { data, error } = await supabase
-      .from('sales')
-      .select('payment_method, grand_total')
+      .from('sales_journal')
+      .select('payment_method, total_price')
       .gte('sale_date', start);
 
     if (error) throw error;
@@ -83,22 +86,23 @@ export const getPaymentMethodBreakdown = async (): Promise<PaymentMethodBreakdow
       especes: 0,
       carte: 0,
       mtn: 0,
+      airtel: 0,
     };
 
-    data?.forEach((sale) => {
-      if (sale.payment_method === 'Espèces') {
-        breakdown.especes += sale.grand_total;
-      } else if (sale.payment_method === 'Carte Bancaire') {
-        breakdown.carte += sale.grand_total;
-      } else if (sale.payment_method === 'MTN Mobile Money') {
-        breakdown.mtn += sale.grand_total;
-      }
+    data?.forEach((row) => {
+      // Normalise les variantes héritées ('Especes'/'Espèces', casse, accents, ...)
+      const id = normalizePaymentMethod(row.payment_method);
+      const amount = row.total_price || 0;
+      if (id === 'especes') breakdown.especes += amount;
+      else if (id === 'carte') breakdown.carte += amount;
+      else if (id === 'mtn') breakdown.mtn += amount;
+      else if (id === 'airtel') breakdown.airtel += amount;
     });
 
     return breakdown;
   } catch (error) {
     console.error('Error getting payment breakdown:', error);
-    return { especes: 0, carte: 0, mtn: 0 };
+    return { especes: 0, carte: 0, mtn: 0, airtel: 0 };
   }
 };
 
@@ -136,10 +140,12 @@ export const getTopSelling = async (limit: number = 10): Promise<TopSelling[]> =
   try {
     const { start } = getDateRange('month');
 
+    // Source unique : sales_journal (inclut ventes scan + hors-ligne, contrairement
+    // à sale_items qui n'est écrit qu'en ligne).
     const { data, error } = await supabase
-      .from('sale_items')
-      .select('medication_name, quantity, subtotal, created_at')
-      .gte('created_at', start);
+      .from('sales_journal')
+      .select('medication_name, quantity_sold, total_price, sale_date')
+      .gte('sale_date', start);
 
     if (error) throw error;
 
@@ -151,8 +157,8 @@ export const getTopSelling = async (limit: number = 10): Promise<TopSelling[]> =
           total_revenue: 0,
         };
       }
-      acc[item.medication_name].total_quantity += item.quantity;
-      acc[item.medication_name].total_revenue += item.subtotal;
+      acc[item.medication_name].total_quantity += item.quantity_sold || 0;
+      acc[item.medication_name].total_revenue += item.total_price || 0;
       return acc;
     }, {});
 
