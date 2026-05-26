@@ -17,6 +17,7 @@ import Dashboard from './components/Dashboard';
 import Stock from './components/Stock';
 import Sales from './components/Sales';
 import { initOfflineMode } from './lib/offlineStorage';
+import { exportSalesJournalCsv } from './lib/exporters';
 import { AuthProvider, useAuth } from './lib/auth';
 import { SellerProvider, useSeller } from './lib/sellerContext';
 import { CartProvider } from './lib/cartContext';
@@ -174,7 +175,11 @@ function AppContent() {
               ].join(', '),
             }}
           >
-            <DesktopTopbar activeTab={activeTab} onNewSale={() => handleTabChange('sales')} />
+            <DesktopTopbar
+              activeTab={activeTab}
+              onNewSale={() => handleTabChange('sales')}
+              onExport={activeTab === 'dashboard' ? exportSalesJournalCsv : undefined}
+            />
             <div style={{ flex: 1, overflowY: 'auto' }} className="smooth-scroll scrollbar-thin">
               <div style={{ padding: '24px 28px', maxWidth: 1600, margin: '0 auto' }}>
                 {renderContent()}

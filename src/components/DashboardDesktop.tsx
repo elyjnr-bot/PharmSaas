@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Truck, MoreHorizontal, ArrowRight, ChevronDown } from 'lucide-react';
+import { Truck, ArrowRight, ChevronDown } from 'lucide-react';
 import { fetchAllMedications, Medication, supabase } from '../lib/supabase';
 import { getDaysUntilExpiry, isExpired } from '../lib/dateUtils';
 import { useAuth } from '../lib/auth';
@@ -232,6 +232,37 @@ export default function DashboardDesktop() {
   const firstName = displayName.split(' ')[0];
   const dateStr = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
+  // Cycle la période (7j → 30j → 90j) — pilote aussi le graphe et les top produits.
+  const cyclePeriod = () => {
+    const idx = PERIODS.findIndex(p => p.id === period);
+    setPeriod(PERIODS[(idx + 1) % PERIODS.length].id);
+  };
+
+  // "Voir tout" : descend vers le journal d'activité (rendu juste en dessous).
+  const scrollToJournal = () => {
+    document.querySelector('[data-journal-section]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  // "Créer une commande" : exporte une liste de réapprovisionnement des produits sous le seuil.
+  const exportRestock = () => {
+    const low = medications.filter(med => med.quantity < (med.minimum_stock ?? med.min_stock ?? 10));
+    if (low.length === 0) { alert('Aucun produit à réapprovisionner pour le moment.'); return; }
+    let r = 'COMMANDE DE RÉAPPROVISIONNEMENT\n=================================\n';
+    r += `Date : ${new Date().toLocaleDateString('fr-FR')}\n\n`;
+    low.forEach((item, i) => {
+      r += `${i + 1}. ${item.name}${item.dosage ? ' ' + item.dosage : ''}\n`;
+      r += `   Quantité actuelle : ${item.quantity}\n`;
+      r += `   Stock minimum : ${item.minimum_stock ?? item.min_stock ?? '-'}\n`;
+      r += `   Fournisseur : ${item.supplier || '-'}\n\n`;
+    });
+    const blob = new Blob([r], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `reapprovisionnement-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const kpis = [
     { lbl: 'Ventes du jour', val: fmt(m.todaySales), unit: 'FC', delta: `${m.dayDelta >= 0 ? '+' : ''}${m.dayDelta.toFixed(1)}%`, pos: m.dayDelta >= 0, spark: m.last7.length ? m.last7 : [0, 0], color: m.dayDelta >= 0 ? C.brand : C.red, sub: 'vs. hier' },
     { lbl: 'Tickets émis', val: String(m.ticketsToday), unit: '', delta: `${m.ticketsToday}`, pos: true, spark: m.ticketsSpark.length ? m.ticketsSpark : [0, 0], color: C.brand, sub: m.ticketsToday ? `panier moyen ${fmt(m.todaySales / m.ticketsToday)} FC` : 'aucune vente' },
@@ -360,7 +391,6 @@ export default function DashboardDesktop() {
               </div>
               <p style={{ fontSize: 12, color: C.inkMute }}>Recommandation : commander aujourd'hui</p>
             </div>
-            <MoreHorizontal size={16} color={C.inkFaint} strokeWidth={1.5} />
           </header>
 
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -378,7 +408,7 @@ export default function DashboardDesktop() {
             ))}
           </div>
 
-          <button style={{ marginTop: 8, padding: '9px 12px', borderRadius: 8, background: C.brandLt, border: `1px solid ${C.brandMid}`, color: C.brand, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', letterSpacing: '-0.01em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+          <button onClick={exportRestock} style={{ marginTop: 8, padding: '9px 12px', borderRadius: 8, background: C.brandLt, border: `1px solid ${C.brandMid}`, color: C.brand, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', letterSpacing: '-0.01em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
             <Truck size={14} color={C.brand} strokeWidth={1.8} />
             Créer une commande
           </button>
@@ -394,7 +424,7 @@ export default function DashboardDesktop() {
               <h2 style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.02em' }}>Transactions récentes</h2>
               <Pill color="gray" size="sm">Live</Pill>
             </div>
-            <button style={{ background: 'transparent', border: 'none', fontSize: 12.5, color: C.brand, fontWeight: 550, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <button onClick={scrollToJournal} style={{ background: 'transparent', border: 'none', fontSize: 12.5, color: C.brand, fontWeight: 550, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
               Voir tout <ArrowRight size={12} color={C.brand} />
             </button>
           </header>
@@ -432,7 +462,7 @@ export default function DashboardDesktop() {
         <article style={{ ...card, padding: '18px 22px' }}>
           <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <h2 style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.02em' }}>Top produits</h2>
-            <button style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'transparent', border: 'none', cursor: 'pointer' }}>
+            <button onClick={cyclePeriod} title="Changer la période" style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'transparent', border: 'none', cursor: 'pointer' }}>
               <span style={{ fontSize: 11.5, color: C.inkMute }}>{PERIODS.find(p => p.id === period)!.label}</span>
               <ChevronDown size={12} color={C.inkFaint} />
             </button>

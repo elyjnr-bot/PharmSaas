@@ -26,9 +26,11 @@ const TAB_LABELS: Record<string, { section: string; label: string }> = {
 interface DesktopTopbarProps {
   activeTab: string;
   onNewSale?: () => void;
+  onFilter?: () => void;
+  onExport?: () => void;
 }
 
-export default function DesktopTopbar({ activeTab, onNewSale }: DesktopTopbarProps) {
+export default function DesktopTopbar({ activeTab, onNewSale, onFilter, onExport }: DesktopTopbarProps) {
   const crumb = TAB_LABELS[activeTab] ?? { section: 'Aperçu', label: activeTab };
 
   return (
@@ -58,42 +60,46 @@ export default function DesktopTopbar({ activeTab, onNewSale }: DesktopTopbarPro
 
       {/* Actions */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        {/* Filter */}
-        <button style={{
-          background: 'transparent',
-          border: `1px solid ${C.hairline}`,
-          borderRadius: 7,
-          padding: '6px 10px',
-          fontSize: 12.5,
-          color: C.inkSoft,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-          cursor: 'pointer',
-          fontWeight: 500,
-          transition: 'background 0.12s',
-        }}>
-          <Filter size={13} color={C.inkMute} strokeWidth={1.5} />
-          Filtres
-        </button>
+        {/* Filter — affiché seulement si une action est branchée */}
+        {onFilter && (
+          <button onClick={onFilter} style={{
+            background: 'transparent',
+            border: `1px solid ${C.hairline}`,
+            borderRadius: 7,
+            padding: '6px 10px',
+            fontSize: 12.5,
+            color: C.inkSoft,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            cursor: 'pointer',
+            fontWeight: 500,
+            transition: 'background 0.12s',
+          }}>
+            <Filter size={13} color={C.inkMute} strokeWidth={1.5} />
+            Filtres
+          </button>
+        )}
 
-        {/* Export */}
-        <button style={{
-          background: 'transparent',
-          border: `1px solid ${C.hairline}`,
-          borderRadius: 7,
-          padding: '6px 10px',
-          fontSize: 12.5,
-          color: C.inkSoft,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-          cursor: 'pointer',
-          fontWeight: 500,
-        }}>
-          <Download size={13} color={C.inkMute} strokeWidth={1.5} />
-          Exporter
-        </button>
+        {/* Export — affiché seulement si une action est branchée */}
+        {onExport && (
+          <button onClick={onExport} style={{
+            background: 'transparent',
+            border: `1px solid ${C.hairline}`,
+            borderRadius: 7,
+            padding: '6px 10px',
+            fontSize: 12.5,
+            color: C.inkSoft,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            cursor: 'pointer',
+            fontWeight: 500,
+          }}>
+            <Download size={13} color={C.inkMute} strokeWidth={1.5} />
+            Exporter
+          </button>
+        )}
 
         {/* Divider */}
         <div style={{ width: 1, height: 22, background: C.hairline, margin: '0 4px' }} />

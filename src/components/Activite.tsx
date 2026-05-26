@@ -928,7 +928,7 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
               )}
             </div>
 
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm">
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm" data-journal-section>
               <div className="px-4 py-3 border-b border-slate-100">
                 <h3 className="font-semibold text-slate-800">Journal d'activité</h3>
               </div>
