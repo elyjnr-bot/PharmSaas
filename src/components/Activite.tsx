@@ -68,9 +68,12 @@ const PAYMENT_METHODS = [
 
 interface ActiviteProps {
   onHideNavigationChange?: (hidden: boolean) => void;
+  /** Mode intégré dans l'Aperçu : masque le hero CA et l'onglet Alertes
+   *  (évite le doublon avec le tableau de bord), retire le chrome de page. */
+  embedded?: boolean;
 }
 
-export default function Activite({ onHideNavigationChange }: ActiviteProps = {}) {
+export default function Activite({ onHideNavigationChange, embedded = false }: ActiviteProps = {}) {
   const { isDesktop } = useResponsive();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'ventes' | 'depenses' | 'alertes'>('ventes');
@@ -622,9 +625,10 @@ export default function Activite({ onHideNavigationChange }: ActiviteProps = {})
   };
 
   return (
-    <div className="bg-slate-50">
-      <div className="px-3 pt-5 pb-6 flex flex-col gap-6">
-        {/* ── Hero CA Card ─────────────────────────────────────────── */}
+    <div className={embedded ? '' : 'bg-slate-50'}>
+      <div className={embedded ? 'flex flex-col gap-6' : 'px-3 pt-5 pb-6 flex flex-col gap-6'}>
+        {/* ── Hero CA Card (masqué en mode intégré : doublon avec l'Aperçu) ── */}
+        {!embedded && (
         <div
           className="rounded-2xl p-4 text-white shadow-lg relative overflow-hidden"
           style={{ background: 'linear-gradient(135deg, #030712 0%, #0f172a 50%, #0c1a2e 100%)' }}
@@ -744,10 +748,11 @@ export default function Activite({ onHideNavigationChange }: ActiviteProps = {})
             })}
           </div>
         </div>
+        )}
 
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
           <div className="flex items-center justify-between p-3 border-b border-slate-100">
-            <div className="flex-1 grid grid-cols-3 gap-1">
+            <div className={`flex-1 grid gap-1 ${embedded ? 'grid-cols-2' : 'grid-cols-3'}`}>
               <button
                 onClick={() => setActiveTab('ventes')}
                 className={`py-2.5 rounded-xl font-semibold text-sm transition-all ${
@@ -769,6 +774,7 @@ export default function Activite({ onHideNavigationChange }: ActiviteProps = {})
               >
                 Depenses
               </button>
+              {!embedded && (
               <button
                 onClick={() => setActiveTab('alertes')}
                 className={`py-2.5 rounded-xl font-semibold text-sm transition-all relative ${
@@ -786,6 +792,7 @@ export default function Activite({ onHideNavigationChange }: ActiviteProps = {})
                   </span>
                 )}
               </button>
+              )}
             </div>
             {isDesktop && (
               <button

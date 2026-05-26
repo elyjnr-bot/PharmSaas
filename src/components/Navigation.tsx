@@ -93,7 +93,7 @@ export default function Navigation({ activeTab, onTabChange, onScanClick, isMana
 
   useEffect(() => {
     const SCROLL_THRESHOLD = 10;
-    const tabsWithHideBehavior = ['activite', 'gestion', 'equipe', 'carnet'];
+    const tabsWithHideBehavior = ['dashboard', 'gestion', 'equipe', 'carnet'];
     const shouldHide = tabsWithHideBehavior.includes(activeTab);
 
     if (!shouldHide) {
@@ -136,15 +136,17 @@ export default function Navigation({ activeTab, onTabChange, onScanClick, isMana
   }, [activeTab]);
 
   const iconMap: Record<string, (color: string) => JSX.Element> = {
-    activite: (c) => <HeartPulse color={c} strokeWidth={1.5} size={22} />,
+    dashboard: (c) => <HeartPulse color={c} strokeWidth={1.5} size={22} />,
     gestion: (c) => <PillIcon color={c} />,
     panier: (c) => <BagIcon color={c} />,
     carnet: (c) => <LedgerIcon color={c} />,
     equipe: (c) => <TeamIcon color={c} />,
   };
 
+  // 'Aperçu' (dashboard) remplace l'ancien onglet 'Activité' : il fusionne
+  // le tableau de bord et les opérations (manager).
   const tabs = [
-    { id: 'activite', label: 'ACTIVITE', managerOnly: true },
+    { id: 'dashboard', label: 'APERÇU', managerOnly: true },
     { id: 'gestion', label: 'GESTION', managerOnly: false },
     { id: 'panier', label: 'PANIER', managerOnly: false, badge: cartItemCount },
     { id: 'carnet', label: 'CARNET', managerOnly: false },

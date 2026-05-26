@@ -68,14 +68,16 @@ interface SidebarProps {
   activeView: string;
   onNavigate: (view: string) => void;
   onSettingsClick: () => void;
+  isManager?: boolean;
 }
 
-const NAV_ITEMS: { id: string; icon: IconName; label: string; kbd: string }[] = [
-  { id: 'dashboard', icon: 'home',     label: 'Aperçu',     kbd: 'D' },
+// 'Aperçu' (dashboard) fusionne désormais l'ancien onglet 'Activité'
+// (financiers + opérations) → réservé au manager.
+const NAV_ITEMS: { id: string; icon: IconName; label: string; kbd: string; managerOnly?: boolean }[] = [
+  { id: 'dashboard', icon: 'home',     label: 'Aperçu',     kbd: 'D', managerOnly: true },
   { id: 'sales',     icon: 'cart',     label: 'Caisse',     kbd: 'P' },
   { id: 'stock',     icon: 'box',      label: 'Inventaire', kbd: 'I' },
   { id: 'gestion',   icon: 'chart',    label: 'Gestion',    kbd: 'G' },
-  { id: 'activite',  icon: 'sparkles', label: 'Activité',   kbd: 'A' },
   { id: 'carnet',    icon: 'mone',     label: 'Carnet',     kbd: 'C' },
   { id: 'equipe',    icon: 'users',    label: 'Équipe',     kbd: 'E' },
 ];
@@ -86,8 +88,9 @@ const FAVORITES = [
   { label: 'Top ventes',         color: C.brand },
 ];
 
-export default function Sidebar({ activeView, onNavigate, onSettingsClick }: SidebarProps) {
+export default function Sidebar({ activeView, onNavigate, onSettingsClick, isManager = true }: SidebarProps) {
   const { profile } = useAuth();
+  const navItems = NAV_ITEMS.filter(item => isManager || !item.managerOnly);
   const { activeSeller } = useSeller();
   const [hovered, setHovered] = useState<string | null>(null);
 
@@ -157,7 +160,7 @@ export default function Sidebar({ activeView, onNavigate, onSettingsClick }: Sid
 
       {/* ── Navigation ── */}
       <nav style={{ flex: 1, padding: '4px 8px', display: 'flex', flexDirection: 'column', gap: 1, overflowY: 'auto' }}>
-        {NAV_ITEMS.map(({ id, icon, label, kbd }) => {
+        {navItems.map(({ id, icon, label, kbd }) => {
           const isActive = activeView === id;
           const isHov = hovered === id;
           return (

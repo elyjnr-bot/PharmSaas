@@ -85,25 +85,31 @@ function AppContent() {
   }, [isManager, loading, user, profile]);
 
   const handleTabChange = (tab: string) => {
-    if (!isManager && tab === 'activite') return;
+    if (!isManager && (tab === 'dashboard' || tab === 'activite')) return;
     if (tab !== activeTab) setActiviteUnlocked(false);
     setActiveTab(tab);
   };
 
   const renderContent = () => {
     switch (activeTab) {
+      // Aperçu = tableau de bord + activité fusionnés (un seul onglet).
+      // Gating identique à l'ancien onglet Activité (contient les financiers + opérations).
       case 'dashboard':
-        return <Dashboard />;
-      case 'stock':
-        return <Stock />;
-      case 'sales':
-        return <Sales />;
       case 'activite':
         if (!isManager) return <StaffActiviteBlocked />;
         if (activeSeller && !activiteUnlocked) {
           return <ManagerLock onUnlock={() => setActiviteUnlocked(true)} />;
         }
-        return <Activite onHideNavigationChange={setHideNavigation} />;
+        return (
+          <div className="flex flex-col gap-6">
+            <Dashboard />
+            <Activite embedded onHideNavigationChange={setHideNavigation} />
+          </div>
+        );
+      case 'stock':
+        return <Stock />;
+      case 'sales':
+        return <Sales />;
       case 'gestion':
         return <Gestion onHideNavigationChange={setHideNavigation} />;
       case 'panier':
@@ -113,7 +119,7 @@ function AppContent() {
       case 'equipe':
         return <Equipe />;
       default:
-        return isDesktop ? <Dashboard /> : (isManager ? <Activite onHideNavigationChange={setHideNavigation} /> : <Gestion onHideNavigationChange={setHideNavigation} />);
+        return <Gestion onHideNavigationChange={setHideNavigation} />;
     }
   };
 
@@ -150,6 +156,7 @@ function AppContent() {
             activeView={activeTab}
             onNavigate={handleTabChange}
             onSettingsClick={() => setShowSettings(true)}
+            isManager={isManager}
           />
           <OfflineIndicator />
           <div
