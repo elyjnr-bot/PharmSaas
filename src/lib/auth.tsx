@@ -56,7 +56,9 @@ const DATA_PREFIXES_TO_PURGE = [
   'jp_patients_migrated',
   'jp_dci_learning_v1',
   'jp_min_stock_',
-  'jp_onboarding_done',
+  // ⚠️ NE PAS purger 'jp_onboarding_done*' : ce flag est scopé par user_id
+  //   (jp_onboarding_done_<userId>) donc aucune fuite entre comptes. Le purger
+  //   à la déconnexion faisait réapparaître l'onboarding à chaque reconnexion.
   'jungle_pharm_settings',
   'workflow_mode',
   'tax_rate',

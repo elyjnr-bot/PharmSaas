@@ -278,9 +278,16 @@ function AppContent() {
   }, []);
 
   useEffect(() => {
+    // ⚠️ Ne RIEN faire tant que l'auth n'est pas résolue. Au rechargement de la
+    // page, `user` est momentanément null (le temps que getSession() réponde) :
+    // si on réinitialisait ici, on effacerait `jp_session_ok` et on rebasculerait
+    // sur l'écran « Qui commence la session ? » à chaque refresh (= fausse
+    // déconnexion). On attend donc la fin du chargement.
+    if (loading) return;
+
     if (!user) {
       setActiveSeller(null);
-      // Reset session lock screen on full logout
+      // Reset session lock screen on full logout (vraie déconnexion, auth résolue)
       setSessionStarted(false);
       sessionStorage.removeItem('jp_session_ok');
       initialTabSet.current = false;
@@ -295,7 +302,7 @@ function AppContent() {
       const displayName = profile.full_name || profile.email.split('@')[0];
       setActiveSeller({ id: profile.id, name: displayName });
     }
-  }, [isManager, profile, user, setActiveSeller]);
+  }, [isManager, profile, user, loading, setActiveSeller]);
 
   // Le verrouillage est maintenant basé sur le timestamp + durée configurée
   // (plus de reset automatique à chaque changement d'onglet)
