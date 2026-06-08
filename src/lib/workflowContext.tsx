@@ -2,11 +2,20 @@ import { createContext, useContext, useState, useCallback } from 'react';
 
 export type WorkflowMode = 'global' | 'unit';
 
+export interface PendingCartItem {
+  name: string;
+  qty: number;
+  ordonnanceRef?: string;
+}
+
 interface WorkflowContextType {
   workflowMode: WorkflowMode;
   setWorkflowMode: (mode: WorkflowMode) => void;
   isUnitMode: boolean;
   isGlobalMode: boolean;
+  /** Items prefilled from an ordonnance — consumed once by Sales.tsx */
+  pendingOrdCart: PendingCartItem[] | null;
+  setPendingOrdCart: (items: PendingCartItem[] | null) => void;
 }
 
 const WorkflowContext = createContext<WorkflowContextType | null>(null);
@@ -16,6 +25,7 @@ export function WorkflowProvider({ children }: { children: React.ReactNode }) {
     const saved = localStorage.getItem('workflow_mode');
     return (saved === 'unit' || saved === 'global') ? saved : 'global';
   });
+  const [pendingOrdCart, setPendingOrdCart] = useState<PendingCartItem[] | null>(null);
 
   const setWorkflowMode = useCallback((mode: WorkflowMode) => {
     setWorkflowModeState(mode);
@@ -28,6 +38,8 @@ export function WorkflowProvider({ children }: { children: React.ReactNode }) {
       setWorkflowMode,
       isUnitMode: workflowMode === 'unit',
       isGlobalMode: workflowMode === 'global',
+      pendingOrdCart,
+      setPendingOrdCart,
     }}>
       {children}
     </WorkflowContext.Provider>

@@ -1,21 +1,31 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Search, ChevronDown, MoreHorizontal } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { useSeller } from '../lib/sellerContext';
+import AlertsBell from './AlertsBell';
+import SyncIndicator from './SyncIndicator';
+import { loadSettings } from '../lib/settings';
+import { getCachedSettings } from '../lib/userSettings';
 
 // ── Reference Chalk Premium icon set (line, 1.5 stroke) ──────────
-type IconName = 'home' | 'cart' | 'box' | 'chart' | 'sparkles' | 'mone' | 'users' | 'settings';
+type IconName = 'home' | 'cart' | 'box' | 'person' | 'sparkles' | 'mone' | 'users' | 'settings' | 'rx' | 'calendar' | 'truck' | 'chart' | 'arrows' | 'building';
 function NavIcon({ name, size = 15, color = 'currentColor', sw = 1.5 }: { name: IconName; size?: number; color?: string; sw?: number }) {
   const p = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: color, strokeWidth: sw, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
   switch (name) {
     case 'home':     return <svg {...p}><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1z" /></svg>;
     case 'cart':     return <svg {...p}><circle cx="9" cy="20" r="1.2" /><circle cx="18" cy="20" r="1.2" /><path d="M3 4h2l3 11h11l2-7H7" /></svg>;
     case 'box':      return <svg {...p}><path d="M3.5 8.5 12 4l8.5 4.5M3.5 8.5v7L12 20m-8.5-11.5L12 13m0 7 8.5-4.5v-7M12 13v7m0-7 8.5-4.5" /></svg>;
-    case 'chart':    return <svg {...p}><path d="M3 3v18h18M7 14l3-3 4 4 6-7" /></svg>;
+    case 'person':   return <svg {...p}><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" /><path d="M15.5 14.5c1-.4 2.5-.5 3.5.5a3.5 3.5 0 0 1 1 2.5" strokeOpacity={0.45}/></svg>;
     case 'sparkles': return <svg {...p}><path d="M5 3v4M3 5h4M19 11v4m-2-2h4M11 4l2.4 5.6L19 12l-5.6 2.4L11 20l-2.4-5.6L3 12l5.6-2.4z" /></svg>;
     case 'mone':     return <svg {...p}><circle cx="12" cy="12" r="9" /><path d="M12 7v10M9 9.5c0-1.4 1.3-2.5 3-2.5s3 1.1 3 2.5-1.3 2.5-3 2.5-3 1.1-3 2.5 1.3 2.5 3 2.5 3-1.1 3-2.5" /></svg>;
     case 'users':    return <svg {...p}><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 11.5a3 3 0 0 0 0-6m6 14.5a5.5 5.5 0 0 0-4-5.3" /></svg>;
     case 'settings': return <svg {...p}><circle cx="12" cy="12" r="3" /><path d="M19 12c0 .8-.1 1.5-.3 2.2l2 1.5-2 3.5-2.4-.9c-1.1.9-2.4 1.6-3.9 1.9L12 23l-.7-2.8a8.5 8.5 0 0 1-3.9-1.9l-2.4.9-2-3.5 2-1.5A8.5 8.5 0 0 1 5 12c0-.8.1-1.5.3-2.2l-2-1.5 2-3.5 2.4.9c1.1-.9 2.4-1.6 3.9-1.9L12 1l.7 2.8c1.5.3 2.8 1 3.9 1.9l2.4-.9 2 3.5-2 1.5c.2.7.3 1.4.3 2.2" /></svg>;
+    case 'rx':       return <svg {...p}><path d="M3 3h8a4 4 0 0 1 0 8H3M3 11l8 10M14 11l6 10M17 11l6-8" /></svg>;
+    case 'calendar': return <svg {...p}><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01" strokeWidth={2}/></svg>;
+    case 'truck':    return <svg {...p}><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11v14H5z"/><path d="M14 3h4l3 4v7h-3M14 17h1"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="18.5" cy="17.5" r="1.5"/></svg>;
+    case 'chart':    return <svg {...p}><path d="M3 3v18h18M7 16l4-4 4 4 4-6" /></svg>;
+    case 'arrows':   return <svg {...p}><path d="M7 16V4m0 0L3 8m4-4 4 4M17 8v12m0 0 4-4m-4 4-4-4" /></svg>;
+    case 'building': return <svg {...p}><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 21V9h6v12M3 9h18M9 6h.01M15 6h.01"/></svg>;
   }
 }
 
@@ -74,25 +84,124 @@ interface SidebarProps {
 // 'Aperçu' (dashboard) fusionne désormais l'ancien onglet 'Activité'
 // (financiers + opérations) → réservé au manager.
 const NAV_ITEMS: { id: string; icon: IconName; label: string; kbd: string; managerOnly?: boolean }[] = [
-  { id: 'dashboard', icon: 'home',     label: 'Aperçu',     kbd: 'D', managerOnly: true },
-  { id: 'sales',     icon: 'cart',     label: 'Caisse',     kbd: 'P' },
-  { id: 'stock',     icon: 'box',      label: 'Inventaire', kbd: 'I' },
-  { id: 'gestion',   icon: 'chart',    label: 'Gestion',    kbd: 'G' },
-  { id: 'carnet',    icon: 'mone',     label: 'Carnet',     kbd: 'C' },
-  { id: 'equipe',    icon: 'users',    label: 'Équipe',     kbd: 'E' },
+  { id: 'dashboard',   icon: 'home',     label: 'Aperçu',       kbd: 'D', managerOnly: true },
+  { id: 'sales',       icon: 'cart',     label: 'Caisse',       kbd: 'P' },
+  { id: 'stock',       icon: 'box',      label: 'Inventaire',   kbd: 'I' },
+  { id: 'patients',    icon: 'person',   label: 'Patients',     kbd: 'A' },
+  { id: 'ordonnances', icon: 'rx',       label: 'Ordonnances',  kbd: 'R' },
+  { id: 'carnet',      icon: 'mone',     label: 'Crédits',      kbd: 'C' },
+  { id: 'equipe',      icon: 'users',    label: 'Équipe',       kbd: 'E' },
+  { id: 'expirations', icon: 'calendar', label: 'Péremptions',  kbd: 'X' },
+  { id: 'mouvements',  icon: 'arrows',   label: 'Mouvements',   kbd: 'M' },
+  { id: 'commandes',    icon: 'truck',    label: 'Commandes',    kbd: 'O' },
+  { id: 'fournisseurs', icon: 'building',  label: 'Fournisseurs', kbd: 'F', managerOnly: true },
+  { id: 'rapports',    icon: 'chart',    label: 'Rapports',     kbd: 'G', managerOnly: true },
 ];
 
-const FAVORITES = [
-  { label: 'Ruptures critiques', color: C.red },
-  { label: 'Lots péremption',    color: C.amber },
-  { label: 'Top ventes',         color: C.brand },
+// ── Catalog complet des raccourcis disponibles ────────────────────────────────
+interface ShortcutDef {
+  id: string;
+  label: string;
+  color: string;
+  route: string;   // vue à activer via onNavigate
+  hint: string;
+  managerOnly?: boolean;
+}
+
+const SHORTCUT_CATALOG: ShortcutDef[] = [
+  { id: 'ruptures',   label: 'Ruptures critiques', color: C.red,     route: 'ruptures',    hint: 'Produits en rupture de stock' },
+  { id: 'peremption', label: 'Lots péremption',    color: C.amber,   route: 'expirations', hint: 'Lots bientôt expirés' },
+  { id: 'topventes',  label: 'Top ventes',         color: C.brand,   route: 'topventes',   hint: 'Classement des produits' },
+  { id: 'dashboard',  label: 'Aperçu',             color: C.brand,   route: 'dashboard',   hint: 'Tableau de bord', managerOnly: true },
+  { id: 'sales',      label: 'Caisse',             color: '#0651bc', route: 'sales',       hint: 'Point de vente' },
+  { id: 'patients',   label: 'Patients CRM',       color: '#6e44b0', route: 'patients',    hint: 'Gestion patients' },
+  { id: 'ordonnances',label: 'Ordonnances',        color: '#b75f06', route: 'ordonnances', hint: 'Prescriptions en cours' },
+  { id: 'commandes',  label: 'Commandes',          color: '#0f7e5e', route: 'commandes',   hint: 'Fournisseurs' },
+  { id: 'mouvements', label: 'Mouvements',         color: '#9aa0a8', route: 'mouvements',  hint: 'Historique des entrées/sorties' },
+  { id: 'rapports',   label: 'Rapports',           color: '#0651bc', route: 'rapports',    hint: 'Rapports & exports', managerOnly: true },
+  { id: 'carnet',      label: 'Crédits clients',   color: '#c81e1e', route: 'carnet',       hint: 'Comptes clients' },
+  { id: 'fournisseurs',label: 'Fournisseurs',      color: '#10785a', route: 'fournisseurs', hint: 'Gestion des fournisseurs', managerOnly: true },
 ];
+
+const FAV_STORAGE_KEY = 'jp_sidebar_favs_v1';
+const DEFAULT_FAV_IDS = ['ruptures', 'peremption', 'topventes'];
+
+function loadFavIds(): string[] {
+  try {
+    const raw = localStorage.getItem(FAV_STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch { /* ignore */ }
+  return DEFAULT_FAV_IDS;
+}
+function saveFavIds(ids: string[]) {
+  try { localStorage.setItem(FAV_STORAGE_KEY, JSON.stringify(ids)); } catch { /* quota */ }
+}
 
 export default function Sidebar({ activeView, onNavigate, onSettingsClick, isManager = true }: SidebarProps) {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const navItems = NAV_ITEMS.filter(item => isManager || !item.managerOnly);
   const { activeSeller } = useSeller();
-  const [hovered, setHovered] = useState<string | null>(null);
+  const [hovered, setHovered]           = useState<string | null>(null);
+  const [favIds, setFavIds]             = useState<string[]>(() => loadFavIds());
+  const [editingFavs, setEditingFavs]   = useState(false);
+
+  // ── Nom de la pharmacie — lit les deux sources et prend la première valide ──
+  const getPharmName = () => {
+    // Source 1 : cache Supabase user_settings (plus fiable, mis à jour par Settings)
+    if (user?.id) {
+      const cached = getCachedSettings(user.id);
+      if (cached.pharmacy_name && cached.pharmacy_name.trim()) return cached.pharmacy_name;
+    }
+    // Source 2 : localStorage jungle_pharm_settings (legacy + onboarding)
+    const legacy = loadSettings().pharmacy_name;
+    if (legacy && legacy !== 'JUNGLE PHARM') return legacy;
+    return '';
+  };
+  const [pharmacyName, setPharmacyName] = useState(() => getPharmName());
+  // Re-lit quand user change ou quand Settings déclenche un event
+  useEffect(() => {
+    setPharmacyName(getPharmName());
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+  useEffect(() => {
+    const refresh = () => setPharmacyName(getPharmName());
+    window.addEventListener('junglepharm:settings_updated', refresh);
+    window.addEventListener('junglepharm:tax_updated', refresh); // settings saved
+    window.addEventListener('storage', refresh);
+    return () => {
+      window.removeEventListener('junglepharm:settings_updated', refresh);
+      window.removeEventListener('junglepharm:tax_updated', refresh);
+      window.removeEventListener('storage', refresh);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+  const [favDropOpen, setFavDropOpen]   = useState(false);
+  const favDropRef                       = useRef<HTMLDivElement>(null);
+
+  // Ferme le dropdown si on clique ailleurs
+  useEffect(() => {
+    if (!favDropOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (favDropRef.current && !favDropRef.current.contains(e.target as Node)) {
+        setFavDropOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [favDropOpen]);
+
+  const catalog = SHORTCUT_CATALOG.filter(s => isManager || !s.managerOnly);
+  const activeFavs = favIds
+    .map(id => catalog.find(s => s.id === id))
+    .filter(Boolean) as ShortcutDef[];
+
+  const toggleFav = (id: string) => {
+    setFavIds(prev => {
+      const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
+      saveFavIds(next);
+      return next;
+    });
+  };
 
   const initials = (name?: string) => {
     if (!name) return 'MG';
@@ -136,26 +245,57 @@ export default function Sidebar({ activeView, onNavigate, onSettingsClick, isMan
             <LeafIcon size={14} />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: C.ink, letterSpacing: '-0.015em', lineHeight: 1.2 }}>
-              Jungle<span style={{ color: C.brand }}>Pharm</span>
-            </div>
-            <div style={{ fontSize: 11, color: C.inkMute, lineHeight: 1.4 }}>Pharma. Centrale</div>
+            {/* Mode white-label léger : nom pharmacie en avant, JunglePharm en attribution */}
+            {pharmacyName ? (
+              <>
+                <div style={{
+                  fontSize: 13, fontWeight: 700, color: C.ink,
+                  letterSpacing: '-0.015em', lineHeight: 1.2,
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>
+                  {pharmacyName}
+                </div>
+                <div style={{ fontSize: 10, color: C.inkFaint, lineHeight: 1.4, marginTop: 1 }}>
+                  Powered by <span style={{ color: C.brand, fontWeight: 600 }}>JunglePharm</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ fontSize: 13, fontWeight: 600, color: C.ink, letterSpacing: '-0.015em', lineHeight: 1.2 }}>
+                  Jungle<span style={{ color: C.brand }}>Pharm</span>
+                </div>
+                <div style={{ fontSize: 11, color: C.inkMute, lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  Configurer le nom →
+                </div>
+              </>
+            )}
           </div>
-          <ChevronDown size={14} color={C.inkFaint} strokeWidth={1.5} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <ChevronDown size={14} color={C.inkFaint} strokeWidth={1.5} />
+          </div>
         </div>
       </div>
 
       {/* ── Search ── */}
       <div style={{ padding: '10px 12px' }}>
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-          background: C.panel, border: `1px solid ${C.hairline}`,
-          borderRadius: 7, padding: '6px 10px', cursor: 'pointer',
-        }}>
+        <button
+          onClick={() => {
+            // Déclenche ⌘K via un événement clavier synthétique
+            window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true }));
+          }}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 8, width: '100%',
+            background: C.panel, border: `1px solid ${C.hairline}`,
+            borderRadius: 7, padding: '6px 10px', cursor: 'pointer',
+            transition: 'background 0.12s',
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.5)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = C.panel; }}
+        >
           <Search size={14} color={C.inkFaint} strokeWidth={1.5} />
-          <span style={{ fontSize: 12.5, color: C.inkMute, flex: 1 }}>Rechercher…</span>
+          <span style={{ fontSize: 12.5, color: C.inkMute, flex: 1, textAlign: 'left' }}>Rechercher…</span>
           <Kbd>⌘K</Kbd>
-        </div>
+        </button>
       </div>
 
       {/* ── Navigation ── */}
@@ -197,27 +337,173 @@ export default function Sidebar({ activeView, onNavigate, onSettingsClick, isMan
         })}
 
         {/* ── Favoris ── */}
-        <div style={{
-          padding: '14px 10px 6px',
-          fontSize: 10.5, color: C.inkFaint, fontWeight: 500,
-          letterSpacing: '0.05em', textTransform: 'uppercase',
-        }}>
-          Favoris
-        </div>
-        {FAVORITES.map((f, i) => (
+        <div style={{ padding: '14px 10px 4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: 10.5, color: C.inkFaint, fontWeight: 500, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+            Favoris
+          </span>
           <button
-            key={i}
+            onClick={() => setEditingFavs(v => !v)}
+            title={editingFavs ? 'Terminer' : 'Personnaliser les favoris'}
             style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              padding: '6px 10px', borderRadius: 7, cursor: 'pointer',
-              background: 'transparent', border: 'none', width: '100%', textAlign: 'left',
+              border: 'none', background: editingFavs ? C.brandLt : 'transparent',
+              borderRadius: 5, padding: '2px 6px', cursor: 'pointer',
+              fontSize: 10.5, color: editingFavs ? C.brand : C.inkFaint,
+              fontWeight: editingFavs ? 600 : 400, transition: 'all 0.12s',
             }}
           >
-            <span style={{ width: 6, height: 6, borderRadius: 2, background: f.color, flexShrink: 0 }} />
-            <span style={{ fontSize: 12.5, color: C.inkSoft, fontWeight: 450, letterSpacing: '-0.005em' }}>{f.label}</span>
+            {editingFavs ? 'Terminer' : '+ Modifier'}
           </button>
-        ))}
+        </div>
+
+        {/* Picker — visible quand editingFavs */}
+        {editingFavs && (
+          <div style={{
+            margin: '2px 8px 6px', borderRadius: 9,
+            background: 'rgba(255,255,255,0.45)',
+            border: `1px solid ${C.border}`,
+            maxHeight: 260,
+            overflowY: 'auto',
+          }}>
+            {catalog.map(s => {
+              const active = favIds.includes(s.id);
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => toggleFav(s.id)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 9,
+                    width: '100%', border: 'none', borderBottom: `1px solid ${C.border}`,
+                    background: 'transparent', cursor: 'pointer',
+                    padding: '7px 10px', textAlign: 'left', transition: 'background 0.1s',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(16,120,90,0.05)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                >
+                  <span style={{
+                    width: 14, height: 14, borderRadius: 4, flexShrink: 0,
+                    border: active ? 'none' : `1.5px solid ${C.inkFaint}`,
+                    background: active ? s.color : 'transparent',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    transition: 'all 0.12s',
+                  }}>
+                    {active && (
+                      <svg width="9" height="9" viewBox="0 0 12 12" fill="none">
+                        <path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                  </span>
+                  <span style={{ width: 6, height: 6, borderRadius: 2, background: s.color, flexShrink: 0 }} />
+                  <span style={{ fontSize: 12, color: C.inkSoft, flex: 1 }}>{s.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ── Dropdown favoris actifs ── */}
+        {!editingFavs && (
+          <div ref={favDropRef} style={{ position: 'relative', margin: '2px 8px 2px' }}>
+            {/* Bouton déclencheur */}
+            <button
+              onClick={() => setFavDropOpen(v => !v)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                width: '100%', padding: '7px 10px', borderRadius: 7,
+                background: favDropOpen ? C.panel : 'transparent',
+                border: favDropOpen ? `1px solid ${C.hairline}` : '1px solid transparent',
+                cursor: 'pointer', transition: 'all 0.12s',
+                boxShadow: favDropOpen ? `0 1px 0 ${C.hairline}` : 'none',
+              }}
+              onMouseEnter={e => { if (!favDropOpen) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.3)'; }}
+              onMouseLeave={e => { if (!favDropOpen) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.brand} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/>
+              </svg>
+              <span style={{ fontSize: 12.5, color: C.inkSoft, fontWeight: 500, flex: 1, textAlign: 'left' }}>
+                {activeFavs.length === 0
+                  ? 'Aucun favori'
+                  : activeFavs.length === 1
+                    ? activeFavs[0].label
+                    : `${activeFavs.length} favoris`}
+              </span>
+              {activeFavs.length > 0 && (
+                <span style={{
+                  fontSize: 10, fontWeight: 700, color: '#fff',
+                  background: C.brand, borderRadius: 99, padding: '1px 6px', marginRight: 2,
+                }}>
+                  {activeFavs.length}
+                </span>
+              )}
+              <ChevronDown
+                size={13}
+                color={C.inkFaint}
+                strokeWidth={2}
+                style={{ transition: 'transform 0.2s', transform: favDropOpen ? 'rotate(180deg)' : 'rotate(0deg)', flexShrink: 0 }}
+              />
+            </button>
+
+            {/* Liste déroulante */}
+            {favDropOpen && (
+              <div style={{
+                position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
+                background: '#fff',
+                borderRadius: 10,
+                border: `1px solid ${C.border}`,
+                boxShadow: '0 8px 24px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.06)',
+                zIndex: 100,
+                overflow: 'hidden',
+                maxHeight: 320,
+                overflowY: 'auto',
+              }}>
+                {activeFavs.length === 0 ? (
+                  <div style={{ padding: '12px 14px', fontSize: 12, color: C.inkFaint, fontStyle: 'italic' }}>
+                    Aucun favori — cliquez "+ Modifier"
+                  </div>
+                ) : (
+                  activeFavs.map((f, i) => (
+                    <button
+                      key={f.id}
+                      onClick={() => { onNavigate(f.route); setFavDropOpen(false); }}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        width: '100%', padding: '9px 14px',
+                        borderBottom: i < activeFavs.length - 1 ? `1px solid ${C.border}` : 'none',
+                        background: activeView === f.route ? 'rgba(16,120,90,0.07)' : 'transparent',
+                        border: 'none',
+                        cursor: 'pointer', textAlign: 'left', transition: 'background 0.1s',
+                      }}
+                      onMouseEnter={e => { if (activeView !== f.route) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(16,120,90,0.04)'; }}
+                      onMouseLeave={e => { if (activeView !== f.route) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+                    >
+                      <span style={{ width: 7, height: 7, borderRadius: 2, background: f.color, flexShrink: 0 }} />
+                      <span style={{
+                        fontSize: 12.5, flex: 1,
+                        color: activeView === f.route ? C.brand : C.inkSoft,
+                        fontWeight: activeView === f.route ? 600 : 450,
+                        letterSpacing: '-0.005em',
+                      }}>
+                        {f.label}
+                      </span>
+                      {activeView === f.route && (
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={C.brand} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                      )}
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
       </nav>
+
+      {/* ── Sync indicator ── */}
+      <div style={{ padding: '6px 12px 0' }}>
+        <SyncIndicator />
+      </div>
 
       {/* ── Settings ── */}
       <div style={{ padding: '8px 8px 0', borderTop: `1px solid ${C.hairline}` }}>

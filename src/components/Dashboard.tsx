@@ -171,11 +171,43 @@ export default function Dashboard() {
   };
 
   const shareStockOutOnWhatsApp = () => {
-    const low = medications.filter(m => m.quantity < 5);
-    if (!low.length) { alert('Aucun produit en rupture de stock (quantité < 5)'); return; }
-    let msg = `*ÉTAT DES RUPTURES DE STOCK*\n${new Date().toLocaleDateString('fr-FR')}\n\nProduits en rupture (stock < 5):\n\n`;
-    low.forEach((item, i) => { msg += `${i + 1}. *${item.name}* ${item.dosage}\n   Quantité: ${item.quantity}\n\n`; });
-    msg += `Total: ${low.length} produit(s) en rupture`;
+    // ── Ruptures (stock = 0) ──
+    const outOfStock = medications.filter(m => m.quantity <= 0);
+    // ── Stock bas (en-dessous du minimum configuré ou < 5 si pas de minimum) ──
+    const lowStock = medications.filter(m => {
+      const min = m.minimum_stock && m.minimum_stock > 0 ? m.minimum_stock : 5;
+      return m.quantity > 0 && m.quantity <= min;
+    });
+
+    if (!outOfStock.length && !lowStock.length) {
+      alert('✅ Aucune alerte stock — tous les produits sont au-dessus du seuil minimum !');
+      return;
+    }
+
+    const date = new Date().toLocaleDateString('fr-FR');
+    let msg = `⚠️ *ALERTE STOCK — ${date}*\n\n`;
+
+    if (outOfStock.length > 0) {
+      msg += `🚫 *RUPTURES (${outOfStock.length})*\n`;
+      outOfStock.slice(0, 15).forEach((item, i) => {
+        msg += `${i + 1}. *${item.name}* ${item.dosage || ''}\n`;
+      });
+      if (outOfStock.length > 15) msg += `   _... et ${outOfStock.length - 15} autres_\n`;
+      msg += `\n`;
+    }
+
+    if (lowStock.length > 0) {
+      msg += `📉 *STOCK BAS (${lowStock.length})*\n`;
+      lowStock.slice(0, 15).forEach((item, i) => {
+        const min = item.minimum_stock && item.minimum_stock > 0 ? item.minimum_stock : 5;
+        msg += `${i + 1}. *${item.name}* ${item.dosage || ''} — ${item.quantity}/${min}\n`;
+      });
+      if (lowStock.length > 15) msg += `   _... et ${lowStock.length - 15} autres_\n`;
+      msg += `\n`;
+    }
+
+    msg += `📦 Total alertes: ${outOfStock.length + lowStock.length} produit(s)\n`;
+    msg += `_🌿 JunglePharm_`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
@@ -272,7 +304,7 @@ export default function Dashboard() {
       </div>
 
       {/* 2×2 KPI grid */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3" data-tour="dash-kpis">
         {[
           { label: 'RUPTURES',     value: String(outOfStock),                 sub: 'hors stock',    color: '#dc2626', bg: '#fef2f2', Icon: AlertTriangle },
           { label: 'PÉREMPTIONS',  value: String(expiringSoon + expiredCount), sub: 'à traiter',     color: '#f97316', bg: '#fff7ed', Icon: Calendar },
@@ -312,7 +344,7 @@ export default function Dashboard() {
       )}
 
       {/* Priority alerts */}
-      <div className="rounded-ios overflow-hidden" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sm)' }}>
+      <div data-tour="dash-alerts" className="rounded-ios overflow-hidden" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sm)' }}>
         <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--color-border-light)' }}>
           <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.01em' }}>Alertes prioritaires</h3>
           {priorityAlerts.length > 0 && <span className="pill-badge badge-danger" style={{ fontWeight: 700 }}>{priorityAlerts.length}</span>}

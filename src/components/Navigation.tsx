@@ -18,13 +18,11 @@ function PulseIcon({ color }: { color: string }) {
   );
 }
 
-function PillIcon({ color }: { color: string }) {
+function PatientIcon({ color }: { color: string }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="4.5" y="9" width="15" height="6" rx="3" transform="rotate(-45 12 12)" />
-      <line x1="14.5" y1="9.5" x2="9.5" y2="14.5" />
-      <line x1="11" y1="7" x2="10" y2="8" />
-      <line x1="16" y1="14" x2="15" y2="15" />
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="7.5" r="4" />
+      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
     </svg>
   );
 }
@@ -63,6 +61,23 @@ function TeamIcon({ color }: { color: string }) {
   );
 }
 
+function RxIcon({ color }: { color: string }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 3h8a4 4 0 0 1 0 8H3M3 11l8 10M14 11l6 10M17 11l6-8" />
+    </svg>
+  );
+}
+
+function BuildingIcon({ color }: { color: string }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <path d="M9 21V9h6v12M3 9h18M9 6h.01M15 6h.01" />
+    </svg>
+  );
+}
+
 function LockIcon({ color }: { color: string }) {
   return (
     <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -93,7 +108,7 @@ export default function Navigation({ activeTab, onTabChange, onScanClick, isMana
 
   useEffect(() => {
     const SCROLL_THRESHOLD = 10;
-    const tabsWithHideBehavior = ['dashboard', 'gestion', 'equipe', 'carnet'];
+    const tabsWithHideBehavior = ['dashboard', 'patients', 'ordonnances', 'equipe', 'carnet'];
     const shouldHide = tabsWithHideBehavior.includes(activeTab);
 
     if (!shouldHide) {
@@ -136,21 +151,22 @@ export default function Navigation({ activeTab, onTabChange, onScanClick, isMana
   }, [activeTab]);
 
   const iconMap: Record<string, (color: string) => JSX.Element> = {
-    dashboard: (c) => <HeartPulse color={c} strokeWidth={1.5} size={22} />,
-    gestion: (c) => <PillIcon color={c} />,
-    panier: (c) => <BagIcon color={c} />,
-    carnet: (c) => <LedgerIcon color={c} />,
-    equipe: (c) => <TeamIcon color={c} />,
+    dashboard:    (c) => <HeartPulse color={c} strokeWidth={1.5} size={22} />,
+    patients:     (c) => <PatientIcon color={c} />,
+    ordonnances:  (c) => <RxIcon color={c} />,
+    panier:       (c) => <BagIcon color={c} />,
+    carnet:       (c) => <LedgerIcon color={c} />,
+    equipe:       (c) => <TeamIcon color={c} />,
+    fournisseurs: (c) => <BuildingIcon color={c} />,
   };
 
-  // 'Aperçu' (dashboard) remplace l'ancien onglet 'Activité' : il fusionne
-  // le tableau de bord et les opérations (manager).
   const tabs = [
-    { id: 'dashboard', label: 'APERÇU', managerOnly: true },
-    { id: 'gestion', label: 'GESTION', managerOnly: false },
-    { id: 'panier', label: 'PANIER', managerOnly: false, badge: cartItemCount },
-    { id: 'carnet', label: 'CARNET', managerOnly: false },
-    { id: 'equipe', label: 'EQUIPE', managerOnly: false },
+    { id: 'dashboard',    label: 'APERÇU',        managerOnly: true  },
+    { id: 'patients',     label: 'PATIENTS',      managerOnly: false },
+    { id: 'ordonnances',  label: 'ORDONNANCES',   managerOnly: false },
+    { id: 'panier',       label: 'PANIER',        managerOnly: false, badge: cartItemCount },
+    { id: 'carnet',       label: 'CRÉDITS',       managerOnly: false },
+    { id: 'fournisseurs', label: 'FOURNISSEURS',  managerOnly: true  },
   ];
 
   if (hidden) return null;

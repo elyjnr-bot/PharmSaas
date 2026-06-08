@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { fetchAllMedications, Medication } from './supabase';
+import { fetchAllMedications, Medication, supabase } from './supabase';
 import { db } from './db';
 import { syncProductsToLocal } from './syncManager';
 
@@ -38,7 +38,26 @@ export function useMedications() {
     if (bgSyncRef.current || !navigator.onLine) return;
     bgSyncRef.current = true;
     try {
+      // ── Attendre que la session Supabase soit prête avant de synchroniser ──
+      // Évite que le token en cours de refresh renvoie [] et efface l'inventaire local.
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.warn('[backgroundSync] Pas de session Supabase — synchro reportée.');
+        return;
+      }
       const data = await fetchAllMedications();
+      // ── Garde : ne pas écraser les données locales si Supabase renvoie rien ──
+      // (session en cours de refresh, RLS, erreur réseau silencieuse, etc.)
+      if (!data || data.length === 0) {
+        console.warn('[backgroundSync] Supabase returned 0 medications — keeping local data.');
+        return;
+      }
+      const localCount = await db.products.count();
+      // Heuristique : si on reçoit moins de 50% de ce qu'on a en local, on ignore
+      if (localCount > 10 && data.length < localCount * 0.5) {
+        console.warn(`[backgroundSync] Supabase ${data.length} < local ${localCount} — keeping local data.`);
+        return;
+      }
       await syncProductsToLocal(data);
       setMedications(data);
     } catch {

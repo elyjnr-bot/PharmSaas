@@ -1,4 +1,5 @@
 import SyncIndicator from './SyncIndicator';
+import AlertsBell from './AlertsBell';
 import { useUserSettings } from '../lib/userSettings';
 
 interface HeaderProps {
@@ -62,12 +63,15 @@ export default function Header({ onSettingsClick }: HeaderProps) {
           </h1>
         </div>
 
-        <button
-          onClick={onSettingsClick}
-          className="w-8 h-8 flex items-center justify-center rounded-full transition-all duration-150 active:scale-90 hover:bg-slate-100"
-        >
-          <SettingsGearIcon />
-        </button>
+        <div className="flex items-center gap-1">
+          <AlertsBell size={16} iconColor="#64748b" />
+          <button
+            onClick={onSettingsClick}
+            className="w-8 h-8 flex items-center justify-center rounded-full transition-all duration-150 active:scale-90 hover:bg-slate-100"
+          >
+            <SettingsGearIcon />
+          </button>
+        </div>
       </div>
     </header>
   );

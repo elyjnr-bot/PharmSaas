@@ -8,7 +8,7 @@ export interface UserSettings {
 }
 
 const DEFAULT_SETTINGS: UserSettings = {
-  pharmacy_name: 'Ma Pharmacie',
+  pharmacy_name: '', // Vide par défaut → l'utilisateur saisit son vrai nom
   default_supplier: '',
   print_config: {},
 };

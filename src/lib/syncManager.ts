@@ -99,7 +99,6 @@ async function syncDexieSales() {
         unit_price: sale.unit_price,
         total_price: sale.total_price,
         payment_method: sale.payment_method,
-        seller_id: sale.seller_id || null,
         seller_name: sale.seller_name || null,
         sale_date: sale.sale_date,
         stock_after_sale: 0,
@@ -138,6 +137,12 @@ async function syncOfflineJournal() {
         stock_after_sale: entry.stock_after_sale,
         seller_name: entry.seller_name || null,
         sale_date: entry.sale_date,
+        // ── Champs assurance (sinon perdus à la synchro) ──
+        insurance_name:   entry.insurance_name ?? null,
+        insurance_card:   entry.insurance_card ?? null,
+        insurance_rate:   entry.insurance_rate ?? null,
+        insurance_amount: entry.insurance_amount ?? null,
+        patient_amount:   entry.patient_amount ?? null,
         synced: true,
       }]);
       if (!error) offlineStorage.markJournalEntrySynced(entry.id);
@@ -163,6 +168,23 @@ async function syncOfflineQueue() {
 }
 
 export async function syncProductsToLocal(products: any[]) {
+  // ── GARDE CRITIQUE : jamais effacer l'inventaire local si Supabase renvoie rien ──
+  // Causes possibles : token en cours de refresh, RLS session expirée, erreur réseau.
+  // On ne fait la synchro que si on reçoit AU MOINS autant de produits que l'on a en local,
+  // ou si on en reçoit au minimum 1 (import initial).
+  if (!products || products.length === 0) {
+    console.warn('[syncProductsToLocal] Supabase a retourné 0 produits — synchro ignorée pour protéger l\'inventaire local.');
+    return;
+  }
+
+  const localCount = await db.products.count();
+  // Heuristique de sécurité : si Supabase renvoie beaucoup moins que le local (> 50% de différence),
+  // c'est suspect → on ne touche pas à IndexedDB.
+  if (localCount > 10 && products.length < localCount * 0.5) {
+    console.warn(`[syncProductsToLocal] Supabase renvoie ${products.length} produits mais IndexedDB en contient ${localCount}. Synchro ignorée (protection anti-perte).`);
+    return;
+  }
+
   await db.products.clear();
 
   const localProducts = products.map((p) => ({

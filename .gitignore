@@ -22,3 +22,6 @@ dist-ssr
 *.sw?
 .env
 supabase/.temp
+
+# Netlify local state
+.netlify

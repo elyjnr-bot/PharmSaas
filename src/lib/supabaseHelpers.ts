@@ -13,6 +13,10 @@ const TABLES_WITH_USER_ID = [
   'inventory_units',
   'sales_journal',
   'credits',
+  'stock_movements',
+  'purchase_orders',
+  'purchase_order_items',
+  'supplier_reps',
 ];
 
 export async function getCurrentUserId(): Promise<string> {

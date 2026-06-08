@@ -1,11 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
-}
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+  || 'https://psuqzlcxwuqnkssgasts.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+  || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBzdXF6bGN4d3Vxbmtzc2dhc3RzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3Mzc0NDYsImV4cCI6MjA5NTMxMzQ0Nn0.jHFOLKgqH_K4zGkJtAVdHPLFMY51B0InvMraz_dCGlM';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
@@ -21,10 +19,15 @@ export async function fetchAllMedications(orderBy: string = 'name'): Promise<Med
   const PAGE_SIZE = 1000;
   let all: Medication[] = [];
   let from = 0;
+  // ── Defense in depth : filtrer explicitement par user_id côté client
+  //    pour garantir l'isolation même si la RLS Supabase venait à mal fonctionner.
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return []; // pas de user → pas de données
   while (true) {
     const { data, error } = await supabase
       .from('medications')
       .select('*')
+      .eq('user_id', user.id)        // ⚠ filtre explicite
       .order(orderBy, { ascending: true })
       .range(from, from + PAGE_SIZE - 1);
     if (error) throw error;

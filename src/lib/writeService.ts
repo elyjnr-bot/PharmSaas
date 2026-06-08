@@ -37,7 +37,8 @@ export async function reserveUnitCodes(count: number): Promise<number> {
 }
 
 export function formatUnitCode(counter: number): string {
-  return `JP-${String(counter).padStart(5, '0')}`;
+  // padStart(6) = JP-000001 à JP-999999 (1 million de codes)
+  return `JP-${String(counter).padStart(6, '0')}`;
 }
 
 export async function syncUnitCounterFromRemote(): Promise<void> {
@@ -152,6 +153,8 @@ export interface CreatedUnit {
 export async function offlineSafeInsertInventoryUnits(
   units: OfflineInventoryUnit[]
 ): Promise<CreatedUnit[]> {
+  const BATCH_SIZE = 500; // PostgREST safe limit
+
   const unitsWithIds = units.map(u => ({
     ...u,
     id: u.id || crypto.randomUUID(),
@@ -162,18 +165,24 @@ export async function offlineSafeInsertInventoryUnits(
     try {
       const userId = await getCurrentUserId();
       const toInsert = unitsWithIds.map(u => ({ ...u, user_id: userId }));
-      const { error } = await supabase.from('inventory_units').insert(toInsert);
-      if (!error) {
-        return unitsWithIds.map(u => ({
-          id: u.id as string,
-          unit_code: u.unit_code,
-          batch_number: u.batch_number,
-          expiry_date: u.expiry_date,
-        }));
+
+      // Insérer par lots de BATCH_SIZE pour supporter n'importe quelle quantité
+      for (let i = 0; i < toInsert.length; i += BATCH_SIZE) {
+        const batch = toInsert.slice(i, i + BATCH_SIZE);
+        const { error } = await supabase.from('inventory_units').insert(batch);
+        if (error) throw error;
       }
+
+      return unitsWithIds.map(u => ({
+        id: u.id as string,
+        unit_code: u.unit_code,
+        batch_number: u.batch_number,
+        expiry_date: u.expiry_date,
+      }));
     } catch {}
   }
 
+  // Mode hors-ligne : mettre en file d'attente
   for (const unit of unitsWithIds) {
     offlineStorage.addToQueue({ type: 'insert', table: 'inventory_units', data: unit });
   }
@@ -355,7 +364,8 @@ export async function recordReturn(input: ReturnInput): Promise<{ ok: boolean }>
         .select('quantity')
         .eq('id', input.medication_id)
         .maybeSingle();
-      const remoteNewQty = (med?.quantity ?? 0) + qty;
+      const remoteBefore = med?.quantity ?? 0;
+      const remoteNewQty = remoteBefore + qty;
       await updateWithUserId('medications', { quantity: remoteNewQty }, { id: input.medication_id });
 
       const { error } = await insertWithUserId('sales_journal', [{
@@ -370,6 +380,23 @@ export async function recordReturn(input: ReturnInput): Promise<{ ok: boolean }>
         synced: true,
       }]);
       syncedRemotely = !error;
+
+      // Tracer le retour dans stock_movements
+      await insertWithUserId('stock_movements', {
+        medication_id:   input.medication_id,
+        medication_name: input.medication_name,
+        dosage:          null,
+        movement_type:   'retour_client',
+        quantity_before: remoteBefore,
+        quantity_change: qty,
+        quantity_after:  remoteNewQty,
+        reference:       null,
+        supplier:        null,
+        unit_cost:       unitPrice,
+        notes:           input.reason ?? null,
+        seller_id:       null,
+        seller_name:     null,
+      });
     } catch (e) {
       console.error('recordReturn online error:', e);
     }

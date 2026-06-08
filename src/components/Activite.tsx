@@ -8,7 +8,9 @@ import { getDaysUntilExpiry } from '../lib/dateUtils';
 import { useResponsive } from '../lib/useResponsive';
 import ZReportModal from './ZReportModal';
 import ReturnModal, { ReturnableSale } from './ReturnModal';
+import { printMonthlyReport } from '../lib/printMonthlyReport';
 import { useAuth } from '../lib/auth';
+import { getSellerPermissions } from '../lib/permissions';
 
 type PeriodType = 'week' | 'month' | 'year';
 
@@ -75,7 +77,7 @@ interface ActiviteProps {
 
 export default function Activite({ onHideNavigationChange, embedded = false }: ActiviteProps = {}) {
   const { isDesktop } = useResponsive();
-  const { user } = useAuth();
+  const { user, isManager } = useAuth();
   const [activeTab, setActiveTab] = useState<'ventes' | 'depenses' | 'alertes'>('ventes');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodType>('week');
@@ -248,10 +250,18 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
     const dayExpenses = expenses.filter(e => e.expense_date.split('T')[0] === dateStr);
     const totalExpenses = dayExpenses.reduce((sum, e) => sum + e.amount, 0);
 
+    // Fond de caisse : ventes espèces uniquement entrent dans la caisse physique
+    const fondDeCaisse = offlineStorage.getFondDeCaisse(dateStr);
+    const fondVal = fondDeCaisse >= 0 ? fondDeCaisse : 0;
+    const especes = dayEntries
+      .filter(e => e.payment_method === 'Espèces')
+      .reduce((sum, e) => sum + e.total_price, 0);
+    const netAmount = fondVal + especes - totalExpenses;
+
     setSummary({
       totalSales,
       totalExpenses,
-      netAmount: totalSales - totalExpenses,
+      netAmount,
       totalItems,
       transactionCount: dayEntries.length,
     });
@@ -389,6 +399,17 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
     }
     setShowZReport(true);
   };
+
+  // ── Listener event 'open-z-report' (déclenché depuis le footer Dashboard) ──
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<{ action: string }>).detail;
+      if (detail?.action === 'open-z-report') handleClosureBtnClick();
+    };
+    window.addEventListener('topbar-action', handler);
+    return () => window.removeEventListener('topbar-action', handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const closeDailyReport = async () => {
     const reportDate = new Date().toISOString().split('T')[0];
@@ -624,6 +645,225 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
     return { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-200' };
   };
 
+  // ════════════════════════════════════════════════════════════════════════════
+  // VUE EMBEDDED — version épurée, anti-doublon avec le Dashboard
+  // ════════════════════════════════════════════════════════════════════════════
+  if (embedded) {
+    const today    = new Date().toISOString().split('T')[0];
+    const todayExpenses = expenses.filter(e => e.expense_date.split('T')[0] === today);
+    const todayExpTotal = todayExpenses.reduce((s, e) => s + e.amount, 0);
+    const monthExpTotal = currentMonthExpenses;
+    return (
+      <div className="flex flex-col gap-4">
+        {/* Bouton Clôture Z déplacé dans le footer "Transactions récentes" du Dashboard
+           — voir DashboardDesktop.tsx. Action déclenchée via évènement 'open-z-report'. */}
+
+        {/* ── Bénéfice du jour — info unique non couverte par Dashboard ────── */}
+        <div style={{
+          background: 'rgba(255,255,255,0.72)',
+          border: '1px solid rgba(255,255,255,0.55)',
+          borderRadius: 14,
+          padding: '14px 16px',
+          backdropFilter: 'blur(12px)',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+        }}>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Percent className="w-3.5 h-3.5" style={{ color: '#7c3aed' }} />
+              <h3 style={{ fontSize: 12.5, fontWeight: 700, color: '#0a0e14', letterSpacing: '-0.01em' }}>Bénéfice du jour</h3>
+            </div>
+            <div style={{ fontSize: 10.5, color: '#9aa0a8', fontWeight: 600 }}>
+              {selectedDate.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
+            </div>
+          </div>
+          <div className="grid grid-cols-4 gap-2">
+            {[
+              { lbl: 'CA net',     val: Math.round(dayProfit.revenue).toLocaleString('fr-FR'),  col: '#0a0e14' },
+              { lbl: 'Coût',       val: Math.round(dayProfit.cost).toLocaleString('fr-FR'),     col: '#6b7280' },
+              { lbl: 'Dépenses',   val: Math.round(todayExpTotal).toLocaleString('fr-FR'),       col: '#dc2626' },
+              { lbl: 'Marge',      val: `${dayProfit.margin.toFixed(0)}%`,                       col: '#7c3aed' },
+            ].map(k => (
+              <div key={k.lbl} style={{ background: 'rgba(15,15,20,0.025)', borderRadius: 9, padding: '8px 6px', textAlign: 'center' }}>
+                <div style={{ fontSize: 10, color: '#9aa0a8', fontWeight: 600, marginBottom: 2 }}>{k.lbl}</div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: k.col, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>{k.val}</div>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center justify-between mt-3 pt-3 border-t" style={{ borderColor: 'rgba(15,15,20,0.05)' }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: '#374151' }}>Bénéfice estimé</span>
+            <span style={{ fontSize: 16, fontWeight: 800, fontVariantNumeric: 'tabular-nums', color: (dayProfit.profit - todayExpTotal) >= 0 ? '#10785a' : '#dc2626', letterSpacing: '-0.02em' }}>
+              {(dayProfit.profit - todayExpTotal) >= 0 ? '+' : ''}{Math.round(dayProfit.profit - todayExpTotal).toLocaleString('fr-FR')}
+              <span style={{ fontSize: 10.5, fontWeight: 500, color: '#9aa0a8', marginLeft: 4 }}>FCFA</span>
+            </span>
+          </div>
+          {dayProfit.missingCost > 0 && (
+            <div className="flex items-start gap-2 mt-2.5 rounded-lg px-2.5 py-1.5" style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.15)' }}>
+              <AlertTriangle className="w-3 h-3 text-amber-600 flex-shrink-0 mt-0.5" />
+              <p style={{ fontSize: 10.5, color: '#92400e', lineHeight: 1.4 }}>
+                {dayProfit.missingCost} produit(s) sans prix d'achat — bénéfice sous-estimé
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* ── Dépenses annexes — CTA Chalk + résumé ────────────────────────── */}
+        <div style={{
+          background: 'rgba(255,255,255,0.72)',
+          border: '1px solid rgba(255,255,255,0.55)',
+          borderRadius: 14,
+          padding: '14px 16px',
+          backdropFilter: 'blur(12px)',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+        }}>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <ArrowDownCircle className="w-3.5 h-3.5" style={{ color: '#dc2626' }} />
+              <h3 style={{ fontSize: 12.5, fontWeight: 700, color: '#0a0e14', letterSpacing: '-0.01em' }}>Dépenses annexes</h3>
+            </div>
+            <span style={{ fontSize: 10.5, color: '#9aa0a8', fontWeight: 600 }}>
+              {todayExpenses.length} aujourd'hui · {expenses.length} ce mois
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            <div style={{ background: 'rgba(220,38,38,0.05)', borderRadius: 9, padding: '8px 10px' }}>
+              <div style={{ fontSize: 10, color: '#9aa0a8', fontWeight: 600, marginBottom: 2 }}>Aujourd'hui</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: '#dc2626', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>
+                {Math.round(todayExpTotal).toLocaleString('fr-FR')} <span style={{ fontSize: 10, fontWeight: 500, color: '#9aa0a8' }}>F</span>
+              </div>
+            </div>
+            <div style={{ background: 'rgba(245,158,11,0.05)', borderRadius: 9, padding: '8px 10px' }}>
+              <div style={{ fontSize: 10, color: '#9aa0a8', fontWeight: 600, marginBottom: 2 }}>Ce mois</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: '#b45309', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>
+                {Math.round(monthExpTotal).toLocaleString('fr-FR')} <span style={{ fontSize: 10, fontWeight: 500, color: '#9aa0a8' }}>F</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Liste des dépenses du jour (max 3) */}
+          {todayExpenses.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 10 }}>
+              {todayExpenses.slice(0, 3).map(exp => (
+                <div key={exp.id} style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '6px 10px', background: 'rgba(15,15,20,0.02)', borderRadius: 7,
+                }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 11.5, fontWeight: 600, color: '#0a0e14', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{exp.description}</div>
+                    <div style={{ fontSize: 10, color: '#9aa0a8' }}>{exp.category} · {exp.payment_method}</div>
+                  </div>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: '#dc2626', fontVariantNumeric: 'tabular-nums' }}>
+                    {exp.amount.toLocaleString('fr-FR')} F
+                  </span>
+                </div>
+              ))}
+              {todayExpenses.length > 3 && (
+                <div style={{ fontSize: 10.5, color: '#9aa0a8', textAlign: 'center', paddingTop: 2 }}>
+                  +{todayExpenses.length - 3} de plus
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* CTA Chalk : ajouter une dépense */}
+          <button
+            onClick={() => setIsExpenseModalOpen(true)}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg transition-all"
+            style={{
+              background: 'rgba(220,38,38,0.06)',
+              border: '1.5px solid rgba(220,38,38,0.18)',
+              color: '#dc2626',
+              fontSize: 12.5,
+              fontWeight: 700,
+              cursor: 'pointer',
+              letterSpacing: '-0.01em',
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = 'rgba(220,38,38,0.10)';
+              (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(220,38,38,0.28)';
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = 'rgba(220,38,38,0.06)';
+              (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(220,38,38,0.18)';
+            }}
+          >
+            <Plus className="w-3.5 h-3.5" strokeWidth={2.5} />
+            Enregistrer une dépense
+            <span style={{ fontSize: 10.5, color: '#9aa0a8', fontWeight: 500, marginLeft: 4 }}>(loyer, eau, salaires…)</span>
+          </button>
+        </div>
+
+        {/* Z report modal toujours actif */}
+        {showZReport && (
+          <ZReportModal
+            isOpen={showZReport}
+            onClose={() => setShowZReport(false)}
+            entries={entries}
+            medications={medications}
+            date={selectedDate}
+            onConfirmClosure={closeDailyReport}
+          />
+        )}
+
+        {/* Modal ajout dépense */}
+        {isExpenseModalOpen && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+            <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b border-slate-100 px-5 py-4 flex items-center justify-between">
+                <h2 className="font-bold text-slate-800">Nouvelle dépense</h2>
+                <button onClick={() => setIsExpenseModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-xl">
+                  <X className="w-5 h-5 text-slate-500" />
+                </button>
+              </div>
+              <div className="p-5 space-y-3">
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 mb-1.5 block">Catégorie</label>
+                  <select value={expenseForm.category} onChange={e => setExpenseForm({ ...expenseForm, category: e.target.value })}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm">
+                    <option>Loyer</option><option>Eau / Électricité</option><option>Salaires</option>
+                    <option>Transport</option><option>Maintenance</option><option>Perte/Peremption</option>
+                    <option>Autre</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 mb-1.5 block">Description</label>
+                  <input value={expenseForm.description} onChange={e => setExpenseForm({ ...expenseForm, description: e.target.value })}
+                    placeholder="Ex: Facture eau Octobre"
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm" />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 mb-1.5 block">Montant (FCFA)</label>
+                    <input type="number" value={expenseForm.amount} onChange={e => setExpenseForm({ ...expenseForm, amount: e.target.value })}
+                      className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm font-mono-num" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 mb-1.5 block">Paiement</label>
+                    <select value={expenseForm.payment_method} onChange={e => setExpenseForm({ ...expenseForm, payment_method: e.target.value })}
+                      className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm">
+                      <option>Espèces</option><option>Mobile Money</option><option>Virement</option><option>Carte</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 mb-1.5 block">Notes (optionnel)</label>
+                  <input value={expenseForm.notes} onChange={e => setExpenseForm({ ...expenseForm, notes: e.target.value })}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm" />
+                </div>
+                <button
+                  onClick={(e) => handleExpenseSubmit(e as unknown as React.FormEvent)}
+                  disabled={!expenseForm.description || !expenseForm.amount}
+                  className="w-full py-3 rounded-xl text-white font-bold transition disabled:opacity-50"
+                  style={{ background: '#dc2626' }}>
+                  Enregistrer la dépense
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className={embedded ? '' : 'bg-slate-50'}>
       <div className={embedded ? 'flex flex-col gap-6' : 'px-3 pt-5 pb-6 flex flex-col gap-6'}>
@@ -811,6 +1051,9 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
 
         {activeTab === 'ventes' && (
           <div className="flex flex-col gap-5">
+            {/* Carte synthèse du jour (navigateur de date + Ventes/Dépenses/Solde).
+                Masquée en mode intégré : doublon avec les KPI du tableau de bord (Aperçu). */}
+            {!embedded && (
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm">
               <div className="flex items-center justify-between p-3 border-b border-slate-100">
                 <button
@@ -864,6 +1107,16 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
                 </div>
               </div>
               <div className="border-t border-slate-100 px-3 py-3 rounded-b-2xl" style={{ background: 'rgba(5,150,105,0.04)' }}>
+                {(() => {
+                  const dateStr = (() => { const d = new Date(selectedDate); return d.toISOString().split('T')[0]; })();
+                  const fond = offlineStorage.getFondDeCaisse(dateStr);
+                  return fond > 0 ? (
+                    <div className="flex items-center justify-between mb-2 text-xs text-slate-500">
+                      <span>Fond de caisse</span>
+                      <span className="font-semibold text-slate-600">+{fond.toLocaleString()} FCFA</span>
+                    </div>
+                  ) : null;
+                })()}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Banknote className="w-5 h-5" style={{ color: '#059669' }} />
@@ -877,7 +1130,7 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
               </div>
 
               {isToday && (
-                <div className="px-3 pb-3">
+                <div className="px-3 pb-3 space-y-2">
                   <button
                     onClick={handleClosureBtnClick}
                     className="w-full text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-md"
@@ -888,9 +1141,32 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
                     <FileText className="w-5 h-5" />
                     Cloturer la journee
                   </button>
+                  <button
+                    onClick={() => { const d = new Date(); printMonthlyReport(d.getFullYear(), d.getMonth()); }}
+                    className="w-full py-3 rounded-xl font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
+                    style={{ background: 'rgba(16,120,90,0.08)', color: '#10785a', border: '1.5px solid rgba(16,120,90,0.2)' }}
+                  >
+                    <Download className="w-4 h-4" />
+                    Rapport mensuel PDF
+                  </button>
                 </div>
               )}
             </div>
+            )}
+
+            {/* En mode intégré, on conserve l'accès à la clôture (synthèse retirée). */}
+            {embedded && isToday && (
+              <button
+                onClick={handleClosureBtnClick}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm text-white active:scale-[0.98] transition-all shadow-md"
+                style={{ background: '#059669' }}
+                onMouseEnter={(e) => (e.currentTarget as HTMLButtonElement).style.background = '#047857'}
+                onMouseLeave={(e) => (e.currentTarget as HTMLButtonElement).style.background = '#059669'}
+              >
+                <FileText className="w-4 h-4" />
+                Clôturer la journée
+              </button>
+            )}
 
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
               <div className="flex items-center gap-2 mb-3">
@@ -936,8 +1212,11 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
               {(() => {
                 const dateStr = selectedDate.toISOString().split('T')[0];
                 const dayExpenses = expenses.filter(e => e.expense_date.split('T')[0] === dateStr);
+                // ── Permission historique : vendeur restreint aux 5 dernières ventes
+                const histPerm = isManager || getSellerPermissions().showTransactionHistory;
+                const limitedEntries = histPerm ? entries : entries.slice(0, 5);
                 const combinedEntries: Array<JournalEntry | ExpenseJournalEntry> = [
-                  ...entries.map(e => ({ ...e, type: 'sale' as const })),
+                  ...limitedEntries.map(e => ({ ...e, type: 'sale' as const })),
                   ...dayExpenses.map(e => ({
                     id: e.id,
                     type: 'expense' as const,

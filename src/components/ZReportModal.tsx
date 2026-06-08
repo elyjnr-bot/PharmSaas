@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
-import { X, Share2, AlertTriangle, TrendingUp, Package, Check, Clock } from 'lucide-react';
+import { X, Share2, AlertTriangle, TrendingUp, Package, Check, Clock, Printer, Banknote } from 'lucide-react';
 import { Medication } from '../lib/supabase';
-import { SalesJournalEntry } from '../lib/offlineStorage';
+import { SalesJournalEntry, offlineStorage } from '../lib/offlineStorage';
 
 interface ZReportModalProps {
   isOpen: boolean;
@@ -12,18 +12,60 @@ interface ZReportModalProps {
   onConfirmClosure?: () => Promise<void>;
 }
 
+// ── Modes de paiement regroupés ─────────────────────────────────────────────
+const CASH_METHODS    = ['Espèces', 'Especes'];
+const MOBILE_METHODS  = ['MTN Mobile Money', 'MTN MM', 'Airtel Money', 'Airtel'];
+const CARD_METHODS    = ['Carte Bancaire', 'Carte'];
+const INSURE_METHODS  = ['Assurance', 'CNSS', 'CAMU', 'Mutuelle'];
+
+function methodGroup(method: string): 'espèces' | 'mobile' | 'carte' | 'assurance' | 'autre' {
+  if (CASH_METHODS.some(m => method.includes(m)))   return 'espèces';
+  if (MOBILE_METHODS.some(m => method.includes(m))) return 'mobile';
+  if (CARD_METHODS.some(m => method.includes(m)))   return 'carte';
+  if (INSURE_METHODS.some(m => method.includes(m))) return 'assurance';
+  return 'autre';
+}
+
 export default function ZReportModal({ isOpen, onClose, entries, medications, date, onConfirmClosure }: ZReportModalProps) {
   const [step, setStep] = useState<'confirm' | 'report'>('confirm');
   const [isSharing, setIsSharing] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 
+  // ── Fond de caisse du jour ────────────────────────────────────────────────
+  const fondDeCaisse = useMemo(() => offlineStorage.getFondDeCaisse(), []);
+
   const totalRevenue = useMemo(() => {
-    return entries.reduce((sum, e) => sum + e.total_price, 0);
+    return entries.filter(e => (e.total_price || 0) > 0).reduce((sum, e) => sum + e.total_price, 0);
   }, [entries]);
 
-  const totalItems = useMemo(() => {
-    return entries.reduce((sum, e) => sum + e.quantity_sold, 0);
+  const totalReturns = useMemo(() => {
+    return entries.filter(e => (e.total_price || 0) < 0).reduce((sum, e) => sum + Math.abs(e.total_price), 0);
   }, [entries]);
+
+  const netRevenue = totalRevenue - totalReturns;
+
+  const totalItems = useMemo(() => {
+    return entries.filter(e => e.quantity_sold > 0).reduce((sum, e) => sum + e.quantity_sold, 0);
+  }, [entries]);
+
+  // ── Ventilation par mode de paiement ────────────────────────────────────
+  const byPaymentMethod = useMemo(() => {
+    const map: Record<string, number> = {};
+    entries.filter(e => (e.total_price || 0) > 0).forEach(e => {
+      const method = e.payment_method || 'Inconnu';
+      map[method] = (map[method] || 0) + e.total_price;
+    });
+    return Object.entries(map).sort((a, b) => b[1] - a[1]);
+  }, [entries]);
+
+  // ── Solde espèces théorique ───────────────────────────────────────────────
+  const especesVentes = useMemo(() => {
+    return entries
+      .filter(e => (e.total_price || 0) > 0 && CASH_METHODS.some(m => (e.payment_method || '').includes(m)))
+      .reduce((sum, e) => sum + e.total_price, 0);
+  }, [entries]);
+
+  const soldeCaisse = fondDeCaisse + especesVentes; // Ce qui devrait être dans la caisse
 
   const salesCount = entries.length;
 
@@ -82,6 +124,64 @@ export default function ZReportModal({ isOpen, onClose, entries, medications, da
     });
   };
 
+  // ── Impression ticket Z thermique ─────────────────────────────────────────
+  const printZReport = () => {
+    const pharmacyName = localStorage.getItem('pharma_pharmacy_name') || 'JunglePharm';
+    const paperWidth = (localStorage.getItem('ticket_width') || '58mm') as '58mm' | '80mm';
+    const fmt = (n: number) => Math.round(n).toLocaleString('fr-FR');
+
+    const paymentRows = byPaymentMethod.map(([m, v]) => `
+      <tr><td>${m}</td><td style="text-align:right">${fmt(v)} F</td></tr>`).join('');
+
+    const sellerRows = bySeller.length > 1
+      ? bySeller.map(([n, v]) => `<tr><td>${n}</td><td style="text-align:right">${fmt(v)} F</td></tr>`).join('') : '';
+
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <style>
+      *{margin:0;padding:0;box-sizing:border-box}
+      body{font-family:'Courier New',Courier,monospace;font-size:11px;width:${paperWidth};margin:0 auto;padding:4mm 2mm;color:#000}
+      .center{text-align:center}.bold{font-weight:bold}.dim{color:#555}
+      .div{border-top:1px dashed #000;margin:4px 0}.div2{border-top:2px solid #000;margin:4px 0}
+      table{width:100%;border-collapse:collapse}td{padding:1.5px 0}
+      .big{font-size:18px;font-weight:bold}
+      @media print{@page{size:${paperWidth} auto;margin:0}body{padding:2mm}}
+    </style></head><body>
+    <div class="center"><div class="bold" style="font-size:16px">${pharmacyName}</div></div>
+    <div class="div"></div>
+    <div class="center bold" style="font-size:13px;letter-spacing:.5px">RAPPORT Z</div>
+    <div class="center dim">${formatDate(date)} — ${formatTime()}</div>
+    <div class="div2"></div>
+
+    <div class="bold" style="font-size:9.5px;margin:3px 0">CA NET</div>
+    <table>
+      <tr><td class="dim">Ventes brutes</td><td style="text-align:right">${fmt(totalRevenue)} F</td></tr>
+      ${totalReturns > 0 ? `<tr><td class="dim">Retours/avoirs</td><td style="text-align:right">- ${fmt(totalReturns)} F</td></tr>` : ''}
+      <tr><td class="bold">TOTAL NET</td><td style="text-align:right" class="bold big">${fmt(netRevenue)} F</td></tr>
+      <tr><td class="dim">Tickets</td><td style="text-align:right">${salesCount}</td></tr>
+      <tr><td class="dim">Unités vendues</td><td style="text-align:right">${totalItems}</td></tr>
+    </table>
+    <div class="div"></div>
+
+    <div class="bold" style="font-size:9.5px;margin:3px 0">PAR MODE DE PAIEMENT</div>
+    <table>${paymentRows}</table>
+    <div class="div"></div>
+
+    <div class="bold" style="font-size:9.5px;margin:3px 0">CAISSE ESPÈCES</div>
+    <table>
+      <tr><td class="dim">Fond ouverture</td><td style="text-align:right">${fmt(fondDeCaisse)} F</td></tr>
+      <tr><td class="dim">Ventes espèces</td><td style="text-align:right">${fmt(especesVentes)} F</td></tr>
+      <tr><td class="bold">Solde théorique</td><td style="text-align:right" class="bold">${fmt(soldeCaisse)} F</td></tr>
+    </table>
+    <div class="div"></div>
+
+    ${sellerRows ? `<div class="bold" style="font-size:9.5px;margin:3px 0">PAR VENDEUR</div><table>${sellerRows}</table><div class="div"></div>` : ''}
+
+    <div class="center dim" style="font-size:9px;margin-top:4px">Clôture ${formatTime()} • JunglePharm</div>
+    </body></html>`;
+
+    import('../lib/printHelper').then(({ printHtml }) => printHtml(html));
+  };
+
   const generateReportText = () => {
     const separator = `--------------------`;
 
@@ -92,9 +192,28 @@ export default function ZReportModal({ isOpen, onClose, entries, medications, da
     text += `${separator}\n`;
     text += `💰 *CHIFFRE D'AFFAIRES*\n`;
     text += `${separator}\n\n`;
-    text += `💵 Total: *${totalRevenue.toLocaleString()} FCFA*\n`;
-    text += `🛒 Ventes: ${salesCount}\n`;
+    text += `💵 Total net: *${Math.round(netRevenue).toLocaleString()} FCFA*\n`;
+    text += `   Ventes: ${Math.round(totalRevenue).toLocaleString()} FCFA\n`;
+    if (totalReturns > 0) text += `   Retours: -${Math.round(totalReturns).toLocaleString()} FCFA\n`;
+    text += `🛒 Tickets: ${salesCount}\n`;
     text += `📦 Articles vendus: ${totalItems}\n\n`;
+
+    if (byPaymentMethod.length > 0) {
+      text += `${separator}\n`;
+      text += `💳 *PAR MODE DE PAIEMENT*\n`;
+      text += `${separator}\n\n`;
+      byPaymentMethod.forEach(([m, v]) => {
+        text += `${m}: *${Math.round(v).toLocaleString()} FCFA*\n`;
+      });
+      text += `\n`;
+    }
+
+    text += `${separator}\n`;
+    text += `🏧 *CAISSE ESPÈCES*\n`;
+    text += `${separator}\n\n`;
+    text += `Fond d'ouverture: ${Math.round(fondDeCaisse).toLocaleString()} FCFA\n`;
+    text += `Ventes espèces: ${Math.round(especesVentes).toLocaleString()} FCFA\n`;
+    text += `💰 Solde théorique: *${Math.round(soldeCaisse).toLocaleString()} FCFA*\n\n`;
 
     if (bySeller.length > 1 || (bySeller.length === 1 && bySeller[0][0] !== 'Non attribue')) {
       text += `${separator}\n`;
@@ -374,20 +493,39 @@ export default function ZReportModal({ isOpen, onClose, entries, medications, da
               )}
             </div>
 
-            <div className="flex-shrink-0 bg-white border-t border-gray-100 p-4 pb-8 space-y-2 sticky bottom-0 z-10">
-              <button
-                onClick={handleShareWhatsApp}
-                disabled={isSharing || isClosing}
-                className="w-full bg-green-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-green-700 active:scale-[0.98] transition-all disabled:opacity-50 shadow-lg flex items-center justify-center gap-3"
-              >
-                <Share2 className="w-6 h-6" />
-                {isSharing ? 'Ouverture WhatsApp...' : isClosing ? 'Clôture en cours...' : 'Partager sur WhatsApp'}
-              </button>
+            <div className="flex-shrink-0 bg-white border-t border-gray-100 p-4 pb-8 sticky bottom-0 z-10">
+              {/* Solde caisse résumé */}
+              <div className="bg-green-50 border border-green-200 rounded-xl p-3 mb-3 flex justify-between items-center">
+                <div>
+                  <div className="text-xs text-green-700 font-semibold uppercase tracking-wide">Solde caisse espèces</div>
+                  <div className="text-xs text-gray-500 mt-0.5">Fond {Math.round(fondDeCaisse).toLocaleString('fr-FR')} F + ventes {Math.round(especesVentes).toLocaleString('fr-FR')} F</div>
+                </div>
+                <div className="text-xl font-black text-green-700">{Math.round(soldeCaisse).toLocaleString('fr-FR')} F</div>
+              </div>
+
+              {/* Boutons d'action */}
+              <div className="flex gap-2 mb-2">
+                <button
+                  onClick={printZReport}
+                  className="flex-1 bg-gray-800 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2"
+                >
+                  <Printer className="w-5 h-5" />
+                  Imprimer Z
+                </button>
+                <button
+                  onClick={handleShareWhatsApp}
+                  disabled={isSharing || isClosing}
+                  className="flex-1 bg-green-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-green-700 active:scale-[0.98] transition-all disabled:opacity-50"
+                >
+                  <Share2 className="w-5 h-5" />
+                  {isSharing ? 'Envoi...' : 'WhatsApp'}
+                </button>
+              </div>
 
               <button
                 onClick={handleClose}
                 disabled={isSharing || isClosing}
-                className="w-full bg-gray-100 text-gray-700 py-3 rounded-2xl font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50"
+                className="w-full bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50"
               >
                 Fermer
               </button>
