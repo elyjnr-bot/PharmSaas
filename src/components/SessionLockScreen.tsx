@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { getManagerPin, setManagerPin } from '../lib/sellerContext';
+import { getManagerPin, setManagerPin, hasManagerPin } from '../lib/sellerContext';
 
-const MANAGER_PIN_KEY = 'pharma_manager_pin';
+// PIN scopé par compte (cf. sellerContext) — plus de clé d'appareil partagée.
 function hasPinConfigured(): boolean {
-  return !!localStorage.getItem(MANAGER_PIN_KEY);
+  return hasManagerPin();
 }
 
 // ── Design tokens ──────────────────────────────────────────────────────────────

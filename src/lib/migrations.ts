@@ -9,7 +9,7 @@
  */
 
 const MIGRATION_VERSION_KEY = 'jp_migrations_done';
-const CURRENT_VERSION = '2026-06-07-v1';
+const CURRENT_VERSION = '2026-06-08-v1';
 
 interface MigrationsState {
   version: string;
@@ -56,6 +56,17 @@ function detectAndFixCorruption(): { fixed: boolean; reasons: string[] } {
   try {
     sessionStorage.removeItem('fond_caisse_prompted');
   } catch {}
+
+  // ── Corruption #5 : PIN gérant « device-wide » (legacy) ─────────────────
+  // Le PIN était stocké au niveau de l'appareil (`pharma_manager_pin`), si bien
+  // qu'un NOUVEAU compte héritait du PIN d'un compte précédent (et n'avait pas
+  // l'écran de création). Le PIN est désormais scopé par compte
+  // (`pharma_manager_pin_<userId>`). On supprime l'ancienne clé partagée pour
+  // qu'aucun compte n'en hérite — chaque compte (re)crée son PIN une fois.
+  if (localStorage.getItem('pharma_manager_pin') !== null) {
+    localStorage.removeItem('pharma_manager_pin');
+    reasons.push('PIN gérant device-wide retiré (désormais scopé par compte)');
+  }
 
   // ── Corruption #4 : préférences mal sérialisées (JSON invalide) ─────────
   const jsonKeys = [

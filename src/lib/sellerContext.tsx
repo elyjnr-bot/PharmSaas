@@ -1,15 +1,41 @@
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { getSellerPermissions } from './permissions';
 
-const MANAGER_PIN_KEY = 'pharma_manager_pin';
+// ════════════════════════════════════════════════════════════════════════════
+//  PIN GÉRANT — SCOPÉ PAR COMPTE (user_id)
+// ════════════════════════════════════════════════════════════════════════════
+// ⚠️ Historiquement le PIN était stocké au niveau de l'APPAREIL
+// (`pharma_manager_pin`), ce qui faisait qu'un nouveau compte héritait du PIN
+// d'un compte précédent (et n'avait pas l'écran de création). On scope donc le
+// PIN au compte connecté : `pharma_manager_pin_<userId>`.
+//
+// L'user_id courant est lu depuis `jp_active_user_id`, maintenu de façon
+// synchrone par auth.tsx à chaque connexion / rechargement.
+const MANAGER_PIN_KEY = 'pharma_manager_pin';        // legacy device-wide (ignoré)
+const ACTIVE_USER_KEY = 'jp_active_user_id';
 const DEFAULT_MANAGER_PIN = '0000';
 
+function currentUserId(): string | null {
+  try { return localStorage.getItem(ACTIVE_USER_KEY); } catch { return null; }
+}
+
+/** Clé du PIN scopée au compte connecté (fallback device si aucun user). */
+function pinKey(): string {
+  const uid = currentUserId();
+  return uid ? `${MANAGER_PIN_KEY}_${uid}` : MANAGER_PIN_KEY;
+}
+
+/** Le compte actuellement connecté a-t-il déjà configuré un PIN gérant ? */
+export function hasManagerPin(): boolean {
+  return !!localStorage.getItem(pinKey());
+}
+
 export function getManagerPin(): string {
-  return localStorage.getItem(MANAGER_PIN_KEY) || DEFAULT_MANAGER_PIN;
+  return localStorage.getItem(pinKey()) || DEFAULT_MANAGER_PIN;
 }
 
 export function setManagerPin(pin: string): void {
-  localStorage.setItem(MANAGER_PIN_KEY, pin);
+  localStorage.setItem(pinKey(), pin);
 }
 
 export interface ActiveSeller {

@@ -29,10 +29,11 @@ import TourHost from './components/TourHost';
 import { initOfflineMode } from './lib/offlineStorage';
 import { useGlobalBarcodeScanner } from './lib/useGlobalBarcodeScanner';
 import { AuthProvider, useAuth } from './lib/auth';
-import { SellerProvider, useSeller, setManagerPin } from './lib/sellerContext';
+import { SellerProvider, useSeller, setManagerPin, hasManagerPin } from './lib/sellerContext';
 
-const MANAGER_PIN_KEY = 'pharma_manager_pin';
-function hasPinConfigured(): boolean { return !!localStorage.getItem(MANAGER_PIN_KEY); }
+// PIN gérant scopé par compte (cf. sellerContext) : un nouveau compte n'hérite
+// jamais du PIN d'un compte précédent sur le même appareil.
+function hasPinConfigured(): boolean { return hasManagerPin(); }
 import { CartProvider } from './lib/cartContext';
 import { WorkflowProvider } from './lib/workflowContext';
 import { ThemeProvider, useTheme } from './lib/themeContext';
