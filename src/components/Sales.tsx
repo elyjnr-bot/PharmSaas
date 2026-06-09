@@ -165,6 +165,13 @@ export default function Sales() {
     return () => { window.removeEventListener('storage', onStorage); window.removeEventListener('junglepharm:tax_updated', onLocal); };
   }, []);
 
+  // ── Recharger le catalogue après import CSV/Excel ─────────────────────────
+  useEffect(() => {
+    const handleCatalogUpdated = () => { loadMedications(); };
+    window.addEventListener('junglepharm:catalog-updated', handleCatalogUpdated);
+    return () => window.removeEventListener('junglepharm:catalog-updated', handleCatalogUpdated);
+  }, []);
+
   // ── Fond de caisse ────────────────────────────────────────────────────────────
   const [showFondModal, setShowFondModal] = useState(false);
   // Valeur affichée en temps réel (re-lit le localStorage à chaque fermeture du modal)

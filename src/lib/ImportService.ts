@@ -11,6 +11,7 @@ import { updateWithUserId, upsertWithUserId, getCurrentUserId } from './supabase
 import { db } from './db';
 import { syncProductsToLocal } from './syncManager';
 import { fetchAllMedications } from './supabase';
+import { offlineStorage } from './offlineStorage';
 
 // ── Insert medications avec retour des lignes créées (id, name…) ──────────────
 async function insertMedications(payload: Record<string, unknown>[], cols: string) {
@@ -610,7 +611,6 @@ async function installImport(rows: NormalizedRow[], onProgress: ProgressCallback
       price: g.sellingPrice, wholesale_price: g.buyingPrice,
       min_stock: 0, batch_number: receptionBatch,
       expiry_date: g.latestExpiry || null, supplier: g.supplier || null,
-      needs_barcode_config: g.barcodes.length === 0,
     }));
     const { data: inserted, error } = await insertMedications(payload, 'id, name');
 
@@ -624,7 +624,6 @@ async function installImport(rows: NormalizedRow[], onProgress: ProgressCallback
           price: g.sellingPrice, wholesale_price: g.buyingPrice,
           min_stock: 0, batch_number: receptionBatch,
           expiry_date: g.latestExpiry || null, supplier: g.supplier || null,
-          needs_barcode_config: g.barcodes.length === 0,
         }));
         const { data: arr, error: e1 } = await insertMedications(subPayload, 'id, name');
         if (e1) {
@@ -662,7 +661,7 @@ async function installImport(rows: NormalizedRow[], onProgress: ProgressCallback
   if (unitMode) await createUnitsForRows(rows, createdByName, receptionBatch, 0, stats, onProgress);
 
   onProgress(rows.length, rows.length, 'Synchronisation…');
-  await syncLocal();
+  await syncLocal(true); // forceReplaceLocal = true (mode remplacer tout)
   return stats;
 }
 
@@ -735,7 +734,6 @@ async function deliveryImport(rows: NormalizedRow[], onProgress: ProgressCallbac
         price: row.sellingPrice, wholesale_price: row.buyingPrice,
         min_stock: 0, batch_number: receptionBatch,
         expiry_date: row.expiry || null, supplier: row.supplier || null,
-        needs_barcode_config: !row.ean,
       }));
       const { data: inserted, error } = await insertMedications(payload, 'id, name, quantity');
 
@@ -887,8 +885,21 @@ async function nextUnitCounter(): Promise<number> {
   return count || 0;
 }
 
-async function syncLocal(): Promise<void> {
-  try { const all = await fetchAllMedications(); await syncProductsToLocal(all); } catch { /* ignore */ }
+async function syncLocal(forceReplaceLocal = false): Promise<void> {
+  try {
+    const all = await fetchAllMedications();
+    if (forceReplaceLocal) {
+      // Mode "remplacer tout" : on vide IndexedDB d'abord pour court-circuiter
+      // la garde anti-perte de syncProductsToLocal (qui bloquerait si le nouveau
+      // catalogue est plus petit que l'ancien).
+      await db.products.clear();
+    }
+    await syncProductsToLocal(all);
+    // Mettre à jour le cache offline (utilisé par la Caisse)
+    offlineStorage.cacheMedications(all);
+    // Notifier tous les composants montés (Stock, Sales, Dashboard…) de recharger
+    window.dispatchEvent(new CustomEvent('junglepharm:catalog-updated'));
+  } catch { /* ignore */ }
 }
 
 interface UnitInsert {

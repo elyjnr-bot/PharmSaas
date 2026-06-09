@@ -502,6 +502,17 @@ export default function Stock({ initialFilter, onNavigateToSales }: { initialFil
   // ── Ligne survolée (pour afficher les actions) ───────────────────────────────
   const [hoveredRowId, setHoveredRowId] = useState<string | null>(null);
 
+  // ── Recharger après import CSV/Excel ────────────────────────────────────────
+  useEffect(() => {
+    const handleCatalogUpdated = () => {
+      // Vider les patches locaux optimistes (données fraîches arrivent de Supabase)
+      setLocalPatches({});
+      loadMedications();
+    };
+    window.addEventListener('junglepharm:catalog-updated', handleCatalogUpdated);
+    return () => window.removeEventListener('junglepharm:catalog-updated', handleCatalogUpdated);
+  }, [loadMedications]);
+
   // Méthode de calcul marge (re-render quand l'utilisateur change le paramètre)
   const [marginMethod, setMarginMethodLocal] = useState(getMarginMethod());
   useEffect(() => {
