@@ -780,20 +780,37 @@ async function deliveryImport(rows: NormalizedRow[], onProgress: ProgressCallbac
     }
   }
 
-  // ── PASSE 2 : INSERT bulk des nouveaux produits ──────────────────────────
+  // ── PASSE 2 : INSERT bulk des nouveaux produits (groupés par nom) ───────────
+  // ⚠️ CRITIQUE : sans regroupement, chaque ligne du fichier génère un médicament
+  // distinct → ex. 14 lignes "DOLIPRANE" → 14 médicaments avec qty=1 chacun.
+  // On regroupe par nom normalisé : 1 insertion par produit unique, tous les EAN
+  // et unités du groupe sont rattachés à ce seul médicament.
   if (rowsToCreate.length > 0) {
-    const BATCH = 500;
-    onProgress(0, rowsToCreate.length, `Création de ${rowsToCreate.length} nouveaux produits…`);
-    for (let i = 0; i < rowsToCreate.length; i += BATCH) {
-      const slice = rowsToCreate.slice(i, i + BATCH);
-      onProgress(i, rowsToCreate.length, `Nouveaux ${i + slice.length}/${rowsToCreate.length}…`);
+    // Grouper les lignes par nom normalisé
+    const newByName = new Map<string, { baseRow: NormalizedRow; totalQty: number; allRows: NormalizedRow[] }>();
+    for (const { row, addQty } of rowsToCreate) {
+      const key = row.name.toLowerCase().trim();
+      if (!newByName.has(key)) {
+        newByName.set(key, { baseRow: row, totalQty: 0, allRows: [] });
+      }
+      const g = newByName.get(key)!;
+      g.totalQty += addQty;
+      g.allRows.push(row);
+    }
+    const groupedNew = Array.from(newByName.values());
 
-      const payload = slice.map(({ row, addQty }) => ({
-        name: row.name, dosage: '',
-        quantity: unitMode ? 0 : addQty,
-        price: row.sellingPrice, wholesale_price: row.buyingPrice,
+    const BATCH = 500;
+    onProgress(0, groupedNew.length, `Création de ${groupedNew.length} produit${groupedNew.length > 1 ? 's' : ''} unique${groupedNew.length > 1 ? 's' : ''}…`);
+    for (let i = 0; i < groupedNew.length; i += BATCH) {
+      const slice = groupedNew.slice(i, i + BATCH);
+      onProgress(i, groupedNew.length, `Nouveaux ${i + slice.length}/${groupedNew.length}…`);
+
+      const payload = slice.map(({ baseRow, totalQty }) => ({
+        name: baseRow.name, dosage: '',
+        quantity: unitMode ? 0 : totalQty,           // en mode unité, qty=0 → géré par inventory_units
+        price: baseRow.sellingPrice, wholesale_price: baseRow.buyingPrice,
         min_stock: 0, batch_number: receptionBatch,
-        expiry_date: row.expiry || null, supplier: row.supplier || null,
+        expiry_date: baseRow.expiry || null, supplier: baseRow.supplier || null,
       }));
       const { data: inserted, error } = await insertMedications(payload, 'id, name, quantity');
 
@@ -807,16 +824,24 @@ async function deliveryImport(rows: NormalizedRow[], onProgress: ProgressCallbac
 
       for (let j = 0; j < rows2.length; j++) {
         const created = rows2[j];
-        const { row, addQty } = slice[j];
+        const { allRows } = slice[j];
         medById.set(created.id, created);
         medByName.set(created.name.toLowerCase().trim(), created);
-        if (row.ean) {
-          newBarcodes.push({ barcode: row.ean, medication_id: created.id });
-          barcodeIndex.set(row.ean, created.id);
+
+        // Lier TOUS les EAN du groupe à ce médicament unique
+        for (const r of allRows) {
+          if (r.ean && !barcodeIndex.has(r.ean)) {
+            newBarcodes.push({ barcode: r.ean, medication_id: created.id });
+            barcodeIndex.set(r.ean, created.id);
+          }
         }
+
+        // Mode unitaire : créer une unité physique par ligne originale du groupe
         if (unitMode) {
-          qtyAdd.set(created.id, 1);
-          units.push(mkUnit(unitCode(++counter), created.id, row, today, receptionBatch));
+          qtyAdd.set(created.id, allRows.length);
+          for (const r of allRows) {
+            units.push(mkUnit(unitCode(++counter), created.id, r, today, receptionBatch));
+          }
         }
       }
     }
