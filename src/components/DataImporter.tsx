@@ -121,6 +121,16 @@ export default function DataImporter({ onImportComplete }: Props = {}) {
   const invalidRows = useMemo(() => normalized.filter(r => r._errors.length > 0), [normalized]);
   const warnRows   = useMemo(() => validRows.filter(r => r._warnings.length > 0), [validRows]);
 
+  // ── Lignes représentatives pour les aperçus (skip lignes orphelines en tête) ──
+  // Prend les premières lignes qui ont au moins une valeur textuelle non-numérique
+  const representativeRows = useMemo(() => {
+    if (!parsed) return [];
+    const rich = parsed.rows.filter(r =>
+      r.some(c => c.trim() && isNaN(Number(c.replace(/[,.\s]/g, ''))))
+    );
+    return rich.length >= 3 ? rich : parsed.rows;
+  }, [parsed]);
+
   const hasRequiredMapping = mapping.designation !== undefined && mapping.prix_vente !== undefined;
 
   // ── Aller en validation (déclenche détection conflits + rapport qualité) ───
@@ -328,8 +338,28 @@ export default function DataImporter({ onImportComplete }: Props = {}) {
             </div>
           )}
 
-          <PreviewTable headers={parsed.headers} rows={parsed.rows.slice(0,5)} />
-          <p style={{ fontSize:11.5, color:C.inkFaint, margin:'8px 2px 0' }}>Aperçu des 5 premières lignes. Vérifiez que les colonnes sont bien séparées.</p>
+          {(() => {
+            const previewRows = representativeRows.slice(0, 5);
+            const skippedCount = representativeRows.length > 0
+              ? parsed.rows.indexOf(representativeRows[0])
+              : 0;
+            return (
+              <>
+                {skippedCount > 0 && (
+                  <div style={{ display:'flex', alignItems:'center', gap:8, padding:'9px 14px', borderRadius:10, background:'rgba(245,158,11,0.07)', border:'1px solid rgba(245,158,11,0.25)', marginBottom:10 }}>
+                    <span style={{ fontSize:14 }}>⚠️</span>
+                    <span style={{ fontSize:12.5, color:'#92400e' }}>
+                      Les <strong>{skippedCount} premières ligne{skippedCount > 1 ? 's' : ''}</strong> de votre fichier n'ont pas de désignation — elles seront ignorées à l'import. L'aperçu ci-dessous montre les premières lignes valides.
+                    </span>
+                  </div>
+                )}
+                <PreviewTable headers={parsed.headers} rows={previewRows} />
+                <p style={{ fontSize:11.5, color:C.inkFaint, margin:'8px 2px 0' }}>
+                  Aperçu de 5 lignes représentatives ({parsed.totalRows.toLocaleString('fr-FR')} lignes au total). Vérifiez que les colonnes sont bien séparées.
+                </p>
+              </>
+            );
+          })()}
           <NavRow onBack={reset} backLabel="Changer de fichier" onNext={() => setStep('mapping')} nextLabel="Mapper les colonnes" />
         </div>
       )}
@@ -368,7 +398,7 @@ export default function DataImporter({ onImportComplete }: Props = {}) {
 
           <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
             {JUNGLE_FIELDS.map(field => (
-              <MappingRow key={field.key} field={field} headers={parsed.headers} sampleRow={parsed.rows[0]} value={mapping[field.key]}
+              <MappingRow key={field.key} field={field} headers={parsed.headers} sampleRow={representativeRows[0]} value={mapping[field.key]}
                 onChange={colIdx => setMapping(m => { const n={...m}; if(colIdx===null)delete n[field.key]; else n[field.key]=colIdx; return n; })} />
             ))}
           </div>
@@ -434,7 +464,7 @@ export default function DataImporter({ onImportComplete }: Props = {}) {
                 <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
                   {candidateCols.map(({ i, h }) => {
                     const checked = extraBarcodeCols.has(i);
-                    const sampleVals = parsed.rows.slice(0, 3).map(r => String(r[i] ?? '').trim()).filter(Boolean);
+                    const sampleVals = representativeRows.slice(0, 3).map(r => String(r[i] ?? '').trim()).filter(Boolean);
                     return (
                       <label key={i}
                         style={{ display:'flex', alignItems:'center', gap:8, padding:'7px 12px', borderRadius:9, border:`1.5px solid ${checked ? C.blue : C.border}`, background: checked ? 'rgba(37,99,235,0.07)' : C.panel, cursor:'pointer', transition:'all 0.12s' }}>
