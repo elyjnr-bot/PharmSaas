@@ -59,6 +59,8 @@ export interface ParsedFile {
 export interface NormalizedRow {
   name: string;
   ean: string;
+  /** Tous les codes-barres liés à ce produit : EAN principal + alias issus des colonnes supplémentaires */
+  allBarcodes: string[];
   buyingPrice: number;
   sellingPrice: number;
   stock: number;
@@ -448,7 +450,13 @@ export function validateEan(ean: string): boolean {
 // ════════════════════════════════════════════════════════════════════════════
 //  6. TRANSFORMATION + VALIDATION
 // ════════════════════════════════════════════════════════════════════════════
-export function applyMapping(parsed: ParsedFile, mapping: Mapping): NormalizedRow[] {
+/**
+ * @param extraBarcodeCols Indices de colonnes supplémentaires dont les valeurs
+ *   seront toutes ajoutées comme alias de codes-barres pour le produit.
+ *   Le système est agnostique : peu importe le format (EAN, CIP, code interne…),
+ *   tout code atterrit dans la table `barcodes` et devient scannable.
+ */
+export function applyMapping(parsed: ParsedFile, mapping: Mapping, extraBarcodeCols: number[] = []): NormalizedRow[] {
   const get = (row: string[], field: JungleField): string => {
     const idx = mapping[field];
     return idx === undefined ? '' : String(row[idx] ?? '').trim();
@@ -464,6 +472,12 @@ export function applyMapping(parsed: ParsedFile, mapping: Mapping): NormalizedRo
     const supplier  = get(row, 'fournisseur') || '';
     const eanRaw = get(row, 'ean');
 
+    // ── Tous les codes-barres : EAN principal + colonnes alias ───────────────
+    const extraCodes = extraBarcodeCols
+      .map(idx => String(row[idx] ?? '').trim())
+      .filter(Boolean);
+    const allBarcodes = [...new Set([eanRaw, ...extraCodes].filter(Boolean))];
+
     const errors: string[] = [];
     const warnings: string[] = [];
 
@@ -477,17 +491,17 @@ export function applyMapping(parsed: ParsedFile, mapping: Mapping): NormalizedRo
     if (!supplier && errors.length === 0) warnings.push('Fournisseur non renseigné');
 
     // ── Niveau qualité ────────────────────────────────────────────────────────
-    const requiresBarcodeConfig = errors.length === 0 && !eanRaw;
+    const requiresBarcodeConfig = errors.length === 0 && allBarcodes.length === 0;
     let quality: NormalizedRow['_quality'] = 'clean';
     if (errors.length === 0) {
-      if (!eanRaw && !expiry) quality = 'degraded';
-      else if (!eanRaw)       quality = 'no_ean';
-      else if (!expiry)       quality = 'no_expiry';
-      else                    quality = 'clean';
+      if (allBarcodes.length === 0 && !expiry) quality = 'degraded';
+      else if (allBarcodes.length === 0)       quality = 'no_ean';
+      else if (!expiry)                        quality = 'no_expiry';
+      else                                     quality = 'clean';
     }
 
     return {
-      name: name || 'Produit sans nom', ean: eanRaw, buyingPrice, sellingPrice,
+      name: name || 'Produit sans nom', ean: eanRaw, allBarcodes, buyingPrice, sellingPrice,
       stock, expiry, supplier, _rowIndex: i, _errors: errors, _warnings: warnings,
       _quality: quality, _requiresBarcodeConfig: requiresBarcodeConfig,
     };
@@ -769,9 +783,12 @@ async function deliveryImport(rows: NormalizedRow[], onProgress: ProgressCallbac
       // Produit connu : on accumule en mémoire
       qtyAdd.set(medId, (qtyAdd.get(medId) || 0) + addQty);
       stats.updated++;
-      if (row.ean && !barcodeIndex.has(row.ean)) {
-        newBarcodes.push({ barcode: row.ean, medication_id: medId });
-        barcodeIndex.set(row.ean, medId);
+      // Lier tous les alias barcodes du produit existant
+      for (const bc of row.allBarcodes) {
+        if (bc && !barcodeIndex.has(bc)) {
+          newBarcodes.push({ barcode: bc, medication_id: medId });
+          barcodeIndex.set(bc, medId);
+        }
       }
       if (unitMode) units.push(mkUnit(unitCode(++counter), medId, row, today, receptionBatch));
     } else {
@@ -828,11 +845,13 @@ async function deliveryImport(rows: NormalizedRow[], onProgress: ProgressCallbac
         medById.set(created.id, created);
         medByName.set(created.name.toLowerCase().trim(), created);
 
-        // Lier TOUS les EAN du groupe à ce médicament unique
+        // Lier TOUS les codes-barres (EAN + alias) du groupe à ce médicament unique
         for (const r of allRows) {
-          if (r.ean && !barcodeIndex.has(r.ean)) {
-            newBarcodes.push({ barcode: r.ean, medication_id: created.id });
-            barcodeIndex.set(r.ean, created.id);
+          for (const bc of r.allBarcodes) {
+            if (bc && !barcodeIndex.has(bc)) {
+              newBarcodes.push({ barcode: bc, medication_id: created.id });
+              barcodeIndex.set(bc, created.id);
+            }
           }
         }
 
@@ -1006,16 +1025,18 @@ function groupByName(rows: NormalizedRow[]): NameGroup[] {
     const g = map.get(key);
     if (g) {
       g.totalStock += r.stock;
-      if (r.ean && !g.barcodes.includes(r.ean)) g.barcodes.push(r.ean);
+      // Collecter TOUS les codes-barres (EAN + alias) du groupe, sans doublons
+      for (const bc of r.allBarcodes) {
+        if (bc && !g.barcodes.includes(bc)) g.barcodes.push(bc);
+      }
       if (r.sellingPrice > 0 && !g.sellingPrice) g.sellingPrice = r.sellingPrice;
       if (r.buyingPrice > 0 && !g.buyingPrice)   g.buyingPrice  = r.buyingPrice;
       if (!g.supplier && r.supplier)              g.supplier     = r.supplier;
-      // Garder la date d'expiration la plus tardive (lot le plus récent)
       if (r.expiry) {
         if (!g.latestExpiry || r.expiry > g.latestExpiry) g.latestExpiry = r.expiry;
       }
     } else {
-      map.set(key, { key, name: r.name, sellingPrice: r.sellingPrice, buyingPrice: r.buyingPrice, barcodes: r.ean ? [r.ean] : [], totalStock: r.stock, latestExpiry: r.expiry, supplier: r.supplier || '' });
+      map.set(key, { key, name: r.name, sellingPrice: r.sellingPrice, buyingPrice: r.buyingPrice, barcodes: [...r.allBarcodes], totalStock: r.stock, latestExpiry: r.expiry, supplier: r.supplier || '' });
     }
   }
   return Array.from(map.values());

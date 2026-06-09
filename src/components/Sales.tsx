@@ -394,25 +394,24 @@ export default function Sales() {
       return;
     }
 
-    // ── 2. CODE EAN / code_produit (cache local d'abord) ─────────────────────
-    const eanMatch = medications.find(m =>
-      m.code_produit === barcode ||
-      (m as any).barcode === barcode ||
-      m.batch_number === barcode
+    // ── 2. LOOKUP UNIVERSEL — table `barcodes` (source de vérité unique) ──────
+    // Peu importe le format du code (EAN, CIP, code interne, JP-XXXXX…),
+    // on fait un seul SELECT sur la table `barcodes`. Si ça rate, on tente
+    // aussi inventory_units.imported_code (EAN importé en mode unitaire).
+    // Avant de requêter Supabase, on vérifie le cache local (rapide).
+    const localMatch = medications.find(m =>
+      m.code_produit === barcode || (m as any).barcode === barcode
     );
-    if (eanMatch) {
-      await addToCart(eanMatch);
-      setScanFeedback({ msg: `✓ ${eanMatch.name} ${eanMatch.dosage} ajouté`, ok: true });
+    if (localMatch) {
+      await addToCart(localMatch);
+      setScanFeedback({ msg: `✓ ${localMatch.name} ${localMatch.dosage} ajouté`, ok: true });
       setTimeout(() => setScanFeedback(null), 3000);
       return;
     }
 
-    // ── 2b. LOOKUP EAN via Supabase (barcodes + inventory_units) ─────────────
-    // Nécessaire en mode unitaire : chaque boîte a son EAN stocké dans
-    // inventory_units.imported_code et dans la table barcodes.
     if (offlineStorage.isOnline()) {
       try {
-        // Mode unitaire : chercher l'unité physique par son EAN d'import
+        // 2a. Mode unitaire : chercher l'unité physique par son EAN d'import
         if (isUnitMode) {
           const { data: unitByEan } = await supabase
             .from('inventory_units')
@@ -453,7 +452,7 @@ export default function Sales() {
           }
         }
 
-        // Mode global ou unité non trouvée : chercher via table barcodes
+        // 2b. Lookup universel via table `barcodes` — couvre EAN, CIP, alias, etc.
         const { data: bcRows } = await supabase
           .from('barcodes')
           .select('medication_id')

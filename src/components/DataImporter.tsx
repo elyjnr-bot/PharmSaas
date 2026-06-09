@@ -79,6 +79,8 @@ export default function DataImporter({ onImportComplete }: Props = {}) {
   // ── Détection automatique du mode de gestion ────────────────────────────
   const [detectedMode, setDetectedMode] = useState<ModeDetectionResult | null>(null);
   const [modeDetectionDismissed, setModeDetectionDismissed] = useState(false);
+  // ── Colonnes alias codes-barres (lookup universel) ───────────────────────
+  const [extraBarcodeCols, setExtraBarcodeCols] = useState<Set<number>>(new Set());
 
   useEffect(() => { setHistory(getImportHistory()); setProfiles(loadMappingProfiles()); }, [step]);
 
@@ -111,7 +113,10 @@ export default function DataImporter({ onImportComplete }: Props = {}) {
   }, [file, parsed]);
 
   // ── Rows normalisés ─────────────────────────────────────────────────────────
-  const normalized = useMemo(() => parsed ? applyMapping(parsed, mapping) : [], [parsed, mapping]);
+  const normalized = useMemo(
+    () => parsed ? applyMapping(parsed, mapping, [...extraBarcodeCols]) : [],
+    [parsed, mapping, extraBarcodeCols],
+  );
   const validRows  = useMemo(() => normalized.filter(r => r._errors.length === 0), [normalized]);
   const invalidRows = useMemo(() => normalized.filter(r => r._errors.length > 0), [normalized]);
   const warnRows   = useMemo(() => validRows.filter(r => r._warnings.length > 0), [validRows]);
@@ -204,6 +209,7 @@ export default function DataImporter({ onImportComplete }: Props = {}) {
     setStats(null); setParseError(''); setProgress({cur:0,total:0,msg:''});
     setConflicts([]); setMode('delivery');
     setDetectedMode(null); setModeDetectionDismissed(false);
+    setExtraBarcodeCols(new Set());
   };
 
   const stepIdx = VISIBLE_STEPS.indexOf(step as Step) >= 0 ? VISIBLE_STEPS.indexOf(step as Step) : VISIBLE_STEPS.length;
@@ -397,6 +403,65 @@ export default function DataImporter({ onImportComplete }: Props = {}) {
               </div>
             )}
           </div>
+
+          {/* ── Codes-barres supplémentaires (alias) ─────────────────────────── */}
+          {parsed && parsed.headers.length > 0 && (() => {
+            // Colonnes non encore mappées (exclure celles déjà utilisées)
+            const usedCols = new Set(Object.values(mapping));
+            const candidateCols = parsed.headers
+              .map((h, i) => ({ i, h }))
+              .filter(({ i }) => !usedCols.has(i));
+            if (candidateCols.length === 0) return null;
+            const totalAliasValues = [...extraBarcodeCols].reduce((sum, colIdx) => {
+              const vals = new Set(parsed.rows.map(r => String(r[colIdx] ?? '').trim()).filter(Boolean));
+              return sum + vals.size;
+            }, 0);
+            return (
+              <div style={{ padding:'14px 16px', borderRadius:12, background:'rgba(37,99,235,0.04)', border:'1px solid rgba(37,99,235,0.18)' }}>
+                <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
+                  <span style={{ fontSize:15 }}>🏷️</span>
+                  <span style={{ fontSize:13, fontWeight:700, color:C.blue }}>Codes-barres supplémentaires</span>
+                  {extraBarcodeCols.size > 0 && (
+                    <span style={{ marginLeft:'auto', fontSize:11, fontWeight:700, padding:'2px 8px', borderRadius:99, background:'rgba(37,99,235,0.12)', color:C.blue }}>
+                      {totalAliasValues} alias
+                    </span>
+                  )}
+                </div>
+                <p style={{ fontSize:12, color:C.inkMute, margin:'0 0 10px', lineHeight:1.5 }}>
+                  Cochez les colonnes contenant d'autres codes (CIP, code interne, GENCOD…).
+                  Chaque valeur sera ajoutée comme alias scannable, <strong>sans écraser</strong> les codes existants.
+                </p>
+                <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+                  {candidateCols.map(({ i, h }) => {
+                    const checked = extraBarcodeCols.has(i);
+                    const sampleVals = parsed.rows.slice(0, 3).map(r => String(r[i] ?? '').trim()).filter(Boolean);
+                    return (
+                      <label key={i}
+                        style={{ display:'flex', alignItems:'center', gap:8, padding:'7px 12px', borderRadius:9, border:`1.5px solid ${checked ? C.blue : C.border}`, background: checked ? 'rgba(37,99,235,0.07)' : C.panel, cursor:'pointer', transition:'all 0.12s' }}>
+                        <input type="checkbox" checked={checked}
+                          onChange={e => {
+                            setExtraBarcodeCols(prev => {
+                              const next = new Set(prev);
+                              if (e.target.checked) next.add(i); else next.delete(i);
+                              return next;
+                            });
+                          }}
+                          style={{ width:14, height:14, accentColor:C.blue, cursor:'pointer' }} />
+                        <div>
+                          <div style={{ fontSize:12.5, fontWeight:700, color: checked ? C.blue : C.ink }}>{h || `Colonne ${i+1}`}</div>
+                          {sampleVals.length > 0 && (
+                            <div style={{ fontSize:10.5, color:C.inkFaint, fontFamily:'monospace' }}>
+                              {sampleVals.join(' · ')}…
+                            </div>
+                          )}
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
 
           <NavRow onBack={() => setStep('preview')} backLabel="Retour" onNext={goToValidate} nextLabel="Valider les données" nextDisabled={!hasRequiredMapping} />
         </div>
