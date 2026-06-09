@@ -394,7 +394,7 @@ export default function Sales() {
       return;
     }
 
-    // ── 2. CODE EAN / code_produit (débit global, quelle que soit la config) ──
+    // ── 2. CODE EAN / code_produit (cache local d'abord) ─────────────────────
     const eanMatch = medications.find(m =>
       m.code_produit === barcode ||
       (m as any).barcode === barcode ||
@@ -405,6 +405,77 @@ export default function Sales() {
       setScanFeedback({ msg: `✓ ${eanMatch.name} ${eanMatch.dosage} ajouté`, ok: true });
       setTimeout(() => setScanFeedback(null), 3000);
       return;
+    }
+
+    // ── 2b. LOOKUP EAN via Supabase (barcodes + inventory_units) ─────────────
+    // Nécessaire en mode unitaire : chaque boîte a son EAN stocké dans
+    // inventory_units.imported_code et dans la table barcodes.
+    if (offlineStorage.isOnline()) {
+      try {
+        // Mode unitaire : chercher l'unité physique par son EAN d'import
+        if (isUnitMode) {
+          const { data: unitByEan } = await supabase
+            .from('inventory_units')
+            .select('id, unit_code, batch_number, expiry_date, medication_id, status')
+            .eq('imported_code', barcode)
+            .eq('status', 'available')
+            .limit(1);
+
+          if (unitByEan && unitByEan.length > 0) {
+            const unit = unitByEan[0];
+            let med = medications.find(m => m.id === unit.medication_id);
+            if (!med) {
+              const { data: medRow } = await supabase
+                .from('medications').select('*').eq('id', unit.medication_id).single();
+              med = medRow ?? undefined;
+            }
+            if (med) {
+              const finalMed = med;
+              const newUnit = { id: unit.id, unit_code: unit.unit_code, batch_number: unit.batch_number, expiry_date: unit.expiry_date };
+              setCart(prev => {
+                const existing = prev.find(i => i.medication.id === finalMed.id);
+                if (existing) {
+                  if (existing.units?.some(u => u.id === unit.id)) {
+                    setScanFeedback({ msg: `Unité déjà dans le panier`, ok: false });
+                    setTimeout(() => setScanFeedback(null), 3000);
+                    return prev;
+                  }
+                  return prev.map(i => i.medication.id === finalMed.id
+                    ? { ...i, quantity: i.quantity + 1, units: [...(i.units || []), newUnit] }
+                    : i);
+                }
+                return [...prev, { medication: finalMed, quantity: 1, units: [newUnit] }];
+              });
+              setScanFeedback({ msg: `✓ ${med.name} — unité scannée (${barcode})`, ok: true });
+              setTimeout(() => setScanFeedback(null), 3000);
+              return;
+            }
+          }
+        }
+
+        // Mode global ou unité non trouvée : chercher via table barcodes
+        const { data: bcRows } = await supabase
+          .from('barcodes')
+          .select('medication_id')
+          .eq('barcode', barcode)
+          .limit(1);
+
+        if (bcRows && bcRows.length > 0) {
+          const medId = bcRows[0].medication_id;
+          let med = medications.find(m => m.id === medId);
+          if (!med) {
+            const { data: medRow } = await supabase
+              .from('medications').select('*').eq('id', medId).single();
+            med = medRow ?? undefined;
+          }
+          if (med) {
+            await addToCart(med);
+            setScanFeedback({ msg: `✓ ${med.name} ${med.dosage} ajouté`, ok: true });
+            setTimeout(() => setScanFeedback(null), 3000);
+            return;
+          }
+        }
+      } catch { /* ignore — fallback texte ci-dessous */ }
     }
 
     // ── 3. RECHERCHE TEXTUELLE par nom (fallback) ─────────────────────────────
