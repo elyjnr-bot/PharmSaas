@@ -495,6 +495,66 @@ export function applyMapping(parsed: ParsedFile, mapping: Mapping): NormalizedRo
 }
 
 // ════════════════════════════════════════════════════════════════════════════
+//  6b. DÉTECTION AUTOMATIQUE DU MODE DE GESTION
+// ════════════════════════════════════════════════════════════════════════════
+export interface ModeDetectionResult {
+  mode: 'unit' | 'global';
+  confidence: number;          // 0–1
+  /** Produit exemple avec plusieurs unités (pour la carte de confirmation) */
+  example: { name: string; barcodes: string[]; count: number } | null;
+  unitRatio: number;           // part des lignes à QTE=1
+  multiBarcode: number;        // nb de produits ayant des EAN distincts
+}
+
+/**
+ * Analyse les lignes normalisées du fichier et détermine si le pharmacien
+ * travaille en mode Unitaire ou Global.
+ *
+ * Mode unitaire = QTE=1 sur ≥90 % des lignes ET même produit répété avec
+ *                des EAN différents (= chaque ligne = 1 boîte physique).
+ * Mode global   = QTE > 1 ou produits uniques (1 ligne = N boîtes).
+ */
+export function detectInventoryMode(rows: NormalizedRow[]): ModeDetectionResult {
+  const valid = rows.filter(r => r._errors.length === 0 && r.name);
+  if (valid.length < 5) return { mode: 'global', confidence: 0.5, example: null, unitRatio: 0, multiBarcode: 0 };
+
+  // Part des lignes avec stock = 1
+  const qty1 = valid.filter(r => r.stock === 1).length;
+  const unitRatio = qty1 / valid.length;
+
+  // Grouper par nom normalisé
+  const byName = new Map<string, NormalizedRow[]>();
+  for (const r of valid) {
+    const key = r.name.toLowerCase().trim();
+    if (!byName.has(key)) byName.set(key, []);
+    byName.get(key)!.push(r);
+  }
+
+  // Produits avec au moins 2 EAN distincts (= multi-boîtes unitaires)
+  const multiEanGroups = Array.from(byName.entries()).filter(([, grp]) => {
+    const eans = new Set(grp.map(r => r.ean).filter(Boolean));
+    return eans.size >= 2;
+  });
+
+  const multiBarcode = multiEanGroups.length;
+
+  if (unitRatio >= 0.88 && multiBarcode >= 1) {
+    // Meilleur exemple = le produit avec le plus de lignes
+    const best = [...multiEanGroups].sort((a, b) => b[1].length - a[1].length)[0];
+    const uniqueEans = [...new Set(best[1].map(r => r.ean).filter(Boolean))].slice(0, 3) as string[];
+    return {
+      mode: 'unit',
+      confidence: Math.min(0.98, 0.78 + (unitRatio - 0.88) * 1.5 + Math.min(multiBarcode, 50) / 100),
+      example: { name: best[0], barcodes: uniqueEans, count: best[1].length },
+      unitRatio,
+      multiBarcode,
+    };
+  }
+
+  return { mode: 'global', confidence: 0.85, example: null, unitRatio, multiBarcode };
+}
+
+// ════════════════════════════════════════════════════════════════════════════
 //  7. DÉTECTION DE CONFLITS (produits similaires déjà en base)
 // ════════════════════════════════════════════════════════════════════════════
 export interface Conflict {

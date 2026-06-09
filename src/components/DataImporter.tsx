@@ -17,11 +17,11 @@ import {
   loadSavedMapping, applyMapping, importData, detectConflicts,
   downloadTemplate, saveMappingProfile, loadMappingProfiles, deleteMappingProfile,
   findMatchingProfile, addToImportHistory, getImportHistory,
-  buildValidationReport,
+  buildValidationReport, detectInventoryMode,
   JUNGLE_FIELDS,
   type ParsedFile, type Mapping, type NormalizedRow, type ImportStats,
   type ImportMode, type JungleField, type MappingProfile, type ImportHistoryEntry, type Conflict,
-  type ValidationReport,
+  type ValidationReport, type ModeDetectionResult,
 } from '../lib/ImportService';
 import { updateColumnsAfterImport } from '../lib/useInventoryColumns';
 
@@ -76,6 +76,9 @@ export default function DataImporter({ onImportComplete }: Props = {}) {
   const [showProblematic, setShowProblematic] = useState(false);
   const [validationReport, setValidationReport] = useState<ValidationReport|null>(null);
   const [showImportConfirm, setShowImportConfirm] = useState(false); // modale de confirmation
+  // ── Détection automatique du mode de gestion ────────────────────────────
+  const [detectedMode, setDetectedMode] = useState<ModeDetectionResult | null>(null);
+  const [modeDetectionDismissed, setModeDetectionDismissed] = useState(false);
 
   useEffect(() => { setHistory(getImportHistory()); setProfiles(loadMappingProfiles()); }, [step]);
 
@@ -122,11 +125,15 @@ export default function DataImporter({ onImportComplete }: Props = {}) {
     setDecisionBlocked(null);
     setDecisionNoEan(null);
     setShowProblematic(false);
+    setModeDetectionDismissed(false);
     const report = buildValidationReport(normalized);
     setValidationReport(report);
     // Auto-décision si pas de lignes bloquées / sans EAN
     if (report.blocked === 0) setDecisionBlocked('skip');
     if (report.noEan === 0)   setDecisionNoEan('skip');
+    // ── Détection automatique du mode de gestion ──────────────────────────
+    const detection = detectInventoryMode(normalized);
+    setDetectedMode(detection);
     setStep('validate');
     setConflictsLoading(true);
     setConflicts([]);
@@ -196,6 +203,7 @@ export default function DataImporter({ onImportComplete }: Props = {}) {
     setStep('upload'); setFile(null); setParsed(null); setMapping({});
     setStats(null); setParseError(''); setProgress({cur:0,total:0,msg:''});
     setConflicts([]); setMode('delivery');
+    setDetectedMode(null); setModeDetectionDismissed(false);
   };
 
   const stepIdx = VISIBLE_STEPS.indexOf(step as Step) >= 0 ? VISIBLE_STEPS.indexOf(step as Step) : VISIBLE_STEPS.length;
@@ -398,6 +406,82 @@ export default function DataImporter({ onImportComplete }: Props = {}) {
       {step === 'validate' && parsed && validationReport && (
         <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
           <style>{`@keyframes jp-spin{to{transform:rotate(360deg)}}`}</style>
+
+          {/* ── Détection automatique du mode de gestion ──────────────────── */}
+          {detectedMode && !modeDetectionDismissed && (() => {
+            const currentMode = localStorage.getItem('workflow_mode') || 'global';
+            const isUnit = detectedMode.mode === 'unit';
+            const alreadySet = currentMode === detectedMode.mode;
+            if (!isUnit) return null; // On ne propose la bascule que vers le mode unitaire
+            return (
+              <div style={{ padding:'16px 18px', borderRadius:14, background:'linear-gradient(135deg, rgba(124,58,237,0.07), rgba(37,99,235,0.06))', border:'1.5px solid rgba(124,58,237,0.25)', position:'relative' }}>
+                {/* Badge IA */}
+                <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
+                  <div style={{ width:28, height:28, borderRadius:8, background:'rgba(124,58,237,0.12)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                    <span style={{ fontSize:15 }}>🤖</span>
+                  </div>
+                  <span style={{ fontSize:13, fontWeight:800, color:'#5b21b6', letterSpacing:'-0.01em' }}>Détection automatique du mode de gestion</span>
+                  <span style={{ marginLeft:'auto', fontSize:10, fontWeight:700, padding:'2px 8px', borderRadius:99, background:'rgba(124,58,237,0.12)', color:'#7c3aed' }}>
+                    {Math.round(detectedMode.confidence * 100)} % de confiance
+                  </span>
+                </div>
+
+                <p style={{ fontSize:13, color:'#374151', margin:'0 0 10px', lineHeight:1.6 }}>
+                  D'après votre fichier ({detectedMode.unitRatio >= 0.99 ? '100 %' : `${Math.round(detectedMode.unitRatio * 100)} %`} des lignes ont QTE = 1), vous semblez travailler en{' '}
+                  <strong style={{ color:'#5b21b6' }}>mode unitaire</strong> — chaque ligne correspond à une boîte physique individuelle.
+                </p>
+
+                {/* Exemple concret */}
+                {detectedMode.example && (
+                  <div style={{ padding:'10px 12px', borderRadius:10, background:'rgba(255,255,255,0.7)', border:'1px solid rgba(124,58,237,0.15)', marginBottom:12 }}>
+                    <p style={{ fontSize:12, color:'#6b7280', margin:'0 0 6px', fontWeight:600 }}>Exemple dans votre fichier :</p>
+                    <p style={{ fontSize:12.5, fontWeight:700, color:'#1f2937', margin:'0 0 4px', textTransform:'capitalize' }}>
+                      {detectedMode.example.name}
+                    </p>
+                    <p style={{ fontSize:12, color:'#6b7280', margin:'0 0 4px' }}>
+                      → <strong style={{ color:'#374151' }}>{detectedMode.example.count} lignes</strong> avec des codes-barres différents :
+                    </p>
+                    <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+                      {detectedMode.example.barcodes.map(bc => (
+                        <span key={bc} style={{ fontSize:11, fontFamily:'monospace', padding:'2px 8px', borderRadius:6, background:'rgba(124,58,237,0.1)', color:'#5b21b6', fontWeight:600 }}>{bc}</span>
+                      ))}
+                      {detectedMode.example.count > detectedMode.example.barcodes.length && (
+                        <span style={{ fontSize:11, color:'#9ca3af' }}>+ {detectedMode.example.count - detectedMode.example.barcodes.length} autres…</span>
+                      )}
+                    </div>
+                    <p style={{ fontSize:11.5, color:'#6b7280', margin:'8px 0 0', lineHeight:1.5 }}>
+                      En mode unitaire, chaque boîte est traçable individuellement et scannable à la vente.
+                    </p>
+                  </div>
+                )}
+
+                {alreadySet ? (
+                  <div style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 14px', borderRadius:10, background:'rgba(16,120,90,0.1)', border:'1px solid rgba(16,120,90,0.2)' }}>
+                    <span style={{ fontSize:16 }}>✅</span>
+                    <span style={{ fontSize:12.5, fontWeight:700, color:'#10785a' }}>Mode unitaire déjà activé — vous êtes prêt !</span>
+                    <button onClick={() => setModeDetectionDismissed(true)} style={{ marginLeft:'auto', background:'none', border:'none', cursor:'pointer', color:'#9ca3af', fontSize:16, lineHeight:1 }}>×</button>
+                  </div>
+                ) : (
+                  <div style={{ display:'flex', gap:8, flexWrap:'wrap', alignItems:'center' }}>
+                    <button
+                      onClick={() => {
+                        localStorage.setItem('workflow_mode', 'unit');
+                        window.dispatchEvent(new CustomEvent('junglepharm:workflow_mode_updated'));
+                        setModeDetectionDismissed(true);
+                      }}
+                      style={{ display:'inline-flex', alignItems:'center', gap:7, padding:'9px 18px', borderRadius:10, border:'none', background:'linear-gradient(135deg,#7c3aed,#6d28d9)', color:'#fff', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit', boxShadow:'0 2px 10px rgba(124,58,237,0.3)' }}>
+                      ✓ Oui, activer le mode unitaire
+                    </button>
+                    <button
+                      onClick={() => setModeDetectionDismissed(true)}
+                      style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'9px 14px', borderRadius:10, border:'1px solid rgba(0,0,0,0.12)', background:'#fff', color:'#6b7280', fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit' }}>
+                      Non, garder le mode actuel
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* ── Bandeau analyse ─────────────────────────────────────────────── */}
           <div style={{ padding:'14px 16px', borderRadius:12, background:'rgba(16,120,90,0.05)', border:'1px solid rgba(16,120,90,0.18)' }}>
