@@ -532,7 +532,7 @@ export function detectInventoryMode(rows: NormalizedRow[]): ModeDetectionResult 
   const valid = rows.filter(r => r._errors.length === 0 && r.name);
   if (valid.length < 5) return { mode: 'global', confidence: 0.5, example: null, unitRatio: 0, multiBarcode: 0 };
 
-  // Part des lignes avec stock = 1
+  // Signal 1 : proportion de lignes avec stock = 1
   const qty1 = valid.filter(r => r.stock === 1).length;
   const unitRatio = qty1 / valid.length;
 
@@ -544,22 +544,49 @@ export function detectInventoryMode(rows: NormalizedRow[]): ModeDetectionResult 
     byName.get(key)!.push(r);
   }
 
-  // Produits avec au moins 2 EAN distincts (= multi-boîtes unitaires)
+  // Signal 2 : produits avec 2+ codes-barres distincts
+  // ⚠️ On utilise allBarcodes (inclut EAN principal + colonnes alias)
+  // pour être robuste même si l'EAN principal n'est pas mappé
   const multiEanGroups = Array.from(byName.entries()).filter(([, grp]) => {
-    const eans = new Set(grp.map(r => r.ean).filter(Boolean));
-    return eans.size >= 2;
+    const barcodes = new Set([
+      ...grp.map(r => r.ean),
+      ...grp.flatMap(r => r.allBarcodes ?? []),
+    ].filter(Boolean));
+    return barcodes.size >= 2;
   });
-
   const multiBarcode = multiEanGroups.length;
 
-  if (unitRatio >= 0.88 && multiBarcode >= 1) {
-    // Meilleur exemple = le produit avec le plus de lignes
-    const best = [...multiEanGroups].sort((a, b) => b[1].length - a[1].length)[0];
-    const uniqueEans = [...new Set(best[1].map(r => r.ean).filter(Boolean))].slice(0, 3) as string[];
+  // Signal 3 : rapport lignes / noms uniques (mode unitaire = beaucoup de lignes, peu de noms)
+  const linePerProduct = valid.length / byName.size;
+
+  // DÉTECTION UNITAIRE — 3 signaux possibles :
+  //  A) Signal fort : 88%+ qty=1 ET au moins 1 produit multi-codes (cas classique)
+  //  B) Signal moyen : 95%+ qty=1 ET ratio > 1.3 lignes/produit (fichier unitaire sans EAN mappé)
+  //  C) Signal fort pur ratio : 95%+ qty=1 ET fichier ≥ 20 lignes (inventaire boîte par boîte)
+  const isUnit =
+    (unitRatio >= 0.88 && multiBarcode >= 1) ||
+    (unitRatio >= 0.95 && linePerProduct >= 1.3 && valid.length >= 10) ||
+    (unitRatio >= 0.95 && valid.length >= 20);
+
+  if (isUnit) {
+    // Meilleur exemple : produit avec le plus de lignes parmi ceux avec multi-codes,
+    // sinon tout groupe de 2+ lignes, sinon le premier groupe
+    const rankedGroups = multiEanGroups.length > 0
+      ? [...multiEanGroups].sort((a, b) => b[1].length - a[1].length)
+      : Array.from(byName.entries()).filter(([, g]) => g.length >= 2).sort((a, b) => b[1].length - a[1].length);
+    const best = (rankedGroups[0] ?? Array.from(byName.entries()).sort((a, b) => b[1].length - a[1].length)[0]);
+
+    const barcodes = best
+      ? [...new Set([
+          ...best[1].map(r => r.ean),
+          ...best[1].flatMap(r => r.allBarcodes ?? []),
+        ].filter(Boolean))].slice(0, 3)
+      : [];
+
     return {
       mode: 'unit',
-      confidence: Math.min(0.98, 0.78 + (unitRatio - 0.88) * 1.5 + Math.min(multiBarcode, 50) / 100),
-      example: { name: best[0], barcodes: uniqueEans, count: best[1].length },
+      confidence: Math.min(0.98, 0.75 + (unitRatio - 0.88) * 2.0 + Math.min(multiBarcode, 50) / 100),
+      example: best ? { name: best[0], barcodes, count: best[1].length } : null,
       unitRatio,
       multiBarcode,
     };
