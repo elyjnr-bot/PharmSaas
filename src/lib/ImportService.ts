@@ -35,7 +35,10 @@ export interface FieldDef {
 
 export const JUNGLE_FIELDS: FieldDef[] = [
   { key: 'designation',  label: 'Désignation',    required: true,  hint: 'Nom du produit',         aliases: ['designation','désignation','nom','produit','libelle','libellé','article','name','description'] },
-  { key: 'ean',          label: 'Code EAN',        required: false, hint: 'Code-barres EAN/GTIN',   aliases: ['ean','code barre','code-barre','codebarre','code_barre','barcode','gencod','gencode','cip','gtin','code produit','code_produit'] },
+  // ⚠️ 'code produit' retiré des aliases EAN : c'est souvent un code GROUPE interne,
+  //    pas un code-barres individuel scannable. Les pluriels 'code barres' / 'codes barres'
+  //    permettent un match exact (score 100) sur des colonnes "Code-Barres".
+  { key: 'ean',          label: 'Code EAN',        required: false, hint: 'Code-barres EAN/GTIN',   aliases: ['ean','code barres','codes barres','code barre','code-barre','code-barres','codebarre','code_barre','barcode','gencod','gencode','cip','gtin'] },
   { key: 'prix_achat',   label: 'Prix Achat',      required: false, hint: 'Prix de cession (gros)', aliases: ['prix achat','prix_achat','achat','cession','prix cession','prixcession','pa','cost','wholesale','prix gros','pamp'] },
   { key: 'prix_vente',   label: 'Prix Vente',      required: true,  hint: 'Prix public',            aliases: ['prix vente','prix_vente','vente','public','prix public','prixpublic','pv','ppc','price','prix','tarif','pu'] },
   { key: 'stock',        label: 'Stock initial',   required: false, hint: 'Quantité en stock',      aliases: ['stock','quantite','quantité','qte','qty','quantity','nombre','nb','dispo'] },
