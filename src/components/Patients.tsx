@@ -527,6 +527,157 @@ function PatientDetail({ patient, idx, patOrdonnances, onEdit, onDelete, onAddPu
   );
 }
 
+// ── Patient Overview (empty state) ───────────────────────────────────────────
+function PatientOverview({ patients, urgentIds, onSelect, onAdd }: {
+  patients: Patient[];
+  urgentIds: Set<string>;
+  onSelect: (p: Patient) => void;
+  onAdd: () => void;
+}) {
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
+  const totalSpent    = patients.flatMap(p => p.purchases).reduce((s, pur) => s + pur.total, 0);
+  const fideles       = patients.filter(p => p.type === 'fidèle').length;
+  const nouveaux      = patients.filter(p => p.created_at >= thirtyDaysAgo).length;
+  const avgBasket     = patients.length > 0 ? Math.round(totalSpent / patients.length) : 0;
+  const withAllergies = patients.filter(p => p.allergies.length > 0).length;
+
+  // Top 6 patients by total spent (with original index for avatar color)
+  const top = useMemo(() =>
+    patients
+      .map((p, idx) => ({ p, idx, spent: p.purchases.reduce((s, pur) => s + pur.total, 0) }))
+      .sort((a, b) => b.spent - a.spent)
+      .slice(0, 6),
+  [patients]);
+
+  // 4 most recently created patients
+  const recent = useMemo(() =>
+    [...patients]
+      .map((p, idx) => ({ p, idx }))
+      .sort((a, b) => b.p.created_at.localeCompare(a.p.created_at))
+      .slice(0, 4),
+  [patients]);
+
+  const kpis = [
+    { lbl: 'Total patients',   val: String(patients.length),            sub: 'enregistrés',                       color: C.ink },
+    { lbl: 'Patients fidèles', val: String(fideles),                    sub: patients.length > 0 ? `${Math.round(fideles / patients.length * 100)}% du total` : '—', color: C.brand },
+    { lbl: 'Nouveaux ce mois', val: String(nouveaux),                   sub: '30 derniers jours',                  color: C.blue },
+    { lbl: 'Panier moyen',     val: avgBasket > 0 ? `${fmt(avgBasket)} FC` : '—', sub: 'par patient',             color: C.amber },
+  ];
+
+  return (
+    <div style={{ flex: 1, borderLeft: `1px solid ${C.hairline}`, display: 'flex', flexDirection: 'column', background: C.bg, fontFamily: C.f, overflowY: 'auto', minWidth: 0 }}>
+      {/* Header */}
+      <div style={{ padding: '24px 32px 20px', background: C.panel2, borderBottom: `1px solid ${C.hairline}`, flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <h2 style={{ fontSize: 20, fontWeight: 700, color: C.ink, letterSpacing: '-0.025em', margin: 0, marginBottom: 4 }}>Vue d'ensemble · Patients</h2>
+            <p style={{ fontSize: 13, color: C.inkMute, margin: 0 }}>
+              {patients.length} patient{patients.length !== 1 ? 's' : ''} enregistrés
+              {withAllergies > 0 && <span style={{ marginLeft: 10, background: C.redLt, color: C.red, borderRadius: 99, padding: '1px 8px', fontSize: 11.5, fontWeight: 600 }}>⚠ {withAllergies} allergie{withAllergies > 1 ? 's' : ''}</span>}
+              {urgentIds.size > 0 && <span style={{ marginLeft: 6, background: 'rgba(183,95,6,0.09)', color: C.amber, borderRadius: 99, padding: '1px 8px', fontSize: 11.5, fontWeight: 600 }}>● {urgentIds.size} urgence{urgentIds.size > 1 ? 's' : ''}</span>}
+            </p>
+          </div>
+          <button onClick={onAdd} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', border: 'none', borderRadius: 9, background: C.ink, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: C.f }}>
+            <Plus size={13} strokeWidth={2.5} /> Ajouter un patient
+          </button>
+        </div>
+      </div>
+
+      <div style={{ padding: '24px 32px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+        {/* KPI cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
+          {kpis.map((k, i) => (
+            <div key={i} style={{ background: C.panel2, border: `1px solid ${C.hairline}`, borderRadius: 12, padding: '16px 18px' }}>
+              <div style={{ fontSize: 11, color: C.inkMute, marginBottom: 8 }}>{k.lbl}</div>
+              <div style={{ fontSize: 26, fontWeight: 700, color: k.color, letterSpacing: '-0.03em', fontFamily: C.fm, lineHeight: 1, marginBottom: 6 }}>{k.val}</div>
+              <div style={{ fontSize: 11.5, color: C.inkFaint }}>{k.sub}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Two columns: top patients + recents */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+
+          {/* Top patients */}
+          <div style={{ background: C.panel2, border: `1px solid ${C.hairline}`, borderRadius: 14, overflow: 'hidden' }}>
+            <div style={{ padding: '14px 18px 12px', borderBottom: `1px solid ${C.hairline}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 13.5, fontWeight: 600, color: C.ink }}>Top patients</span>
+              <span style={{ fontSize: 11.5, color: C.inkFaint }}>par dépense totale</span>
+            </div>
+            {top.length === 0 ? (
+              <div style={{ padding: '24px', textAlign: 'center', fontSize: 12.5, color: C.inkFaint, fontStyle: 'italic' }}>Aucune donnée</div>
+            ) : top.map(({ p, idx, spent }, i) => (
+              <button key={p.id} onClick={() => onSelect(p)}
+                style={{ width: '100%', padding: '11px 18px', border: 'none', borderBottom: i < top.length - 1 ? `1px solid ${C.hairline}` : 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 11, fontFamily: C.f, textAlign: 'left', transition: 'background 0.1s' }}
+                onMouseEnter={e => (e.currentTarget.style.background = C.bg)}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                <div style={{ width: 20, fontSize: 12, fontWeight: 700, color: i < 3 ? C.amber : C.inkFaint, fontFamily: C.fm, textAlign: 'center', flexShrink: 0 }}>#{i + 1}</div>
+                <Avatar name={p.name} idx={idx} size={34} round />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: C.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                  <div style={{ fontSize: 11.5, color: C.inkMute }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, background: TYPE_STYLE[p.type].bg, color: TYPE_STYLE[p.type].text, borderRadius: 99, padding: '1px 6px', fontSize: 10.5, fontWeight: 600 }}>
+                      <span style={{ width: 3, height: 3, borderRadius: 99, background: TYPE_STYLE[p.type].text }} />
+                      {p.type}
+                    </span>
+                    <span style={{ marginLeft: 6 }}>{p.purchases.length} visite{p.purchases.length !== 1 ? 's' : ''}</span>
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: C.ink, fontFamily: C.fm }}>{fmtk(spent)}</div>
+                  <div style={{ fontSize: 10.5, color: C.inkFaint }}>FC</div>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Recent patients */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ background: C.panel2, border: `1px solid ${C.hairline}`, borderRadius: 14, overflow: 'hidden' }}>
+              <div style={{ padding: '14px 18px 12px', borderBottom: `1px solid ${C.hairline}` }}>
+                <span style={{ fontSize: 13.5, fontWeight: 600, color: C.ink }}>Ajoutés récemment</span>
+              </div>
+              {recent.length === 0 ? (
+                <div style={{ padding: '24px', textAlign: 'center', fontSize: 12.5, color: C.inkFaint, fontStyle: 'italic' }}>Aucun patient</div>
+              ) : recent.map(({ p, idx }, i) => (
+                <button key={p.id} onClick={() => onSelect(p)}
+                  style={{ width: '100%', padding: '11px 18px', border: 'none', borderBottom: i < recent.length - 1 ? `1px solid ${C.hairline}` : 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 11, fontFamily: C.f, textAlign: 'left', transition: 'background 0.1s' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = C.bg)}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                  <Avatar name={p.name} idx={idx} size={34} round />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: C.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                    <div style={{ fontSize: 11.5, color: C.inkFaint }}>{new Date(p.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: '2-digit' })}</div>
+                  </div>
+                  {urgentIds.has(p.id) && (
+                    <span style={{ fontSize: 10, fontWeight: 700, background: C.redLt, color: C.red, borderRadius: 99, padding: '1px 6px', whiteSpace: 'nowrap' }}>● Urgent</span>
+                  )}
+                  <ChevronRight size={14} color={C.inkGhost} strokeWidth={1.5} />
+                </button>
+              ))}
+            </div>
+
+            {/* Quick add CTA */}
+            <button onClick={onAdd}
+              style={{ background: C.brandLt, border: `1px solid rgba(16,120,90,0.18)`, borderRadius: 14, padding: '18px 20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, fontFamily: C.f, textAlign: 'left', transition: 'background 0.12s' }}
+              onMouseEnter={e => (e.currentTarget.style.background = C.brandMid)}
+              onMouseLeave={e => (e.currentTarget.style.background = C.brandLt)}>
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: C.brand, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <UserPlus size={18} color="#fff" strokeWidth={1.5} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 600, color: C.brand }}>Ajouter un nouveau patient</div>
+                <div style={{ fontSize: 12, color: C.inkMute, marginTop: 2 }}>Nom, téléphone, profil thérapeutique</div>
+              </div>
+              <ArrowRight size={16} color={C.brand} />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function Patients() {
   const { patients, isLoading, error, addPatient, updatePatient, deletePatient, addPurchase } = usePatients();
@@ -732,11 +883,12 @@ export default function Patients() {
             onAddPurchase={p => handleAddPurchase(selected.id, p)}
           />
         ) : (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, color: C.inkFaint, background: C.bg }}>
-            <UserPlus size={40} color={C.inkGhost} strokeWidth={1} />
-            <div style={{ fontSize: 14, color: C.inkMute, fontWeight: 500 }}>Sélectionnez un patient</div>
-            <div style={{ fontSize: 12.5, color: C.inkFaint }}>Cliquez sur un patient dans la liste pour afficher sa fiche.</div>
-          </div>
+          <PatientOverview
+            patients={patients}
+            urgentIds={urgentPatientIds}
+            onSelect={p => setSelected(p)}
+            onAdd={() => setShowNewModal(true)}
+          />
         )}
       </div>
 
