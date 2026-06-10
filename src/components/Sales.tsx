@@ -1295,8 +1295,23 @@ export default function Sales() {
 
     setMedications(updatedMeds.filter(m => m.quantity > 0));
 
-    if (offlineStorage.isOnline() && paymentMode !== 'credit') {
-      syncToCloud(saleDate, subtotal, tax, total, stockUpdates);
+    if (offlineStorage.isOnline()) {
+      if (paymentMode === 'credit') {
+        // ── Crédit : syncToCloud ne s'exécute pas (pas de table sales/sale_items),
+        // mais on met quand même à jour medications.quantity en Supabase immédiatement
+        // pour éviter qu'un autre appareil voie un stock incorrect.
+        (async () => {
+          try {
+            for (const update of stockUpdates) {
+              await updateWithUserId('medications', { quantity: update.newQty }, { id: update.id });
+            }
+          } catch (err) {
+            console.error('Erreur sync stock crédit:', err);
+          }
+        })();
+      } else {
+        syncToCloud(saleDate, subtotal, tax, total, stockUpdates);
+      }
     }
 
     setIsProcessing(false);
