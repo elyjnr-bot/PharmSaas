@@ -105,7 +105,8 @@ function InsuranceBillingSection() {
         .select('sale_date,medication_name,quantity_sold,unit_price,total_price,insurance_name,insurance_card,insurance_rate,insurance_amount,patient_amount,payment_method')
         .gte('sale_date', from)
         .lte('sale_date', to + 'T23:59:59')
-        .not('insurance_name', 'is', null);
+        .not('insurance_name', 'is', null)
+        .gt('quantity_sold', 0);           // exclure les retours (quantity_sold < 0)
       if (!data) { setLines([]); return; }
       const map: Record<string, InsuranceLine> = {};
       for (const row of data) {
@@ -442,10 +443,9 @@ async function exportVentesXlsx() {
       Date: new Date(r.sale_date).toLocaleDateString('fr-FR'),
       Type: isReturn ? 'Retour' : 'Vente',
       Médicament: r.medication_name || '',
-      Quantité: isReturn ? 0 : qty,
-      Retour: isReturn ? Math.abs(qty) : 0,
+      Quantité: Math.abs(qty),             // toujours positif — le Type indique si c'est un retour
       'Prix unitaire': r.unit_price ?? 0,
-      Total: r.total_price ?? 0,
+      Total: r.total_price ?? 0,           // négatif pour les retours → visible dans Excel
       Paiement: r.payment_method || '',
       Vendeur: r.seller_name || '',
     };
