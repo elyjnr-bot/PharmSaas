@@ -323,9 +323,10 @@ export default function Sales() {
     setShowScanner(false);
     setDesktopScanInput('');
 
-    // Si un prompt JP est ouvert → router le scan vers handleJpEntry
-    if (pendingJpScan && barcode.startsWith('JP-')) {
-      await handleJpEntry(barcode);
+    // Si un prompt de scan unitaire est ouvert → router TOUT scan vers handleUnitEntry
+    // (peu importe le format : EAN, JP-, code interne…)
+    if (pendingJpScan) {
+      await handleUnitEntry(barcode);
       return;
     }
 
@@ -337,61 +338,52 @@ export default function Sales() {
     // 3. Texte libre    → medications par nom (débit global)
     // ─────────────────────────────────────────────────────────────────────────
 
-    // ── 1. CODE JP : unité spécifique ────────────────────────────────────────
-    if (barcode.startsWith('JP-')) {
-      const { data: unitRows, error } = await supabase
+    // ── 1. LOOKUP UNITAIRE — cherche d'abord en inventory_units par unit_code ──
+    // Gère les deux flux : EAN natif (import Excel) ET JP-XXXXXX (entrée manuelle)
+    {
+      const { data: unitRows } = await supabase
         .from('inventory_units')
         .select('id, unit_code, batch_number, expiry_date, medication_id, status')
         .eq('unit_code', barcode)
         .limit(1);
 
-      if (error || !unitRows || unitRows.length === 0) {
-        setScanFeedback({ msg: `Code JP introuvable : ${barcode}`, ok: false });
-        setTimeout(() => setScanFeedback(null), 3500);
-        return;
-      }
-      const unit = unitRows[0];
-      if (unit.status !== 'available') {
-        setScanFeedback({ msg: `Unité déjà vendue ou indisponible : ${barcode}`, ok: false });
-        setTimeout(() => setScanFeedback(null), 3500);
-        return;
-      }
-      // Chercher dans le cache local en priorité, sinon Supabase
-      let med = medications.find(m => m.id === unit.medication_id);
-      if (!med) {
-        const { data: medRow } = await supabase
-          .from('medications')
-          .select('*')
-          .eq('id', unit.medication_id)
-          .single();
-        med = medRow ?? undefined;
-      }
-      if (!med) {
-        setScanFeedback({ msg: `Médicament introuvable pour ${barcode}`, ok: false });
-        setTimeout(() => setScanFeedback(null), 3500);
-        return;
-      }
-      // Ajouter au panier avec tracking d'unité (débit = marquer sold à la vente)
-      const finalMed = med;
-      setCart(prev => {
-        const existing = prev.find(i => i.medication.id === finalMed.id);
-        const newUnit = { id: unit.id, unit_code: unit.unit_code, batch_number: unit.batch_number, expiry_date: unit.expiry_date };
-        if (existing) {
-          if (existing.units?.some(u => u.id === unit.id)) {
-            setScanFeedback({ msg: `Unité déjà dans le panier : ${barcode}`, ok: false });
-            setTimeout(() => setScanFeedback(null), 3000);
-            return prev;
-          }
-          return prev.map(i => i.medication.id === finalMed.id
-            ? { ...i, quantity: i.quantity + 1, units: [...(i.units || []), newUnit] }
-            : i
-          );
+      if (unitRows && unitRows.length > 0) {
+        const unit = unitRows[0];
+        if (unit.status !== 'available') {
+          setScanFeedback({ msg: `Unité déjà vendue ou indisponible : ${barcode}`, ok: false });
+          setTimeout(() => setScanFeedback(null), 3500);
+          return;
         }
-        return [...prev, { medication: finalMed, quantity: 1, units: [newUnit] }];
-      });
-      setScanFeedback({ msg: `✓ ${med.name} ${med.dosage} — unité ${barcode}`, ok: true });
-      setTimeout(() => setScanFeedback(null), 3000);
-      return;
+        let med = medications.find(m => m.id === unit.medication_id);
+        if (!med) {
+          const { data: medRow } = await supabase.from('medications').select('*').eq('id', unit.medication_id).single();
+          med = medRow ?? undefined;
+        }
+        if (!med) {
+          setScanFeedback({ msg: `Médicament introuvable pour ${barcode}`, ok: false });
+          setTimeout(() => setScanFeedback(null), 3500);
+          return;
+        }
+        const finalMed = med;
+        setCart(prev => {
+          const existing = prev.find(i => i.medication.id === finalMed.id);
+          const newUnit = { id: unit.id, unit_code: unit.unit_code, batch_number: unit.batch_number, expiry_date: unit.expiry_date };
+          if (existing) {
+            if (existing.units?.some(u => u.id === unit.id)) {
+              setScanFeedback({ msg: `Unité déjà dans le panier : ${barcode}`, ok: false });
+              setTimeout(() => setScanFeedback(null), 3000);
+              return prev;
+            }
+            return prev.map(i => i.medication.id === finalMed.id
+              ? { ...i, quantity: i.quantity + 1, units: [...(i.units || []), newUnit] }
+              : i);
+          }
+          return [...prev, { medication: finalMed, quantity: 1, units: [newUnit] }];
+        });
+        setScanFeedback({ msg: `✓ ${med.name} — unité ${barcode}`, ok: true });
+        setTimeout(() => setScanFeedback(null), 3000);
+        return;
+      }
     }
 
     // ── 2. LOOKUP UNIVERSEL — table `barcodes` (source de vérité unique) ──────
@@ -768,23 +760,42 @@ export default function Sales() {
     }
   };
 
-  // ── Validation du code JP scanné / saisi manuellement ────────────────────────
-  const handleJpEntry = async (rawCode: string) => {
+  // ── Validation du code scanné / saisi manuellement (EAN import ou JP- manuel) ─
+  const handleUnitEntry = async (rawCode: string) => {
     if (!pendingJpScan) return;
     const code = rawCode.trim().toUpperCase();
     if (!code) return;
 
-    // Normaliser : accepter "000003" ou "JP-000003"
-    const jpCode = code.startsWith('JP-') ? code : `JP-${code}`;
+    // Stratégie de résolution :
+    //  1. Chercher le code tel quel (EAN natif du flux import, ex: 6155004000123)
+    //  2. Si rien trouvé et que le code est court (≤6 chiffres), tenter JP-XXXXXX
+    //     (flux manuel rétrocompatible)
+    let resolvedCode = code;
+    let unitRows: { id: string; unit_code: string; batch_number: string; expiry_date: string | null; medication_id: string; status: string }[] | null = null;
 
-    const { data: unitRows, error } = await supabase
+    // Tentative 1 : code brut
+    const { data: rows1, error: err1 } = await supabase
       .from('inventory_units')
       .select('id, unit_code, batch_number, expiry_date, medication_id, status')
-      .eq('unit_code', jpCode)
+      .eq('unit_code', code)
       .limit(1);
+    if (!err1 && rows1 && rows1.length > 0) {
+      unitRows = rows1;
+    }
 
-    if (error || !unitRows || unitRows.length === 0) {
-      setScanFeedback({ msg: `Code JP introuvable : ${jpCode}`, ok: false });
+    // Tentative 2 : préfixe JP- (si code numérique court)
+    if (!unitRows && /^\d{1,6}$/.test(code)) {
+      resolvedCode = `JP-${code.padStart(6, '0')}`;
+      const { data: rows2, error: err2 } = await supabase
+        .from('inventory_units')
+        .select('id, unit_code, batch_number, expiry_date, medication_id, status')
+        .eq('unit_code', resolvedCode)
+        .limit(1);
+      if (!err2 && rows2 && rows2.length > 0) unitRows = rows2;
+    }
+
+    if (!unitRows || unitRows.length === 0) {
+      setScanFeedback({ msg: `Code introuvable : ${code}`, ok: false });
       setTimeout(() => setScanFeedback(null), 3000);
       setPendingJpScan(prev => prev ? { ...prev, jpInput: '' } : null);
       setTimeout(() => jpInputRef.current?.focus(), 50);
@@ -2734,33 +2745,32 @@ export default function Sales() {
                     <X style={{ width: 12, height: 12, color: '#6b7280' }} />
                   </button>
                 </div>
-                {/* Input JP */}
+                {/* Input code unitaire (EAN import ou JP- manuel) */}
                 <div style={{ display: 'flex', gap: 6 }}>
                   <div style={{ position: 'relative', flex: 1 }}>
-                    <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 11, color: '#9ca3af', fontFamily: 'monospace', pointerEvents: 'none', userSelect: 'none' }}>JP-</span>
                     <input
                       ref={jpInputRef}
                       type="text"
-                      value={pendingJpScan.jpInput.replace(/^JP-/i, '')}
+                      value={pendingJpScan.jpInput}
                       onChange={e => setPendingJpScan(prev => prev ? { ...prev, jpInput: e.target.value } : null)}
                       onKeyDown={e => {
-                        if (e.key === 'Enter') handleJpEntry(pendingJpScan.jpInput || e.currentTarget.value);
+                        if (e.key === 'Enter') handleUnitEntry(pendingJpScan.jpInput || e.currentTarget.value);
                         if (e.key === 'Escape') setPendingJpScan(null);
                       }}
-                      placeholder="000000"
-                      style={{ width: '100%', height: 36, paddingLeft: 34, paddingRight: 10, borderRadius: 8, border: '1.5px solid rgba(16,120,90,0.35)', fontSize: 13, fontFamily: 'monospace', fontWeight: 600, outline: 'none', boxSizing: 'border-box', background: 'rgba(16,120,90,0.04)' }}
+                      placeholder="Scannez ou saisissez le code…"
+                      style={{ width: '100%', height: 36, paddingLeft: 12, paddingRight: 10, borderRadius: 8, border: '1.5px solid rgba(16,120,90,0.35)', fontSize: 13, fontFamily: 'monospace', fontWeight: 600, outline: 'none', boxSizing: 'border-box', background: 'rgba(16,120,90,0.04)' }}
                       autoFocus
                     />
                   </div>
                   <button
-                    onClick={() => handleJpEntry(pendingJpScan.jpInput)}
+                    onClick={() => handleUnitEntry(pendingJpScan.jpInput)}
                     style={{ height: 36, padding: '0 14px', borderRadius: 8, background: '#10785a', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' }}
                   >
                     Ajouter
                   </button>
                 </div>
                 <p style={{ fontSize: 10, color: '#9ca3af', marginTop: 7, lineHeight: 1.4 }}>
-                  Scannez le code-barres JP sur la boîte, ou saisissez-le manuellement · ESC pour annuler
+                  Scannez l'EAN ou le code JP sur la boîte · ESC pour annuler
                 </p>
               </div>
             )}
