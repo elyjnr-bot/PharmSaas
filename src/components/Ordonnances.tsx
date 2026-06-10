@@ -37,9 +37,9 @@ export type { OrdStatus, OrdonnanceItem, Ordonnance };
 
 // ── Status config ─────────────────────────────────────────────────────────────
 const STATUS_MAP: Record<OrdStatus, { label: string; bg: string; fg: string; dot: string }> = {
-  en_attente: { label: 'En attente', bg: C.amberLt, fg: C.amber, dot: C.amber },
-  partielle:  { label: 'Partielle',  bg: C.blueLt,  fg: C.blue,  dot: C.blue  },
-  terminee:   { label: 'Terminée',   bg: C.brandLt, fg: C.brand, dot: C.brand },
+  en_attente: { label: 'À dispenser', bg: C.amberLt, fg: C.amber, dot: C.amber },
+  partielle:  { label: 'Partielle',   bg: C.blueLt,  fg: C.blue,  dot: C.blue  },
+  terminee:   { label: 'Complétée',   bg: C.brandLt, fg: C.brand, dot: C.brand },
 };
 const FILTERS = [
   { key: 'en_attente', label: 'À traiter'  },
@@ -78,7 +78,7 @@ function initials(name: string) { return name.trim().split(/\s+/).map(w => w[0])
 function Avatar({ name, idx, size = 30 }: { name: string; idx: number; size?: number }) {
   return (
     <div style={{
-      width: size, height: size, borderRadius: size * 0.3, flexShrink: 0,
+      width: size, height: size, borderRadius: '50%', flexShrink: 0,
       background: GRADS[idx % GRADS.length], display: 'flex',
       alignItems: 'center', justifyContent: 'center',
       color: '#fff', fontSize: size * 0.36, fontWeight: 700,
@@ -423,11 +423,11 @@ function OrdDetail({
   onConvertToSale: (ord: Ordonnance) => void;
   avatarIdx?: number;
 }) {
-  const hasRupture = ord.items.some(i => i.status === 'rupture');
   const ruptureItems = ord.items.filter(i => i.status === 'rupture');
   const availCount = ord.items.filter(i => i.status !== 'rupture').length;
   const totalQty = ord.items.reduce((s, i) => s + i.qty, 0);
   const delivered = ord.items.reduce((s, i) => s + i.qty_delivered, 0);
+  const dateFormatted = new Date(ord.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 
   const handlePrint = () => {
     const html = `<!DOCTYPE html><html><head><title>Ordonnance ${ord.ref}</title>
@@ -462,112 +462,90 @@ function OrdDetail({
 
   return (
     <div>
-      {/* ── Header: avatar + nom + badges + boutons ── */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 24, paddingBottom: 22, borderBottom: `1px solid ${C.border}` }}>
-        <Avatar name={ord.patient_name} idx={avatarIdx} size={56} />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 5 }}>
-            <span style={{ fontSize: 20, fontWeight: 700, color: C.ink, letterSpacing: '-0.025em' }}>{ord.patient_name}</span>
+      {/* ── Header: avatar · nom · Urgent | boutons à droite ── */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 22 }}>
+        <Avatar name={ord.patient_name} idx={avatarIdx} size={62} />
+
+        <div style={{ flex: 1, minWidth: 0, paddingTop: 3 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 7 }}>
+            <span style={{ fontSize: 22, fontWeight: 800, color: C.ink, letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+              {ord.patient_name}
+            </span>
             {ord.status === 'en_attente' && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: C.redLt, color: C.red, borderRadius: 99, padding: '2px 9px', fontSize: 11, fontWeight: 700 }}>
-                <span style={{ width: 5, height: 5, borderRadius: 99, background: C.red, flexShrink: 0 }} />
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: C.redLt, color: C.red, borderRadius: 99, padding: '3px 10px', fontSize: 11.5, fontWeight: 700 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.red, flexShrink: 0 }} />
                 Urgent
               </span>
             )}
-            {hasRupture && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: C.amberLt, color: C.amber, borderRadius: 99, padding: '2px 9px', fontSize: 11, fontWeight: 600 }}>
-                Rupture stock
-              </span>
-            )}
           </div>
-          <div style={{ fontSize: 12.5, color: C.inkMute, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-            <span style={{ fontFamily: C.fm, color: C.inkFaint, fontSize: 11.5 }}>{ord.ref}</span>
-            {ord.medecin && <><span style={{ color: C.inkGhost }}>·</span><span>{ord.medecin}</span></>}
-            {ord.patient_phone && <><span style={{ color: C.inkGhost }}>·</span><span>{ord.patient_phone}</span></>}
-          </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <button onClick={handlePrint} style={{
-              display: 'flex', alignItems: 'center', gap: 7,
-              padding: '7px 14px', border: `1.5px solid ${C.border}`,
-              borderRadius: 8, background: C.panelSolid, color: C.inkSoft,
-              fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: C.f,
-            }}>
-              <div style={{ width: 20, height: 20, borderRadius: 6, background: C.ink, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <span style={{ color: '#fff', fontSize: 9, fontWeight: 800, lineHeight: 1 }}>R</span>
-              </div>
-              Historique
-            </button>
-            {ord.status !== 'terminee' && (
-              <button onClick={() => onConvertToSale(ord)} style={{
-                display: 'flex', alignItems: 'center', gap: 7,
-                padding: '7px 14px', border: `1.5px solid ${C.brandMid}`,
-                borderRadius: 8, background: 'transparent', color: C.brand,
-                fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: C.f,
-              }}>
-                <ShoppingCart size={13} strokeWidth={2} />
-                Préparer la vente
-              </button>
-            )}
-            {(ord.status === 'en_attente' || ord.status === 'partielle') && (
-              <button onClick={() => onStatusChange(ord.id, 'terminee')} style={{
-                display: 'flex', alignItems: 'center', gap: 7,
-                padding: '7px 16px', border: 'none',
-                borderRadius: 8, background: C.ink, color: '#fff',
-                fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: C.f,
-                boxShadow: '0 1px 2px rgba(0,0,0,0.12)',
-              }}>
-                ✓ Valider l'ordonnance
-              </button>
-            )}
-            {ord.status === 'terminee' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: C.brandLt, color: C.brand, borderRadius: 8, fontSize: 12.5, fontWeight: 600, fontFamily: C.f }}>
-                ✓ Délivrée
-              </div>
-            )}
+          <div style={{ fontSize: 13, color: C.inkMute, display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
+            {ord.patient_phone && <span>{ord.patient_phone}</span>}
+            {ord.patient_phone && ord.medecin && <span style={{ color: C.inkGhost }}>·</span>}
+            {ord.medecin && <span>{ord.medecin}</span>}
+            {!ord.patient_phone && !ord.medecin && <span style={{ color: C.inkFaint }}>—</span>}
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-          <button onClick={onEdit} style={{ width: 30, height: 30, border: `1px solid ${C.border}`, borderRadius: 8, background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.inkMute }}>
+
+        {/* Boutons droite */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, paddingTop: 4 }}>
+          <button onClick={onEdit} style={{ width: 32, height: 32, border: `1px solid ${C.border}`, borderRadius: 8, background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.inkFaint }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#f5f5f5'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>
-          <button onClick={onDelete} style={{ width: 30, height: 30, border: `1px solid ${C.border}`, borderRadius: 8, background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.inkFaint }}
-            onMouseEnter={e => { e.currentTarget.style.background = C.redLt; e.currentTarget.style.color = C.red; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = C.inkFaint; }}>
+          <button onClick={onDelete} style={{ width: 32, height: 32, border: `1px solid ${C.border}`, borderRadius: 8, background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.inkFaint }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = C.redLt; (e.currentTarget as HTMLButtonElement).style.color = C.red; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = C.inkFaint; }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
           </button>
+
+          <button onClick={handlePrint} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', border: `1px solid ${C.border}`, borderRadius: 10, background: '#f3f4f6', color: C.inkSoft, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: C.f, boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+            <div style={{ width: 22, height: 22, borderRadius: '50%', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <span style={{ color: '#fff', fontSize: 10, fontWeight: 800, lineHeight: 1 }}>R</span>
+            </div>
+            Historique
+          </button>
+
+          {(ord.status === 'en_attente' || ord.status === 'partielle') && (
+            <button onClick={() => onStatusChange(ord.id, 'terminee')} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 20px', border: 'none', borderRadius: 10, background: '#111', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: C.f, boxShadow: '0 2px 6px rgba(0,0,0,0.2)' }}>
+              <svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              Valider l'ordonnance
+            </button>
+          )}
+          {ord.status === 'terminee' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10, background: C.brandLt, color: C.brand, fontSize: 13, fontWeight: 700, fontFamily: C.f }}>
+              ✓ Complétée
+            </div>
+          )}
         </div>
       </div>
 
-      {/* ── Grille info 4 colonnes ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 14 }}>
+      {/* ── Grille info — une ligne : N°ORD · MÉDECIN · DATE · VALIDITÉ · STATUT + bouton violet ── */}
+      <div style={{ border: `1px solid ${C.border}`, borderRadius: 12, padding: '14px 20px', marginBottom: 22, display: 'flex', alignItems: 'center', background: '#fff' }}>
         {[
-          { lbl: 'N° ORDONNANCE', val: ord.ref, mono: true },
-          { lbl: 'MÉDECIN',       val: ord.medecin || '—', mono: false },
-          { lbl: 'DATE',          val: new Date(ord.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }), mono: false },
-          { lbl: 'VALIDITÉ',      val: '3 mois', mono: false },
+          { lbl: 'N°\nORDONNANCE', val: ord.ref,          mono: true  },
+          { lbl: 'MÉDECIN',        val: ord.medecin || '—', mono: false },
+          { lbl: 'DATE',           val: dateFormatted,      mono: false },
+          { lbl: 'VALIDITÉ',       val: '3 mois',           mono: false },
         ].map(({ lbl, val, mono }) => (
-          <div key={lbl} style={{ background: C.panelSolid, border: `1px solid ${C.border}`, borderRadius: 10, padding: '10px 12px' }}>
-            <div style={{ fontSize: 9.5, fontWeight: 600, color: C.inkFaint, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 5 }}>{lbl}</div>
-            <div style={{ fontSize: 12.5, fontWeight: 600, color: C.ink, fontFamily: mono ? C.fm : C.f, wordBreak: 'break-all' }}>{val}</div>
+          <div key={lbl} style={{ flex: 1, paddingRight: 18, marginRight: 18, borderRight: `1px solid ${C.border}` }}>
+            <div style={{ fontSize: 9.5, fontWeight: 600, color: C.inkFaint, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6, whiteSpace: 'pre-line', lineHeight: 1.3 }}>{lbl}</div>
+            <div style={{ fontSize: 13.5, fontWeight: 700, color: C.ink, fontFamily: mono ? C.fm : C.f }}>{val}</div>
           </div>
         ))}
-      </div>
-
-      {/* ── Statut + imprimer ── */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-        <Pill status={ord.status} />
-        <button onClick={handlePrint} style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          padding: '6px 14px', border: `1px solid rgba(6,81,188,0.2)`,
-          borderRadius: 8, background: C.blueLt, color: C.blue,
-          fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: C.f,
-        }}>
-          <Printer size={12} strokeWidth={1.5} />
+        <div style={{ paddingRight: 18, marginRight: 18, borderRight: `1px solid ${C.border}`, flexShrink: 0 }}>
+          <div style={{ fontSize: 9.5, fontWeight: 600, color: C.inkFaint, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 7 }}>STATUT</div>
+          <Pill status={ord.status} />
+        </div>
+        <button onClick={handlePrint} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', border: 'none', borderRadius: 10, background: '#6e44b0', color: '#fff', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: C.f, whiteSpace: 'nowrap', flexShrink: 0, boxShadow: '0 2px 8px rgba(110,68,176,0.3)' }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+          </svg>
           Voir l'ordonnance scannée
         </button>
       </div>
 
-      {/* ── Progression délivrance (partielle) ── */}
+      {/* ── Progression (partielle) ── */}
       {ord.status === 'partielle' && totalQty > 0 && (
         <div style={{ marginBottom: 18 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, color: C.inkMute, marginBottom: 5 }}>
@@ -575,57 +553,65 @@ function OrdDetail({
             <span style={{ fontFamily: C.fm, fontWeight: 600 }}>{delivered}/{totalQty}</span>
           </div>
           <div style={{ height: 5, background: C.blueLt, borderRadius: 99, overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${totalQty > 0 ? (delivered / totalQty) * 100 : 0}%`, background: C.blue, borderRadius: 99, transition: 'width 0.3s' }} />
+            <div style={{ height: '100%', width: `${(delivered / totalQty) * 100}%`, background: C.blue, borderRadius: 99, transition: 'width 0.3s' }} />
           </div>
         </div>
       )}
 
       {/* ── Tableau médicaments ── */}
-      <div style={{ background: C.panelSolid, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden', marginBottom: 18 }}>
-        <div style={{ padding: '12px 16px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: C.ink }}>Médicaments prescrits</span>
-          <span style={{ fontSize: 11.5, color: C.inkMute }}>
-            {availCount} disponible{availCount !== 1 ? 's' : ''} sur {ord.items.length}
-            {ruptureItems.length > 0 && ` · ${ruptureItems.length} en rupture`}
+      <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden', marginBottom: 20 }}>
+        <div style={{ padding: '12px 20px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>Médicaments prescrits</span>
+          <span style={{ fontSize: 12.5 }}>
+            {availCount > 0 && <span style={{ color: C.brand, fontWeight: 600 }}>{availCount} disponible{availCount > 1 ? 's' : ''}</span>}
+            <span style={{ color: C.inkMute }}> sur {ord.items.length}</span>
+            {ruptureItems.length > 0 && <span style={{ color: C.red, fontWeight: 600 }}> · {ruptureItems.length} en rupture</span>}
           </span>
         </div>
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
-              <tr style={{ background: 'rgba(15,15,20,0.025)', borderBottom: `1px solid ${C.border}` }}>
-                <th style={{ width: 36, padding: '9px 12px' }} />
+              <tr style={{ background: 'rgba(15,15,20,0.02)', borderBottom: `1px solid ${C.border}` }}>
+                <th style={{ width: 52, padding: '10px 16px' }} />
                 {['MÉDICAMENT', 'POSOLOGIE', 'DURÉE', 'QUANTITÉ', 'STOCK DISPO.', 'STATUT'].map((h, i) => (
-                  <th key={i} style={{ padding: '9px 14px', textAlign: i >= 2 ? 'center' : 'left', fontSize: 10.5, color: C.inkMute, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', whiteSpace: 'nowrap', fontFamily: C.f }}>{h}</th>
+                  <th key={i} style={{ padding: '10px 16px', textAlign: i >= 2 ? 'center' : 'left', fontSize: 10.5, color: C.inkMute, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', whiteSpace: 'nowrap', fontFamily: C.f }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {ord.items.map((item, i) => {
+                const isOk = item.status !== 'rupture';
                 const durMatch = item.dosage.match(/(\d+)\s*(jour|jours|semaine|semaines|mois)/i);
                 const duration = durMatch ? `${durMatch[1]} ${durMatch[2]}` : '—';
                 return (
-                  <tr key={item.id} style={{ borderBottom: i < ord.items.length - 1 ? `1px solid ${C.border}` : 'none', background: item.status === 'rupture' ? 'rgba(200,30,30,0.025)' : 'transparent' }}>
-                    <td style={{ padding: '12px 12px', textAlign: 'center' }}>
-                      <div style={{ width: 16, height: 16, border: `1.5px solid ${item.status === 'rupture' ? C.red : C.brand}`, borderRadius: 4, margin: '0 auto' }} />
+                  <tr key={item.id} style={{ borderBottom: i < ord.items.length - 1 ? `1px solid ${C.border}` : 'none', background: !isOk ? 'rgba(200,30,30,0.02)' : 'transparent' }}>
+                    <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                      <div style={{ width: 20, height: 20, borderRadius: 5, margin: '0 auto', background: isOk ? C.brand : '#fff', border: isOk ? 'none' : `1.5px solid ${C.inkGhost}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {isOk && (
+                          <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
+                            <polyline points="1.5,4.5 4.5,7.5 9.5,1.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        )}
+                      </div>
                     </td>
-                    <td style={{ padding: '12px 14px' }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: C.ink }}>{item.name}</div>
-                      {item.dci && <div style={{ fontSize: 11, color: C.inkFaint, marginTop: 1 }}>{item.dci}</div>}
+                    <td style={{ padding: '14px 16px' }}>
+                      <div style={{ fontSize: 13.5, fontWeight: 700, color: C.ink }}>{item.name}</div>
+                      {item.dci && <div style={{ fontSize: 11.5, color: C.inkFaint, marginTop: 2 }}>{item.dci}</div>}
                     </td>
-                    <td style={{ padding: '12px 14px', fontSize: 11.5, color: C.inkMute }}>{item.dosage || '—'}</td>
-                    <td style={{ padding: '12px 14px', textAlign: 'center', fontSize: 11.5, color: C.inkMute }}>{duration}</td>
-                    <td style={{ padding: '12px 14px', textAlign: 'center', fontFamily: C.fm, fontSize: 13, fontWeight: 700, color: C.ink }}>{item.qty}</td>
-                    <td style={{ padding: '12px 14px', textAlign: 'center', fontFamily: C.fm, fontSize: 13, fontWeight: 700, color: item.status === 'rupture' ? C.red : C.brand }}>{item.stock_available}</td>
-                    <td style={{ padding: '12px 14px', textAlign: 'center' }}>
-                      {item.status === 'rupture' ? (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: C.redLt, color: C.red, borderRadius: 99, padding: '3px 9px', fontSize: 10.5, fontWeight: 600, whiteSpace: 'nowrap' }}>
-                          <span style={{ width: 4, height: 4, borderRadius: 99, background: C.red, flexShrink: 0 }} />
+                    <td style={{ padding: '14px 16px', fontSize: 13, color: C.inkSoft }}>{item.dosage || '—'}</td>
+                    <td style={{ padding: '14px 16px', textAlign: 'center', fontSize: 13, color: C.inkSoft }}>{duration}</td>
+                    <td style={{ padding: '14px 16px', textAlign: 'center', fontFamily: C.fm, fontSize: 14, fontWeight: 800, color: C.ink }}>{item.qty}</td>
+                    <td style={{ padding: '14px 16px', textAlign: 'center', fontFamily: C.fm, fontSize: 14, fontWeight: 800, color: !isOk ? C.red : C.ink }}>{item.stock_available}</td>
+                    <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                      {!isOk ? (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: C.redLt, color: C.red, border: `1px solid rgba(200,30,30,0.2)`, borderRadius: 99, padding: '4px 11px', fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap' }}>
+                          <span style={{ width: 5, height: 5, borderRadius: '50%', background: C.red, flexShrink: 0 }} />
                           Rupture · alternative ?
                         </span>
                       ) : (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: C.brandLt, color: C.brand, borderRadius: 99, padding: '3px 9px', fontSize: 10.5, fontWeight: 500, whiteSpace: 'nowrap' }}>
-                          <span style={{ width: 4, height: 4, borderRadius: 99, background: C.brand, flexShrink: 0 }} />
-                          Disponible
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: C.brand, fontSize: 12, fontWeight: 600 }}>
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.brand, flexShrink: 0 }} />
+                          Dispo.
                         </span>
                       )}
                     </td>
@@ -637,24 +623,29 @@ function OrdDetail({
         </div>
       </div>
 
-      {/* ── Cartes suggestion alternatives ── */}
-      {ruptureItems.length > 0 && ruptureItems.map(item => (
-        <div key={item.id} style={{ background: '#fffbf2', border: `1px solid rgba(183,95,6,0.25)`, borderRadius: 12, padding: '14px 16px', marginBottom: 12 }}>
-          <div style={{ fontSize: 10.5, fontWeight: 700, color: C.amber, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
-            Suggestion d'alternative — {item.name}
+      {/* ── Suggestion d'alternative (carte crème) ── */}
+      {ruptureItems.map(item => (
+        <div key={item.id} style={{ background: '#f6f2eb', borderRadius: 14, padding: '18px 22px', marginBottom: 14, display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+          <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#fde9c2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
+            <span style={{ fontSize: 18, lineHeight: 1 }}>✦</span>
           </div>
-          <div style={{ fontSize: 13, color: C.ink, marginBottom: 12, lineHeight: 1.55 }}>
-            {item.alternative || 'Aucune alternative renseignée — contactez le médecin prescripteur pour une substitution.'}
-          </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <button style={{ padding: '6px 14px', border: `1.5px solid ${C.amber}`, borderRadius: 7, background: 'transparent', color: C.amber, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: C.f }}>
-              Proposer au médecin
-            </button>
-            {item.alternative && (
-              <button style={{ padding: '6px 14px', border: 'none', borderRadius: 7, background: C.amber, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: C.f }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.ink, marginBottom: 6 }}>
+              Suggestion d'alternative pour {item.name}
+            </div>
+            <div style={{ fontSize: 13, color: C.inkSoft, lineHeight: 1.6, marginBottom: 14 }}>
+              {item.alternative
+                ? <>L'<strong>{item.alternative}</strong> est en stock — même classe thérapeutique.</>
+                : 'Aucune alternative renseignée — contactez le médecin prescripteur.'}
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button style={{ padding: '8px 20px', border: `1px solid ${C.border}`, borderRadius: 9, background: '#fff', color: C.ink, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: C.f }}>
+                Proposer au médecin
+              </button>
+              <button style={{ padding: '8px 20px', border: 'none', borderRadius: 9, background: '#111', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: C.f }}>
                 Accepter alternative
               </button>
-            )}
+            </div>
           </div>
         </div>
       ))}
@@ -668,14 +659,17 @@ function OrdDetail({
       )}
 
       {/* ── Actions secondaires ── */}
-      {ord.status === 'en_attente' && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <button onClick={() => onStatusChange(ord.id, 'partielle')} style={{
-            background: C.amberLt, color: C.amber, border: `1px solid rgba(183,95,6,0.3)`,
-            borderRadius: 8, padding: '9px 18px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: C.f,
-          }}>
-            Délivrance partielle
+      {ord.status !== 'terminee' && (
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap', paddingTop: 4 }}>
+          <button onClick={() => onConvertToSale(ord)} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 18px', border: `1.5px solid ${C.brandMid}`, borderRadius: 9, background: 'transparent', color: C.brand, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: C.f }}>
+            <ShoppingCart size={13} strokeWidth={2} />
+            Préparer la vente
           </button>
+          {ord.status === 'en_attente' && (
+            <button onClick={() => onStatusChange(ord.id, 'partielle')} style={{ padding: '9px 18px', border: `1px solid rgba(183,95,6,0.3)`, borderRadius: 9, background: C.amberLt, color: C.amber, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: C.f }}>
+              Délivrance partielle
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -810,42 +804,55 @@ export default function Ordonnances() {
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
 
           {/* Left list */}
-          <div style={{ width: 320, borderRight: `1px solid ${C.hairline}`, display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+          <div style={{ width: 380, borderRight: `1px solid ${C.hairline}`, display: 'flex', flexDirection: 'column', flexShrink: 0, background: '#f8f8f8' }}>
 
             {/* Panel header */}
-            <div style={{ padding: '14px 16px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `1px solid ${C.hairline}`, flexShrink: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 14.5, fontWeight: 700, color: C.ink, letterSpacing: '-0.01em' }}>Ordonnances</span>
-                {kpis.enAttente > 0 && (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', background: C.amberLt, color: C.amber, borderRadius: 99, padding: '2px 8px', fontSize: 10.5, fontWeight: 700 }}>
-                    {kpis.enAttente} en attente
-                  </span>
-                )}
+            <div style={{ padding: '16px 18px 14px', background: '#f8f8f8', borderBottom: `1px solid ${C.hairline}`, flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: C.ink, letterSpacing: '-0.02em' }}>Ordonnances</span>
+                  {kpis.enAttente > 0 && (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', background: C.redLt, color: C.red, borderRadius: 99, padding: '2px 8px', fontSize: 10.5, fontWeight: 700 }}>
+                      {kpis.enAttente}
+                    </span>
+                  )}
+                </div>
+                <button onClick={() => { setEditOrd(null); setShowModal(true); }} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', border: 'none', borderRadius: 8, background: C.ink, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: C.f }}>
+                  <Plus size={11} strokeWidth={2.5} />
+                  Nouvelle
+                </button>
               </div>
-            </div>
 
-            {/* Search */}
-            <div style={{ padding: '8px 12px', borderBottom: `1px solid ${C.hairline}`, flexShrink: 0 }}>
+              {/* Search */}
               <div style={{ position: 'relative' }}>
-                <Search size={12} color={C.inkMute} strokeWidth={1.5} style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Patient, ref, médecin…" style={{ width: '100%', height: 30, paddingLeft: 28, paddingRight: 8, border: `1px solid ${C.border}`, borderRadius: 7, fontSize: 12, background: C.panelSolid, color: C.ink, outline: 'none', boxSizing: 'border-box' as const, fontFamily: C.f }} />
+                <Search size={12} color={C.inkMute} strokeWidth={1.5} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Patient, ref, médecin…" style={{ width: '100%', height: 34, paddingLeft: 30, paddingRight: 10, border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 12.5, background: '#fff', color: C.ink, outline: 'none', boxSizing: 'border-box' as const, fontFamily: C.f }} />
               </div>
             </div>
 
-            {/* Filter tabs */}
-            <div style={{ display: 'flex', borderBottom: `1px solid ${C.hairline}`, flexShrink: 0 }}>
+            {/* Chip filter tabs */}
+            <div style={{ display: 'flex', gap: 6, padding: '10px 14px', background: '#f8f8f8', borderBottom: `1px solid ${C.hairline}`, flexShrink: 0 }}>
               {FILTERS.map(f => {
                 const count = ords.filter(o => o.status === f.key).length;
                 const isActive = filter === f.key;
                 return (
                   <button key={f.key} onClick={() => setFilter(f.key)} style={{
-                    flex: 1, padding: '9px 4px', border: 'none',
-                    borderBottom: `2px solid ${isActive ? C.brand : 'transparent'}`,
-                    background: 'transparent', color: isActive ? C.brand : C.inkMute,
-                    fontSize: 11.5, fontWeight: isActive ? 700 : 500, cursor: 'pointer',
-                    fontFamily: C.f, whiteSpace: 'nowrap', transition: 'color 0.15s',
+                    display: 'flex', alignItems: 'center', gap: 5,
+                    padding: '6px 14px', border: isActive ? 'none' : `1px solid ${C.border}`,
+                    borderRadius: 99, cursor: 'pointer', fontFamily: C.f,
+                    background: isActive ? '#fff' : 'transparent',
+                    color: isActive ? C.ink : C.inkMute,
+                    fontSize: 12, fontWeight: isActive ? 700 : 500,
+                    boxShadow: isActive ? '0 1px 4px rgba(0,0,0,0.12)' : 'none',
+                    transition: 'all 0.15s',
+                    whiteSpace: 'nowrap',
                   }}>
-                    {f.label}{count > 0 ? ` ${count}` : ''}
+                    {f.label}
+                    {count > 0 && (
+                      <span style={{ fontSize: 11, fontWeight: 700, color: isActive ? C.brand : C.inkFaint }}>
+                        {count}
+                      </span>
+                    )}
                   </button>
                 );
               })}
@@ -872,31 +879,31 @@ export default function Ordonnances() {
                 const dateStr = new Date(o.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' });
                 return (
                   <div key={o.id} onClick={() => setSelectedId(isActive ? null : o.id)}
-                    style={{ padding: '12px 14px', borderBottom: `1px solid ${C.hairline}`, cursor: 'pointer', background: isActive ? '#f0faf6' : 'transparent', borderLeft: `4px solid ${isActive ? C.brand : 'transparent'}`, transition: 'background 0.12s' }}>
+                    style={{ padding: '13px 18px', borderBottom: `1px solid ${C.hairline}`, cursor: 'pointer', background: isActive ? '#fff' : '#fff', borderLeft: `3px solid ${isActive ? C.brand : 'transparent'}`, transition: 'border-color 0.12s' }}>
                     {/* Ref + badges + statut */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ fontFamily: C.fm, fontSize: 11, fontWeight: 700, color: C.inkMute }}>{o.ref}</span>
+                        <span style={{ fontFamily: C.fm, fontSize: 11, fontWeight: 700, color: C.inkFaint }}>{o.ref}</span>
                         {o.status === 'en_attente' && (
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, background: C.redLt, color: C.red, borderRadius: 99, padding: '1px 6px', fontSize: 9.5, fontWeight: 700 }}>
-                            <span style={{ width: 4, height: 4, borderRadius: 99, background: C.red, flexShrink: 0 }} />
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, background: C.redLt, color: C.red, borderRadius: 99, padding: '1px 7px', fontSize: 9.5, fontWeight: 700 }}>
+                            <span style={{ width: 4, height: 4, borderRadius: '50%', background: C.red, flexShrink: 0 }} />
                             Urgent
                           </span>
                         )}
                         {hasRupture && o.status !== 'en_attente' && (
-                          <span style={{ fontSize: 9.5, background: C.amberLt, color: C.amber, borderRadius: 99, padding: '1px 6px', fontWeight: 600 }}>Rupture</span>
+                          <span style={{ fontSize: 9.5, background: C.amberLt, color: C.amber, borderRadius: 99, padding: '1px 7px', fontWeight: 600 }}>Rupture</span>
                         )}
                       </div>
                       <Pill status={o.status} sm />
                     </div>
                     {/* Nom patient */}
-                    <div style={{ fontSize: 13, fontWeight: 700, color: C.ink, letterSpacing: '-0.01em', marginBottom: 3 }}>{o.patient_name}</div>
+                    <div style={{ fontSize: 13.5, fontWeight: 700, color: C.ink, letterSpacing: '-0.015em', marginBottom: 3 }}>{o.patient_name}</div>
                     {/* Médecin */}
-                    <div style={{ fontSize: 11.5, color: C.inkMute, marginBottom: 5 }}>{o.medecin || 'Médecin non renseigné'}</div>
+                    <div style={{ fontSize: 12, color: C.inkMute, marginBottom: 6 }}>{o.medecin || 'Médecin non renseigné'}</div>
                     {/* Date + nb méds */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: 11, color: C.inkFaint }}>{dateStr}</span>
-                      <span style={{ fontSize: 11, color: C.inkFaint }}>{o.items.length} méd.</span>
+                      <span style={{ fontSize: 11.5, color: C.inkFaint }}>{dateStr}</span>
+                      <span style={{ fontSize: 11.5, color: C.inkFaint }}>{o.items.length} médicament{o.items.length > 1 ? 's' : ''}</span>
                     </div>
                   </div>
                 );
