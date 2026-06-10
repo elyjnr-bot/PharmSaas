@@ -577,9 +577,6 @@ function PatientOverview({ patients, urgentIds, onSelect, onAdd }: {
               {urgentIds.size > 0 && <span style={{ marginLeft: 6, background: 'rgba(183,95,6,0.09)', color: C.amber, borderRadius: 99, padding: '1px 8px', fontSize: 11.5, fontWeight: 600 }}>● {urgentIds.size} urgence{urgentIds.size > 1 ? 's' : ''}</span>}
             </p>
           </div>
-          <button onClick={onAdd} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', border: 'none', borderRadius: 9, background: C.ink, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: C.f }}>
-            <Plus size={13} strokeWidth={2.5} /> Ajouter un patient
-          </button>
         </div>
       </div>
 
@@ -786,9 +783,6 @@ export default function Patients() {
                 <div style={{ fontSize: 16, fontWeight: 700, color: C.ink, letterSpacing: '-0.02em' }}>Patients</div>
                 <div style={{ fontSize: 11.5, color: C.inkMute, marginTop: 1 }}>{patients.length.toLocaleString('fr-FR')} enregistrés</div>
               </div>
-              <button onClick={() => setShowNewModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 13px', border: 'none', borderRadius: 8, background: C.ink, color: '#fff', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: C.f }}>
-                <Plus size={12} strokeWidth={2.5} /> Ajouter
-              </button>
             </div>
             {/* Search */}
             <div style={{ position: 'relative' }}>
