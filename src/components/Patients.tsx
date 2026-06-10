@@ -440,7 +440,7 @@ const ORD_STATUS: Record<OrdStatus, { label: string; bg: string; fg: string }> =
   terminee:   { label: 'Terminée',   bg: 'rgba(16,120,90,0.08)',  fg: '#10785a' },
 };
 
-// ── Patient Detail Panel ──────────────────────────────────────────────────────
+// ── Patient Detail Panel — Chalk Premium ─────────────────────────────────────
 function PatientDetail({ patient, idx, onClose, onEdit, onDelete, onAddPurchase }: {
   patient: Patient;
   idx: number;
@@ -460,325 +460,284 @@ function PatientDetail({ patient, idx, onClose, onEdit, onDelete, onAddPurchase 
     ).sort((a, b) => b.date.localeCompare(a.date)),
   [ords, patient.id, patient.name]);
 
+  const sortedPurchases = useMemo(() =>
+    [...patient.purchases].sort((a, b) => b.date.localeCompare(a.date)),
+  [patient.purchases]);
+
   const totalSpent = patient.purchases.reduce((s, p) => s + p.total, 0);
-  const lastVisit = patient.purchases.length > 0
-    ? [...patient.purchases].sort((a, b) => b.date.localeCompare(a.date))[0].date
+  const avgBasket  = patient.purchases.length > 0 ? Math.round(totalSpent / patient.purchases.length) : 0;
+  const lastPurchase = sortedPurchases[0] ?? null;
+
+  // Médicaments fréquents : top items from all purchases
+  const freqMeds = useMemo(() => {
+    const freq: Record<string, number> = {};
+    patient.purchases.forEach(p => p.items.forEach(item => {
+      const name = item.split('×')[0]?.trim() || item;
+      freq[name] = (freq[name] || 0) + 1;
+    }));
+    return Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([n]) => n);
+  }, [patient.purchases]);
+
+  // Active / pending ordonnances
+  const activeOrds = patOrdonnances.filter(o => o.status !== 'terminee');
+
+  // Age from dob
+  const age = patient.dob
+    ? Math.floor((Date.now() - new Date(patient.dob).getTime()) / (365.25 * 86400000))
     : null;
 
-  const whatsappMessage = () => {
-    const msg = encodeURIComponent(
-      `Bonjour ${patient.name.split(' ')[0]} 👋\n\nMerci de votre fidélité à notre pharmacie.\nVous pouvez nous contacter pour toute ordonnance ou renouvellement.\n\nÀ bientôt !`
-    );
-    const phone = patient.phone.replace(/[\s+\-()\[\]]/g, '');
-    window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
-  };
+  // Gender from notes heuristic (M/F stored as first char of notes or not stored — show nothing if unknown)
+  const hasUrgentOrd = activeOrds.some(o => o.status === 'en_attente');
+
+  // Last visit display
+  const lastVisitLabel = lastPurchase
+    ? (() => {
+        const d = new Date(lastPurchase.date);
+        const today = new Date();
+        const diff = Math.floor((today.getTime() - d.getTime()) / 86400000);
+        if (diff === 0) return "Aujourd'hui";
+        if (diff === 1) return 'Hier';
+        return formatDate(lastPurchase.date);
+      })()
+    : 'Jamais';
+
+  // Build combined timeline: purchases + ordonnances
+  type TimelineRow = { date: string; type: 'achat' | 'ordonnance'; label: string; articles: number; montant: number; ref?: string; status?: string };
+  const timeline = useMemo((): TimelineRow[] => {
+    const rows: TimelineRow[] = sortedPurchases.map(p => ({
+      date: p.date,
+      type: 'achat',
+      label: p.ticket || 'Vente libre',
+      articles: p.items.length,
+      montant: p.total,
+    }));
+    patOrdonnances.forEach(o => {
+      const montant = o.items.reduce((s, i) => s + (i.qty * 0), 0); // no price in ordonnance items
+      rows.push({ date: o.date, type: 'ordonnance', label: o.ref, articles: o.items.length, montant: o.total, ref: o.ref, status: o.status });
+    });
+    return rows.sort((a, b) => b.date.localeCompare(a.date)).slice(0, 8);
+  }, [sortedPurchases, patOrdonnances]);
 
   return (
     <>
       <div style={{
-        width: 340, borderLeft: `1px solid ${C.hairline}`, flexShrink: 0,
+        flex: 1, borderLeft: `1px solid ${C.hairline}`,
         display: 'flex', flexDirection: 'column',
-        background: C.panel, fontFamily: C.f,
+        background: 'rgba(255,255,255,0.5)', fontFamily: C.f,
         backdropFilter: 'saturate(180%) blur(28px)',
         WebkitBackdropFilter: 'saturate(180%) blur(28px)',
+        minWidth: 0, overflow: 'hidden',
       }}>
-        {/* Panel header */}
+        {/* ── HEADER ─────────────────────────────────────────────────────── */}
         <div style={{
-          padding: '14px 18px', borderBottom: `1px solid ${C.hairline}`,
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0,
+          padding: '20px 28px 18px', borderBottom: `1px solid ${C.hairline}`,
+          flexShrink: 0, background: 'rgba(255,255,255,0.62)',
         }}>
-          <span style={{ fontSize: 13, fontWeight: 600, color: C.ink }}>Fiche patient</span>
-          <div style={{ display: 'flex', gap: 4 }}>
-            <button onClick={onEdit} title="Modifier" style={{ width: 28, height: 28, border: 'none', background: 'transparent', cursor: 'pointer', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.inkMute }}
-              onMouseEnter={e => (e.currentTarget.style.background = C.brandLt)}
-              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-              <Edit3 size={13} />
-            </button>
-            <button onClick={onDelete} title="Supprimer" style={{ width: 28, height: 28, border: 'none', background: 'transparent', cursor: 'pointer', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.inkMute }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(200,30,30,0.08)'; e.currentTarget.style.color = C.red; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = C.inkMute; }}>
-              <Trash2 size={13} />
-            </button>
-            <button onClick={onClose} style={{ width: 28, height: 28, border: 'none', background: 'transparent', cursor: 'pointer', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.inkMute }}>
-              <X size={14} />
-            </button>
+          {/* Top row: avatar + name + actions */}
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 12 }}>
+            <Avatar name={patient.name} idx={idx} size={56} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 6 }}>
+                <span style={{ fontSize: 22, fontWeight: 700, color: C.ink, letterSpacing: '-0.025em', lineHeight: 1.1 }}>{patient.name}</span>
+                <TypePill type={patient.type} />
+                {hasUrgentOrd && (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(200,30,30,0.08)', color: C.red, borderRadius: 99, padding: '2px 8px', fontSize: 11, fontWeight: 600 }}>
+                    <span style={{ width: 5, height: 5, borderRadius: 99, background: C.red }} />
+                    Ordo. urgente
+                  </span>
+                )}
+              </div>
+              {/* Bio line */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 0, flexWrap: 'wrap', fontSize: 12.5, color: C.inkMute }}>
+                {age !== null && <span>{age} ans</span>}
+                {patient.dob && <><span style={{ margin: '0 8px', opacity: 0.3 }}>·</span><span>née le {formatDate(patient.dob)}</span></>}
+                {patient.phone && <><span style={{ margin: '0 8px', opacity: 0.3 }}>·</span><span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Phone size={11} strokeWidth={1.5} />{patient.phone}</span></>}
+                {patient.address && <><span style={{ margin: '0 8px', opacity: 0.3 }}>·</span><span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={11} strokeWidth={1.5} />{patient.address}</span></>}
+              </div>
+            </div>
+            {/* Action buttons */}
+            <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+              <button onClick={onEdit} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', border: `1px solid ${C.border}`, borderRadius: 8, background: 'transparent', color: C.inkSoft, fontSize: 12.5, fontWeight: 500, cursor: 'pointer', fontFamily: C.f }}>
+                <Edit3 size={12} strokeWidth={1.5} /> Modifier
+              </button>
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent('navigate-to-tab', { detail: { tab: 'sales' } }))}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', border: 'none', borderRadius: 8, background: C.ink, color: '#fff', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: C.f, boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}>
+                <ChevronRight size={13} strokeWidth={2} /> Nouvelle vente
+              </button>
+            </div>
           </div>
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '18px' }}>
-          {/* Identity */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
-            <Avatar name={patient.name} idx={idx} size={48} />
-            <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: C.ink, letterSpacing: '-0.015em', lineHeight: 1.2 }}>{patient.name}</div>
-              <div style={{ fontSize: 12, color: C.inkMute, marginTop: 2 }}>{patient.phone}</div>
-              <div style={{ marginTop: 5 }}><TypePill type={patient.type} /></div>
-            </div>
-          </div>
+        {/* ── SCROLLABLE BODY ─────────────────────────────────────────────── */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 28px' }}>
 
-          {/* Contact info */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 18 }}>
-            {patient.phone && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, color: C.inkSoft }}>
-                <Phone size={11} color={C.inkFaint} strokeWidth={1.5} />
-                {patient.phone}
-              </div>
-            )}
-            {patient.email && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, color: C.inkSoft }}>
-                <Mail size={11} color={C.inkFaint} strokeWidth={1.5} />
-                {patient.email}
-              </div>
-            )}
-            {patient.address && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, color: C.inkSoft }}>
-                <MapPin size={11} color={C.inkFaint} strokeWidth={1.5} />
-                {patient.address}
-              </div>
-            )}
-            {patient.dob && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, color: C.inkSoft }}>
-                <Calendar size={11} color={C.inkFaint} strokeWidth={1.5} />
-                {formatDate(patient.dob)}
-              </div>
-            )}
-          </div>
-
-          {/* KPIs */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 18 }}>
+          {/* ── 4 STAT CARDS ─────────────────────────────────────────────── */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 22 }}>
             {[
-              { lbl: 'Visites', val: patient.purchases.length.toString() },
-              { lbl: 'Dernière', val: lastVisit ? formatShortDate(lastVisit) : 'jamais' },
-              { lbl: 'Total FC', val: fmt(totalSpent) },
-            ].map(({ lbl, val }, i) => (
-              <div key={i} style={{ background: C.brandLt, borderRadius: 9, padding: '9px 11px' }}>
-                <div style={{ fontSize: 9.5, color: C.inkFaint, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 3 }}>{lbl}</div>
-                <div style={{ fontSize: i === 2 ? 11 : 16, fontWeight: 700, color: C.ink, fontFamily: i !== 1 ? C.fm : 'inherit', lineHeight: 1.2 }}>{val}</div>
+              { lbl: 'Total dépensé', val: `${fmt(totalSpent)} FC`, sub: patient.purchases.length > 0 ? `${patient.purchases.length} achat${patient.purchases.length > 1 ? 's' : ''}` : 'Aucun achat', color: C.ink },
+              { lbl: 'Visites', val: String(patient.purchases.length), sub: 'enregistrées', color: C.blue },
+              { lbl: 'Panier moyen', val: avgBasket > 0 ? `${fmt(avgBasket)} FC` : '—', sub: avgBasket > 0 ? 'par visite' : 'Aucune donnée', color: C.brand },
+              { lbl: 'Dernière visite', val: lastVisitLabel, sub: lastPurchase?.ticket ? `Ticket ${lastPurchase.ticket}` : lastPurchase ? formatShortDate(lastPurchase.date) : '—', color: C.inkSoft },
+            ].map((s, i) => (
+              <div key={i} style={{ background: C.panel, border: `1px solid ${C.hairline}`, borderRadius: 12, padding: '14px 16px', backdropFilter: 'saturate(180%) blur(20px)', boxShadow: glassRing }}>
+                <div style={{ fontSize: 11, color: C.inkMute, marginBottom: 6 }}>{s.lbl}</div>
+                <div style={{ fontSize: i === 3 ? 14 : 20, fontWeight: 700, color: s.color, letterSpacing: '-0.025em', fontFamily: C.fm, lineHeight: 1.15, marginBottom: 4 }}>{s.val}</div>
+                <div style={{ fontSize: 11, color: C.inkFaint }}>{s.sub}</div>
               </div>
             ))}
           </div>
 
-          {/* Allergies */}
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 10.5, fontWeight: 600, color: C.inkFaint, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
-              <AlertTriangle size={10} color={C.inkFaint} strokeWidth={2} />
-              Allergies
-            </div>
-            {patient.allergies.length === 0 ? (
-              <div style={{ fontSize: 12, color: C.inkFaint, fontStyle: 'italic' }}>Aucune allergie connue</div>
-            ) : (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-                {patient.allergies.map(a => (
-                  <span key={a} style={{
-                    background: 'rgba(200,30,30,0.08)', color: C.red,
-                    borderRadius: 99, padding: '4px 10px', fontSize: 11.5, fontWeight: 550,
-                    display: 'flex', alignItems: 'center', gap: 4,
-                  }}>
-                    <AlertTriangle size={9} strokeWidth={2} /> {a}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
+          {/* ── TWO COLUMNS: history + therapeutic profile ───────────────── */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 16, marginBottom: 20 }}>
 
-          {/* Profil thérapeutique */}
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 10.5, fontWeight: 600, color: C.inkFaint, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
-              <Heart size={10} color={C.inkFaint} strokeWidth={2} />
-              Profil thérapeutique
-            </div>
-            {patient.therapeutic_profile.length === 0 ? (
-              <div style={{ fontSize: 12, color: C.inkFaint, fontStyle: 'italic' }}>Aucun profil enregistré</div>
-            ) : (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-                {patient.therapeutic_profile.map(t => (
-                  <span key={t} style={{ background: C.brandLt, color: C.brand, borderRadius: 99, padding: '4px 10px', fontSize: 11.5, fontWeight: 550 }}>{t}</span>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Notes */}
-          {patient.notes && (
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 10.5, fontWeight: 600, color: C.inkFaint, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
-                <FileText size={10} color={C.inkFaint} strokeWidth={2} />
-                Notes
-              </div>
-              <div style={{
-                fontSize: 12.5, color: C.inkSoft, lineHeight: 1.5,
-                background: 'rgba(15,15,20,0.03)', borderRadius: 8,
-                padding: '10px 12px',
-              }}>
-                {patient.notes}
-              </div>
-            </div>
-          )}
-
-          {/* ── Ordonnances liées ──────────────────────────────────────────── */}
-          <div style={{ marginBottom: 18 }}>
-            <div style={{ fontSize: 10.5, fontWeight: 600, color: C.inkFaint, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                <FileText size={10} color={C.inkFaint} strokeWidth={2} />
-                Ordonnances ({patOrdonnances.length})
-              </span>
-              <button
-                onClick={() => window.dispatchEvent(new CustomEvent('navigate-to-tab', { detail: { tab: 'ordonnances' } }))}
-                style={{ fontSize: 10.5, color: C.brand, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 3, padding: 0, fontFamily: C.f }}
-              >
-                {patOrdonnances.length > 0 ? 'Voir toutes' : 'Créer'}
-                <ChevronRight size={10} strokeWidth={2} />
-              </button>
-            </div>
-            {patOrdonnances.length === 0 ? (
-              <div style={{ fontSize: 12, color: C.inkFaint, fontStyle: 'italic' }}>Aucune ordonnance liée</div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {patOrdonnances.slice(0, 3).map(ord => {
-                  const st = ORD_STATUS[ord.status];
-                  return (
-                    <div key={ord.id} style={{ background: C.panel, border: `1px solid ${C.hairline}`, borderRadius: 9, padding: '9px 12px', boxShadow: glassRing }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                        <span style={{ fontFamily: C.fm, fontSize: 10.5, color: C.inkMute }}>{ord.ref}</span>
-                        <span style={{ fontSize: 10, fontWeight: 600, background: st.bg, color: st.fg, borderRadius: 99, padding: '1px 7px' }}>{st.label}</span>
-                      </div>
-                      <div style={{ fontSize: 11.5, color: C.inkSoft }}>
-                        {ord.items.length} médicament{ord.items.length > 1 ? 's' : ''}
-                        {' · '}{new Date(ord.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: '2-digit' })}
-                      </div>
-                      {ord.medecin && <div style={{ fontSize: 11, color: C.inkFaint, marginTop: 2 }}>Dr. {ord.medecin}</div>}
-                    </div>
-                  );
-                })}
-                {patOrdonnances.length > 3 && (
-                  <button onClick={() => window.dispatchEvent(new CustomEvent('navigate-to-tab', { detail: { tab: 'ordonnances' } }))}
-                    style={{ fontSize: 11.5, color: C.brand, fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '2px 0', fontFamily: C.f }}>
-                    +{patOrdonnances.length - 3} de plus…
+            {/* LEFT — Historique des achats */}
+            <div style={{ background: C.panel, border: `1px solid ${C.hairline}`, borderRadius: 12, overflow: 'hidden', backdropFilter: 'saturate(180%) blur(20px)', boxShadow: glassRing }}>
+              <div style={{ padding: '14px 16px 10px', borderBottom: `1px solid ${C.hairline}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: C.ink }}>Historique des achats</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 11.5, color: C.inkMute }}>{timeline.length} entrée{timeline.length > 1 ? 's' : ''}</span>
+                  <button onClick={() => setShowAddPurchase(true)} style={{ display: 'flex', alignItems: 'center', gap: 4, background: C.brandLt, border: 'none', borderRadius: 6, padding: '3px 8px', fontSize: 11, color: C.brand, fontWeight: 600, cursor: 'pointer', fontFamily: C.f }}>
+                    <Plus size={9} strokeWidth={2.5} /> Ajouter
                   </button>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* ── Résumé fidélité ────────────────────────────────────────────── */}
-          {patient.purchases.length > 0 && (() => {
-            const sorted = [...patient.purchases].sort((a, b) => a.date.localeCompare(b.date));
-            const firstDate = sorted[0]?.date;
-            const monthsActive = firstDate
-              ? Math.max(1, Math.ceil((Date.now() - new Date(firstDate).getTime()) / (30.44 * 86400000)))
-              : 1;
-            const freqPerMonth = (patient.purchases.length / monthsActive).toFixed(1);
-            // Top 3 produits achetés
-            const productFreq: Record<string, number> = {};
-            patient.purchases.forEach(p => p.items.forEach(item => {
-              const name = item.split('×')[0]?.trim() || item;
-              productFreq[name] = (productFreq[name] || 0) + 1;
-            }));
-            const topProducts = Object.entries(productFreq).sort((a, b) => b[1] - a[1]).slice(0, 3);
-
-            return (
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 10.5, fontWeight: 600, color: C.inkFaint, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <TrendingUp size={10} color={C.inkFaint} strokeWidth={2} />
-                  Résumé fidélité
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginBottom: topProducts.length > 0 ? 8 : 0 }}>
-                  <div style={{ background: C.brandLt, borderRadius: 8, padding: '8px 10px', textAlign: 'center' }}>
-                    <div style={{ fontSize: 16, fontWeight: 800, color: C.brand }}>{fmt(totalSpent)}</div>
-                    <div style={{ fontSize: 10, color: C.inkMute, marginTop: 1 }}>Total FC</div>
-                  </div>
-                  <div style={{ background: 'rgba(37,99,235,0.06)', borderRadius: 8, padding: '8px 10px', textAlign: 'center' }}>
-                    <div style={{ fontSize: 16, fontWeight: 800, color: '#2563eb' }}>{patient.purchases.length}</div>
-                    <div style={{ fontSize: 10, color: C.inkMute, marginTop: 1 }}>Visites</div>
-                  </div>
-                  <div style={{ background: 'rgba(245,158,11,0.06)', borderRadius: 8, padding: '8px 10px', textAlign: 'center' }}>
-                    <div style={{ fontSize: 16, fontWeight: 800, color: '#b45309' }}>{freqPerMonth}</div>
-                    <div style={{ fontSize: 10, color: C.inkMute, marginTop: 1 }}>×/mois</div>
-                  </div>
-                </div>
-                {topProducts.length > 0 && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                    {topProducts.map(([name, count]) => (
-                      <span key={name} style={{
-                        fontSize: 10.5, background: 'rgba(16,120,90,0.06)',
-                        color: C.brand, borderRadius: 5, padding: '3px 7px', fontWeight: 550,
-                      }}>
-                        {name} ×{count}
-                      </span>
-                    ))}
-                  </div>
-                )}
               </div>
-            );
-          })()}
-
-          {/* Historique achats */}
-          <div>
-            <div style={{ fontSize: 10.5, fontWeight: 600, color: C.inkFaint, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span>Historique des achats ({patient.purchases.length})</span>
-              <button onClick={() => setShowAddPurchase(true)} style={{
-                display: 'flex', alignItems: 'center', gap: 4,
-                background: C.brandLt, border: 'none', borderRadius: 99,
-                padding: '3px 8px', fontSize: 10.5, color: C.brand, fontWeight: 600, cursor: 'pointer',
-              }}>
-                <Plus size={9} strokeWidth={2.5} /> Ajouter
-              </button>
-            </div>
-            {patient.purchases.length === 0 ? (
-              <div style={{ fontSize: 12, color: C.inkFaint, fontStyle: 'italic', padding: '8px 0' }}>Aucun achat enregistré</div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                {[...patient.purchases].sort((a, b) => b.date.localeCompare(a.date)).map(pur => (
-                  <div key={pur.id} style={{
-                    background: C.panel, border: `1px solid ${C.hairline}`,
-                    borderRadius: 10, padding: '10px 12px',
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ fontFamily: C.fm, fontSize: 10.5, color: C.inkMute }}>{pur.ticket}</span>
-                        <span style={{ fontSize: 10.5, color: C.inkFaint }}>· {formatShortDate(pur.date)}</span>
-                        {pur.payment_method && (
-                          <span style={{ fontSize: 10, color: C.inkFaint, background: 'rgba(0,0,0,0.05)', borderRadius: 4, padding: '1px 5px' }}>{pur.payment_method}</span>
-                        )}
+              {/* Table header */}
+              <div style={{ display: 'grid', gridTemplateColumns: '90px 1fr 60px 90px', gap: 0, padding: '8px 16px', borderBottom: `1px solid ${C.border}` }}>
+                {['DATE', 'TYPE', 'ART.', 'MONTANT'].map(h => (
+                  <div key={h} style={{ fontSize: 10, fontWeight: 700, color: C.inkFaint, letterSpacing: '0.06em' }}>{h}</div>
+                ))}
+              </div>
+              {timeline.length === 0 ? (
+                <div style={{ padding: '24px 16px', textAlign: 'center', fontSize: 12, color: C.inkFaint, fontStyle: 'italic' }}>Aucun historique</div>
+              ) : (
+                <div>
+                  {timeline.map((row, i) => {
+                    const isOrd = row.type === 'ordonnance';
+                    const st = isOrd ? ORD_STATUS[row.status as OrdStatus] : null;
+                    return (
+                      <div key={i} style={{ display: 'grid', gridTemplateColumns: '90px 1fr 60px 90px', gap: 0, padding: '10px 16px', borderBottom: i < timeline.length - 1 ? `1px solid ${C.hairline}` : 'none', alignItems: 'center' }}>
+                        <div style={{ fontSize: 11.5, color: C.inkMute }}>{formatShortDate(row.date)}</div>
+                        <div>
+                          {isOrd ? (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: st!.bg, color: st!.fg, borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 600 }}>
+                              <span style={{ width: 4, height: 4, borderRadius: 99, background: st!.fg, flexShrink: 0 }} />
+                              {row.label}
+                            </span>
+                          ) : (
+                            <span style={{ fontSize: 12, color: C.inkSoft, fontWeight: 500 }}>Vente libre</span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: 12, color: C.inkMute }}>{row.articles}</div>
+                        <div style={{ fontSize: 12.5, fontWeight: 700, color: isOrd && row.montant === 0 ? C.inkFaint : C.ink, fontFamily: C.fm }}>
+                          {row.montant > 0 ? `${fmt(row.montant)} FC` : '—'}
+                        </div>
                       </div>
-                      <span style={{ fontFamily: C.fm, fontSize: 13, fontWeight: 700, color: C.brand }}>{fmt(pur.total)} FC</span>
-                    </div>
-                    {pur.items.length > 0 && (
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                        {pur.items.map((item, j) => (
-                          <span key={j} style={{
-                            fontSize: 10.5, background: 'rgba(15,15,20,0.04)',
-                            color: C.inkSoft, borderRadius: 5, padding: '2px 6px',
-                          }}>
-                            {item}
-                          </span>
-                        ))}
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* RIGHT — Profil thérapeutique */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ background: C.panel, border: `1px solid ${C.hairline}`, borderRadius: 12, overflow: 'hidden', backdropFilter: 'saturate(180%) blur(20px)', boxShadow: glassRing }}>
+                <div style={{ padding: '14px 16px 10px', borderBottom: `1px solid ${C.hairline}`, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Heart size={13} color={C.inkMute} strokeWidth={1.5} />
+                  <span style={{ fontSize: 13, fontWeight: 600, color: C.ink }}>Profil thérapeutique</span>
+                </div>
+                <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {/* Allergies */}
+                  <div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: C.red, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Allergies</div>
+                    {patient.allergies.length === 0 ? (
+                      <div style={{ fontSize: 11.5, color: C.inkFaint, fontStyle: 'italic' }}>Aucune allergie déclarée</div>
+                    ) : (
+                      <div style={{ background: 'rgba(200,30,30,0.05)', borderRadius: 8, padding: '8px 10px', fontSize: 12, color: C.red, lineHeight: 1.5 }}>
+                        {patient.allergies.join(' · ')}
                       </div>
                     )}
                   </div>
-                ))}
+                  {/* Traitements en cours */}
+                  <div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: C.blue, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Traitements en cours</div>
+                    {patient.therapeutic_profile.length === 0 ? (
+                      <div style={{ fontSize: 11.5, color: C.inkFaint, fontStyle: 'italic' }}>Aucun traitement renseigné</div>
+                    ) : (
+                      <div style={{ background: C.blueLt, borderRadius: 8, padding: '8px 10px', fontSize: 12, color: C.blue, lineHeight: 1.5 }}>
+                        {patient.therapeutic_profile.join(' · ')}
+                      </div>
+                    )}
+                  </div>
+                  {/* Médicaments fréquents */}
+                  <div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: C.brand, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Médicaments fréquents</div>
+                    {freqMeds.length === 0 ? (
+                      <div style={{ fontSize: 11.5, color: C.inkFaint, fontStyle: 'italic' }}>Calculé depuis l'historique</div>
+                    ) : (
+                      <div style={{ background: C.brandLt, borderRadius: 8, padding: '8px 10px', fontSize: 12, color: C.brand, lineHeight: 1.5 }}>
+                        {freqMeds.join(', ')}
+                      </div>
+                    )}
+                  </div>
+                  {/* Notes / mutuelle */}
+                  {patient.notes && (
+                    <div>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: C.inkMute, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Notes</div>
+                      <div style={{ background: 'rgba(15,15,20,0.04)', borderRadius: 8, padding: '8px 10px', fontSize: 12, color: C.inkSoft, lineHeight: 1.5 }}>
+                        {patient.notes}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
+            </div>
           </div>
+
+          {/* ── ACTIVE ORDONNANCES ────────────────────────────────────────── */}
+          {activeOrds.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {activeOrds.slice(0, 2).map(ord => {
+                const st = ORD_STATUS[ord.status];
+                const rupture = ord.items.filter(i => i.status === 'rupture');
+                return (
+                  <div key={ord.id} style={{ background: C.panel, border: `1px solid ${C.hairline}`, borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14, backdropFilter: 'saturate(180%) blur(20px)', boxShadow: glassRing }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 10, background: st.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <FileText size={16} color={st.fg} strokeWidth={1.5} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: C.ink }}>{ord.ref}</div>
+                      <div style={{ fontSize: 12, color: C.inkMute, marginTop: 2 }}>
+                        Dr. {ord.medecin || '—'} · {ord.items.length} médicament{ord.items.length > 1 ? 's' : ''}
+                        {rupture.length > 0 && <span style={{ color: C.red }}>{` dont ${rupture.length} en rupture`}</span>}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => window.dispatchEvent(new CustomEvent('navigate-to-tab', { detail: { tab: 'ordonnances' } }))}
+                      style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', border: 'none', borderRadius: 8, background: C.ink, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: C.f, whiteSpace: 'nowrap' }}>
+                      Continuer le traitement <ChevronRight size={12} strokeWidth={2} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* Actions footer */}
-        <div style={{ padding: '12px 16px', borderTop: `1px solid ${C.hairline}`, display: 'flex', gap: 7, flexShrink: 0 }}>
-          <button onClick={whatsappMessage} style={{
-            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-            padding: '8px 0', border: 'none', borderRadius: 9,
-            background: '#25D366', color: '#fff',
-            fontSize: 12.5, fontWeight: 600, cursor: 'pointer',
-          }}>
+        {/* ── FOOTER ────────────────────────────────────────────────────────── */}
+        <div style={{ padding: '10px 28px', borderTop: `1px solid ${C.hairline}`, display: 'flex', gap: 8, flexShrink: 0, background: 'rgba(255,255,255,0.62)' }}>
+          <button onClick={() => { const msg = encodeURIComponent(`Bonjour ${patient.name.split(' ')[0]} 👋\n\nMerci de votre fidélité.\n\nÀ bientôt !`); const p = patient.phone.replace(/[\s+\-()\[\]]/g, ''); window.open(`https://wa.me/${p}?text=${msg}`, '_blank'); }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', border: 'none', borderRadius: 8, background: '#25D366', color: '#fff', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: C.f }}>
             <MessageCircle size={13} strokeWidth={1.5} /> WhatsApp
           </button>
-          <button onClick={onEdit} style={{
-            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-            padding: '8px 0', border: `1px solid ${C.border}`, borderRadius: 9,
-            background: 'transparent', color: C.inkSoft,
-            fontSize: 12.5, fontWeight: 500, cursor: 'pointer', fontFamily: C.f,
-          }}>
-            <Edit3 size={13} strokeWidth={1.5} /> Modifier
+          <button onClick={onDelete}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', border: `1px solid ${C.border}`, borderRadius: 8, background: 'transparent', color: C.red, fontSize: 12.5, fontWeight: 500, cursor: 'pointer', fontFamily: C.f }}>
+            <Trash2 size={13} strokeWidth={1.5} /> Supprimer
+          </button>
+          <div style={{ flex: 1 }} />
+          <button onClick={onClose}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', border: `1px solid ${C.border}`, borderRadius: 8, background: 'transparent', color: C.inkSoft, fontSize: 12.5, cursor: 'pointer', fontFamily: C.f }}>
+            <X size={13} /> Fermer
           </button>
         </div>
       </div>
@@ -828,8 +787,12 @@ export default function Patients() {
 
   // Derived data
   const filtered = useMemo(() => {
+    const t30 = new Date(Date.now() - 30 * 86400000).toISOString();
     let list = patients;
-    if (activeType !== 'Tous') list = list.filter(p => p.type === activeType);
+    if (activeType === 'fidèle') list = list.filter(p => p.type === 'fidèle');
+    else if (activeType === 'récurrent') list = list.filter(p => p.type === 'récurrent');
+    else if (activeType === 'occasionnel') list = list.filter(p => p.type === 'occasionnel');
+    else if (activeType === 'nouveaux' as any) list = list.filter(p => p.created_at >= t30);
     const q = search.trim().toLowerCase();
     if (q) list = list.filter(p =>
       p.name.toLowerCase().includes(q) ||
@@ -897,11 +860,11 @@ export default function Patients() {
 
   const selectedIdx = selected ? patients.findIndex(p => p.id === selected.id) : -1;
 
-  const typeChips: { label: string; value: 'Tous' | PatientType }[] = [
-    { label: `Tous (${patients.length})`, value: 'Tous' },
-    { label: `Fidèles (${patients.filter(p => p.type === 'fidèle').length})`, value: 'fidèle' },
-    { label: `Récurrents (${patients.filter(p => p.type === 'récurrent').length})`, value: 'récurrent' },
-    { label: `Occasionnels (${patients.filter(p => p.type === 'occasionnel').length})`, value: 'occasionnel' },
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
+  const typeChips: { label: string; value: 'Tous' | PatientType | 'nouveaux' }[] = [
+    { label: `Tous  ${patients.length}`, value: 'Tous' },
+    { label: `Fidèles  ${patients.filter(p => p.type === 'fidèle').length}`, value: 'fidèle' },
+    { label: `Nouveaux  ${patients.filter(p => p.created_at >= thirtyDaysAgo).length}`, value: 'nouveaux' },
   ];
 
   // Loading skeleton
@@ -925,223 +888,132 @@ export default function Patients() {
 
   return (
     <>
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', fontFamily: C.f, color: C.ink }}>
-        {errorBanner}
-        {/* ── Search bar ── */}
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <div style={{ display: 'flex', height: '100%', fontFamily: C.f, color: C.ink, overflow: 'hidden' }}>
+
+        {/* ── LEFT: LIST PANEL ──────────────────────────────────────────── */}
         <div style={{
-          padding: '12px 28px', display: 'flex', alignItems: 'center', gap: 8,
-          background: C.panel, backdropFilter: 'saturate(180%) blur(28px)',
+          width: 360, flexShrink: 0, borderRight: `1px solid ${C.hairline}`,
+          display: 'flex', flexDirection: 'column', background: C.panel,
+          backdropFilter: 'saturate(180%) blur(28px)',
           WebkitBackdropFilter: 'saturate(180%) blur(28px)',
-          borderBottom: `1px solid ${C.hairline}`, flexShrink: 0,
         }}>
-          <div style={{ position: 'relative', flex: 1, maxWidth: 320 }}>
-            <Search size={13} color={C.inkMute} strokeWidth={1.5} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Nom, téléphone, email…"
-              style={{
-                width: '100%', height: 34, paddingLeft: 30, paddingRight: 10,
-                border: `1px solid ${C.border}`, borderRadius: 8,
-                fontSize: 12.5, background: C.panelSolid, color: C.ink,
-                outline: 'none', boxSizing: 'border-box', fontFamily: C.f,
-              }}
-            />
-          </div>
-          <button
-            data-tour="patients-add"
-            onClick={() => setShowNewModal(true)}
-            style={{
-              height: 34, padding: '0 14px', display: 'flex', alignItems: 'center', gap: 6,
-              background: C.ink, color: '#fff', border: 'none', borderRadius: 8,
-              fontSize: 13, fontWeight: 600, cursor: 'pointer',
-              boxShadow: '0 1px 2px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.1)',
-              fontFamily: C.f,
-            }}
-          >
-            <Plus size={13} strokeWidth={2.5} />
-            Nouveau patient
-          </button>
-        </div>
-
-        {/* ── Filter chips ── */}
-        <div style={{
-          padding: '8px 28px', display: 'flex', gap: 6, flexShrink: 0,
-          overflowX: 'auto', background: C.panel, borderBottom: `1px solid ${C.hairline}`,
-        }}>
-          {typeChips.map(({ label, value }) => {
-            const isActive = activeType === value;
-            return (
-              <button key={value} onClick={() => setActiveType(value)} style={{
-                padding: '5px 12px', borderRadius: 99,
-                fontSize: 11.5, fontWeight: isActive ? 550 : 500, cursor: 'pointer', whiteSpace: 'nowrap',
-                border: `1px solid ${isActive ? C.brandMid : C.border}`,
-                background: isActive ? C.brandLt : 'transparent',
-                color: isActive ? C.brand : C.inkSoft,
-                fontFamily: C.f,
-              }}>
-                {label}
+          {/* Header */}
+          <div style={{ padding: '16px 18px 12px', borderBottom: `1px solid ${C.hairline}`, flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: C.ink, letterSpacing: '-0.02em' }}>Patients</div>
+                <div style={{ fontSize: 12, color: C.inkMute, marginTop: 1 }}>{patients.length} enregistrés</div>
+              </div>
+              <button
+                data-tour="patients-add"
+                onClick={() => setShowNewModal(true)}
+                style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 12px', border: 'none', borderRadius: 8, background: C.ink, color: '#fff', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: C.f }}>
+                <Plus size={12} strokeWidth={2.5} /> Ajouter
               </button>
-            );
-          })}
-        </div>
-
-        {/* ── KPIs ── */}
-        <div style={{
-          padding: '12px 28px', display: 'flex', gap: 10, flexShrink: 0,
-          borderBottom: `1px solid ${C.hairline}`,
-        }}>
-          {[
-            { lbl: 'Total patients', val: kpis.total.toString(), color: C.ink },
-            { lbl: 'Actifs ce mois', val: kpis.activeThisMonth.toString(), color: C.brand },
-            { lbl: 'LTV moyen', val: `${fmt(kpis.ltv)} FC`, color: C.inkSoft },
-            { lbl: 'Avec allergies', val: kpis.withAllergies.toString(), color: C.red },
-          ].map(({ lbl, val, color }) => (
-            <div key={lbl} style={{
-              flex: 1, background: C.panel, border: `1px solid ${C.hairline}`,
-              borderRadius: 10, padding: '10px 14px',
-              backdropFilter: 'saturate(180%) blur(20px)',
-              WebkitBackdropFilter: 'saturate(180%) blur(20px)',
-              boxShadow: glassRing,
-            }}>
-              <div style={{ fontSize: 10, color: C.inkFaint, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3 }}>{lbl}</div>
-              <div style={{ fontSize: 20, fontWeight: 700, color, fontFamily: C.fm, letterSpacing: '-0.02em', lineHeight: 1.1 }}>{val}</div>
             </div>
-          ))}
-        </div>
+            {/* Search */}
+            <div style={{ position: 'relative' }}>
+              <Search size={12} color={C.inkMute} strokeWidth={1.5} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Nom, téléphone, ID…"
+                style={{ width: '100%', height: 32, paddingLeft: 28, paddingRight: 10, border: `1px solid ${C.border}`, borderRadius: 7, fontSize: 12.5, background: C.panelSolid, color: C.ink, outline: 'none', boxSizing: 'border-box', fontFamily: C.f }} />
+            </div>
+          </div>
 
-        {/* ── Content ── */}
-        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-          {/* Patient grid */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '20px 28px' }}>
-            {filtered.length === 0 ? (
-              <div style={{
-                display: 'flex', flexDirection: 'column', alignItems: 'center',
-                justifyContent: 'center', padding: '56px 24px', gap: 12,
-                background: C.panel, border: `1px solid ${C.hairline}`, borderRadius: 12,
-              }}>
+          {/* Filter tabs */}
+          <div style={{ padding: '8px 18px', borderBottom: `1px solid ${C.hairline}`, display: 'flex', gap: 4, flexShrink: 0 }}>
+            {typeChips.map(({ label, value }) => {
+              const isActive = activeType === value;
+              const [text, count] = label.split('  ');
+              return (
+                <button key={value} onClick={() => setActiveType(value as any)} style={{
+                  padding: '5px 10px', borderRadius: 7, border: 'none', cursor: 'pointer', fontFamily: C.f,
+                  background: isActive ? C.ink : 'transparent', color: isActive ? '#fff' : C.inkMute,
+                  fontSize: 12, fontWeight: isActive ? 600 : 500, display: 'flex', alignItems: 'center', gap: 5, transition: 'all 0.12s',
+                }}>
+                  {text}
+                  <span style={{ fontSize: 11, background: isActive ? 'rgba(255,255,255,0.2)' : C.border, color: isActive ? '#fff' : C.inkFaint, borderRadius: 99, padding: '0 5px', lineHeight: '16px' }}>{count}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Patient list */}
+          <div style={{ flex: 1, overflowY: 'auto' }}>
+            {errorBanner}
+            {isLoading && patients.length === 0 ? (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200, gap: 8, color: C.inkFaint }}>
+                <Loader2 size={16} strokeWidth={1.5} style={{ animation: 'spin 1s linear infinite' }} />
+                <span style={{ fontSize: 12.5 }}>Chargement…</span>
+              </div>
+            ) : filtered.length === 0 ? (
+              <div style={{ padding: '40px 18px', textAlign: 'center' }}>
                 {patients.length === 0 ? (
                   <>
-                    <div style={{ width: 56, height: 56, borderRadius: 14, background: C.brandLt, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <UserPlus size={26} color={C.brand} strokeWidth={1.5} />
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontSize: 15, fontWeight: 600, color: C.ink }}>Aucun patient enregistré</div>
-                      <div style={{ fontSize: 13, color: C.inkMute, marginTop: 4 }}>Commencez par ajouter votre premier patient.</div>
-                    </div>
-                    <button onClick={() => setShowNewModal(true)} style={{
-                      padding: '8px 20px', border: 'none', borderRadius: 8,
-                      background: C.brand, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                    }}>
-                      Nouveau patient
-                    </button>
+                    <UserPlus size={28} color={C.inkFaint} strokeWidth={1} style={{ marginBottom: 10 }} />
+                    <div style={{ fontSize: 13, color: C.inkMute, fontWeight: 500 }}>Aucun patient</div>
+                    <div style={{ fontSize: 12, color: C.inkFaint, marginTop: 4 }}>Ajoutez votre premier patient.</div>
                   </>
                 ) : (
                   <>
-                    <Search size={22} color={C.inkFaint} strokeWidth={1.5} />
-                    <span style={{ fontSize: 13, color: C.inkMute }}>Aucun résultat pour « {search} »</span>
+                    <Search size={22} color={C.inkFaint} strokeWidth={1.5} style={{ marginBottom: 8 }} />
+                    <div style={{ fontSize: 12.5, color: C.inkMute }}>Aucun résultat pour « {search} »</div>
                   </>
                 )}
               </div>
             ) : (
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: selected ? 'repeat(auto-fill, minmax(240px, 1fr))' : 'repeat(auto-fill, minmax(260px, 1fr))',
-                gap: 12,
-              }}>
-                {filtered.map((p, i) => {
-                  const totalSpent = p.purchases.reduce((s, pur) => s + pur.total, 0);
-                  const lastVisit = p.purchases.length > 0
-                    ? [...p.purchases].sort((a, b) => b.date.localeCompare(a.date))[0].date
-                    : null;
-                  const isSelected = selected?.id === p.id;
-
-                  return (
-                    <article
-                      key={p.id}
-                      onClick={() => setSelected(isSelected ? null : p)}
-                      style={{
-                        background: isSelected ? `${C.brand}08` : C.panel,
-                        border: `1.5px solid ${isSelected ? C.brandMid : C.hairline}`,
-                        borderRadius: 12, padding: '16px 18px', cursor: 'pointer',
-                        backdropFilter: 'saturate(180%) blur(20px)',
-                        WebkitBackdropFilter: 'saturate(180%) blur(20px)',
-                        boxShadow: isSelected ? `0 0 0 3px ${C.brandLt}, ${glassRing}` : glassRing,
-                        transition: 'all 0.14s',
-                      }}
-                      onMouseEnter={e => {
-                        if (!isSelected) e.currentTarget.style.borderColor = C.brandMid;
-                      }}
-                      onMouseLeave={e => {
-                        if (!isSelected) e.currentTarget.style.borderColor = C.hairline;
-                      }}
-                    >
-                      {/* Top row */}
-                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 12 }}>
-                        <Avatar name={p.name} idx={i} size={38} />
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 13.5, fontWeight: 550, color: C.ink, letterSpacing: '-0.01em', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: C.f }}>{p.name}</div>
-                          <div style={{ fontSize: 11.5, color: C.inkMute, marginTop: 2 }}>{p.phone}</div>
+              filtered.map((p, i) => {
+                const totalSpent = p.purchases.reduce((s, pur) => s + pur.total, 0);
+                const lastVisit = p.purchases.length > 0
+                  ? [...p.purchases].sort((a, b) => b.date.localeCompare(a.date))[0].date
+                  : null;
+                const isSelected = selected?.id === p.id;
+                return (
+                  <button key={p.id} onClick={() => setSelected(isSelected ? null : p)}
+                    style={{ width: '100%', padding: '11px 18px', border: 'none', textAlign: 'left', cursor: 'pointer', fontFamily: C.f, borderBottom: `1px solid ${C.hairline}`, background: isSelected ? C.brandLt : 'transparent', transition: 'background 0.1s', display: 'block' }}
+                    onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'rgba(15,15,20,0.025)'; }}
+                    onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'transparent'; }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <Avatar name={p.name} idx={i} size={36} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: C.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
+                          <TypePill type={p.type} />
                         </div>
-                        <TypePill type={p.type} />
-                      </div>
-
-                      {/* Stats */}
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-                        <div>
-                          <div style={{ fontSize: 9.5, color: C.inkFaint, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 2 }}>Visites</div>
-                          <div style={{ fontSize: 17, fontWeight: 700, color: C.ink, fontFamily: C.fm }}>{p.purchases.length}</div>
-                        </div>
-                        <div>
-                          <div style={{ fontSize: 9.5, color: C.inkFaint, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 2 }}>Dernière</div>
-                          <div style={{ fontSize: 11, fontWeight: 500, color: C.inkSoft }}>{lastVisit ? formatShortDate(lastVisit) : 'jamais'}</div>
-                        </div>
-                        <div>
-                          <div style={{ fontSize: 9.5, color: C.inkFaint, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 2 }}>Total FC</div>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: C.brand, fontFamily: C.fm }}>{fmt(totalSpent)}</div>
+                        <div style={{ fontSize: 11.5, color: C.inkMute }}>
+                          {p.purchases.length} visite{p.purchases.length > 1 ? 's' : ''}
+                          {lastVisit && <span style={{ marginLeft: 6, color: C.inkFaint }}>{formatShortDate(lastVisit)}</span>}
                         </div>
                       </div>
-
-                      {/* Allergy warning */}
-                      {p.allergies.length > 0 && (
-                        <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 5 }}>
-                          <AlertTriangle size={10} color={C.red} strokeWidth={2} />
-                          <span style={{ fontSize: 11, color: C.red, fontWeight: 550 }}>
-                            Allergie : {p.allergies.slice(0, 2).join(', ')}{p.allergies.length > 2 ? ` +${p.allergies.length - 2}` : ''}
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Therapeutic tags (preview) */}
-                      {p.therapeutic_profile.length > 0 && (
-                        <div style={{ marginTop: 7, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                          {p.therapeutic_profile.slice(0, 3).map(t => (
-                            <span key={t} style={{ background: C.brandLt, color: C.brand, borderRadius: 4, padding: '2px 7px', fontSize: 10.5, fontWeight: 500 }}>{t}</span>
-                          ))}
-                          {p.therapeutic_profile.length > 3 && (
-                            <span style={{ color: C.inkFaint, fontSize: 10.5 }}>+{p.therapeutic_profile.length - 3}</span>
-                          )}
-                        </div>
-                      )}
-                    </article>
-                  );
-                })}
-              </div>
+                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: isSelected ? C.brand : C.ink, fontFamily: C.fm }}>{fmt(totalSpent)}</div>
+                        {p.allergies.length > 0 && <AlertTriangle size={10} color={C.red} strokeWidth={2} style={{ marginTop: 3 }} />}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })
             )}
           </div>
-
-          {/* Detail panel */}
-          {selected && selectedIdx >= 0 && (
-            <PatientDetail
-              patient={selected}
-              idx={selectedIdx}
-              onClose={() => setSelected(null)}
-              onEdit={() => { setEditPatient(selected); }}
-              onDelete={() => handleDelete(selected.id)}
-              onAddPurchase={p => handleAddPurchase(selected.id, p)}
-            />
-          )}
         </div>
+
+        {/* ── RIGHT: DETAIL OR EMPTY STATE ─────────────────────────────── */}
+        {selected && selectedIdx >= 0 ? (
+          <PatientDetail
+            patient={selected}
+            idx={selectedIdx}
+            onClose={() => setSelected(null)}
+            onEdit={() => setEditPatient(selected)}
+            onDelete={() => handleDelete(selected.id)}
+            onAddPurchase={p => handleAddPurchase(selected.id, p)}
+          />
+        ) : (
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, color: C.inkFaint }}>
+            <UserPlus size={40} color={C.inkGhost} strokeWidth={1} />
+            <div style={{ fontSize: 14, color: C.inkMute, fontWeight: 500 }}>Sélectionnez un patient</div>
+            <div style={{ fontSize: 12.5, color: C.inkFaint }}>Cliquez sur un patient dans la liste pour afficher sa fiche.</div>
+          </div>
+        )}
       </div>
 
       {/* Modals */}
@@ -1153,7 +1025,6 @@ export default function Patients() {
           saving={saving}
         />
       )}
-
     </>
   );
 }
