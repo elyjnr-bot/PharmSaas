@@ -142,6 +142,7 @@ export default function Sidebar({ activeView, onNavigate, onSettingsClick, isMan
   const navItems = NAV_ITEMS.filter(item => isManager || !item.managerOnly);
   const { activeSeller } = useSeller();
   const [hovered, setHovered]           = useState<string | null>(null);
+  const [pressed, setPressed]           = useState<string | null>(null);
   const [favIds, setFavIds]             = useState<string[]>(() => loadFavIds());
   const [editingFavs, setEditingFavs]   = useState(false);
 
@@ -308,13 +309,19 @@ export default function Sidebar({ activeView, onNavigate, onSettingsClick, isMan
               key={id}
               onClick={() => onNavigate(id)}
               onMouseEnter={() => setHovered(id)}
-              onMouseLeave={() => setHovered(null)}
+              onMouseLeave={() => { setHovered(null); setPressed(null); }}
+              onMouseDown={() => setPressed(id)}
+              onMouseUp={() => setPressed(null)}
+              onTouchStart={() => setPressed(id)}
+              onTouchEnd={() => setPressed(null)}
               style={{
                 display: 'flex', alignItems: 'center', gap: 10,
                 padding: '7px 10px', borderRadius: 7,
-                background: isActive ? C.panel : isHov ? 'rgba(255,255,255,0.3)' : 'transparent',
+                background: isActive ? C.panel : isHov ? 'rgba(255,255,255,0.12)' : 'transparent',
                 boxShadow: isActive ? `0 1px 0 ${C.hairline}, 0 0 0 1px ${C.hairline}` : 'none',
-                cursor: 'pointer', transition: 'all 0.12s',
+                cursor: 'pointer',
+                transition: pressed === id ? 'transform 0.07s ease' : 'transform 0.15s ease, background 0.12s',
+                transform: pressed === id ? 'scale(0.96)' : 'scale(1)',
                 border: 'none', width: '100%', textAlign: 'left',
               }}
             >
@@ -471,10 +478,13 @@ export default function Sidebar({ activeView, onNavigate, onSettingsClick, isMan
                         borderBottom: i < activeFavs.length - 1 ? `1px solid ${C.border}` : 'none',
                         background: activeView === f.route ? 'rgba(16,120,90,0.07)' : 'transparent',
                         border: 'none',
-                        cursor: 'pointer', textAlign: 'left', transition: 'background 0.1s',
+                        cursor: 'pointer', textAlign: 'left',
+                        transition: 'background 0.1s, transform 0.07s ease',
                       }}
                       onMouseEnter={e => { if (activeView !== f.route) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(16,120,90,0.04)'; }}
-                      onMouseLeave={e => { if (activeView !== f.route) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+                      onMouseLeave={e => { if (activeView !== f.route) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
+                      onMouseDown={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.96)'; }}
+                      onMouseUp={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
                     >
                       <span style={{ width: 7, height: 7, borderRadius: 2, background: f.color, flexShrink: 0 }} />
                       <span style={{
