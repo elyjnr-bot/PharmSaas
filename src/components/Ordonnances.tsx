@@ -804,7 +804,7 @@ export default function Ordonnances() {
         )}
 
         {/* ── Content ── */}
-        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden', background: '#fff' }}>
 
           {/* Left list */}
           <div style={{ width: 380, borderRight: `1px solid ${C.hairline}`, display: 'flex', flexDirection: 'column', flexShrink: 0, background: '#f8f8f8' }}>
@@ -915,21 +915,24 @@ export default function Ordonnances() {
           </div>
 
           {/* Right detail */}
-          <div style={{ flex: 1, overflow: 'auto', padding: '28px 32px', minWidth: 0 }}>
+          <div style={{ flex: 1, overflow: 'auto', padding: '28px 32px', minWidth: 0, background: '#fff' }}>
             {!selected ? (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: C.inkFaint, gap: 12 }}>
-                <div style={{ width: 64, height: 64, borderRadius: 16, background: C.brandLt, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <FileText size={28} color={C.brand} strokeWidth={1.5} />
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 16 }}>
+                {/* Icône sobre */}
+                <div style={{ width: 72, height: 72, borderRadius: 20, background: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <FileText size={30} color='#c4c4c4' strokeWidth={1.5} />
                 </div>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: C.inkSoft, marginBottom: 4 }}>Sélectionnez une ordonnance</div>
-                  <div style={{ fontSize: 13, color: C.inkFaint }}>ou créez-en une nouvelle</div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: C.ink, marginBottom: 6, letterSpacing: '-0.01em' }}>Aucune ordonnance sélectionnée</div>
+                  <div style={{ fontSize: 13, color: C.inkFaint, lineHeight: 1.5 }}>Choisissez une ordonnance dans la liste<br />ou créez-en une nouvelle.</div>
                 </div>
                 <button onClick={() => { setEditOrd(null); setShowModal(true); }} style={{
-                  marginTop: 8, padding: '9px 22px', background: C.brand, color: '#fff', border: 'none',
-                  borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: C.f,
+                  marginTop: 4, display: 'flex', alignItems: 'center', gap: 7,
+                  padding: '10px 22px', background: C.ink, color: '#fff', border: 'none',
+                  borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: C.f,
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
                 }}>
-                  <Plus size={13} style={{ marginRight: 6 }} />
+                  <Plus size={13} strokeWidth={2.5} />
                   Nouvelle ordonnance
                 </button>
               </div>
