@@ -13,11 +13,49 @@
  * Toutes les options peuvent être modifiées plus tard via Réglages.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Component } from 'react';
+import type { ErrorInfo, ReactNode } from 'react';
 import {
   Building2, Percent, FileSpreadsheet, CheckCircle2,
   ChevronRight, X, Check, Boxes, ScanLine, Palette, Sparkles,
+  AlertTriangle,
 } from 'lucide-react';
+
+// ── Error boundary : remplace la page blanche par un message d'erreur lisible ──
+class ImportErrorBoundary extends Component<
+  { children: ReactNode },
+  { error: Error | null }
+> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { error: null };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('[OnboardingWizard] DataImporter crash:', error, info);
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ padding: '20px', borderRadius: 12, background: 'rgba(200,30,30,0.07)', border: '1.5px solid rgba(200,30,30,0.2)', textAlign: 'center' }}>
+          <AlertTriangle size={28} color="#c81e1e" style={{ margin: '0 auto 10px', display: 'block' }} />
+          <p style={{ margin: '0 0 6px', fontSize: 14, fontWeight: 700, color: '#c81e1e' }}>Erreur dans l'importeur</p>
+          <p style={{ margin: '0 0 14px', fontSize: 12, color: '#6b7280', fontFamily: 'monospace', wordBreak: 'break-all' }}>
+            {this.state.error.message}
+          </p>
+          <button
+            onClick={() => this.setState({ error: null })}
+            style={{ padding: '8px 18px', borderRadius: 8, border: 'none', background: '#c81e1e', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+            Réessayer
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 import DataImporter from './DataImporter';
 import { supabase } from '../lib/supabase';
 import { useWorkflow, type WorkflowMode } from '../lib/workflowContext';
@@ -606,7 +644,9 @@ export default function OnboardingWizard({ onDismiss, onNavigate }: Props) {
                       Glissez votre fichier Excel ou CSV avec vos produits. Le mapping se fait automatiquement.
                     </p>
                   </div>
-                  <DataImporter onImportComplete={() => setCatalogDone(true)} />
+                  <ImportErrorBoundary>
+                    <DataImporter onImportComplete={() => setCatalogDone(true)} />
+                  </ImportErrorBoundary>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 16, gap: 10 }}>
                     <button onClick={() => setStep(4)}
                       style={{ fontSize: 13, color: C.inkMute, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>

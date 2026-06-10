@@ -3,6 +3,30 @@ import { supabase } from './supabase';
 import { insertWithUserId, updateWithUserId, getCurrentUserId } from './supabaseHelpers';
 import { offlineStorage } from './offlineStorage';
 
+// ════════════════════════════════════════════════════════════════════════════
+//  FLUX MANUEL — JP-XXXXXX  (EXCLUSIF À CE FICHIER)
+// ════════════════════════════════════════════════════════════════════════════
+//
+//  ⚠️  IMPORTANT — Séparation stricte des deux flux unitaires :
+//
+//  ┌─────────────────────────────────────────────────────────────────────┐
+//  │  FLUX IMPORT   (ImportService.ts)                                   │
+//  │  • Source : fichier Excel                                           │
+//  │  • Code unitaire = EAN/barcode du fichier  (jamais JP-)             │
+//  │  • Fonction : createImportUnits() + mkImportUnit()                  │
+//  └─────────────────────────────────────────────────────────────────────┘
+//  ┌─────────────────────────────────────────────────────────────────────┐
+//  │  FLUX MANUEL   (ce fichier — writeService.ts)                       │
+//  │  • Source : saisie manuelle / scan à la réception                   │
+//  │  • Code unitaire = JP-XXXXXX généré ici                             │
+//  │  • Déclenche l'impression étiquette thermique (PrintUnitsModal)     │
+//  │  • Fonctions : reserveUnitCodes() · formatUnitCode()                │
+//  │  • Utilisateurs : AddMedicationModal · ScanEntrySheet               │
+//  └─────────────────────────────────────────────────────────────────────┘
+//
+//  Ne jamais appeler reserveUnitCodes() / formatUnitCode() depuis
+//  ImportService.ts ou tout autre flux d'import automatique.
+//
 // ── JP-XXXXX Offline Counter ─────────────────────────────────────────────────
 
 const UNIT_COUNTER_KEY = 'jp_unit_counter';

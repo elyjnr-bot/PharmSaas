@@ -156,21 +156,9 @@ export default function DataImporter({ onImportComplete }: Props = {}) {
     finally { setConflictsLoading(false); }
   }, [parsed, mapping, validRows, normalized]);
 
-  // ── Vérification avant import : confirmation si décisions en attente ────────
-  const handleImportClick = useCallback(() => {
-    if (!validationReport) return;
-    const hasPendingDecisions =
-      (validationReport.blocked > 0 && decisionBlocked === null) ||
-      (validationReport.noEan   > 0 && decisionNoEan   === null);
-    if (hasPendingDecisions) {
-      setShowImportConfirm(true); // affiche la modale d'avertissement
-    } else {
-      runImport();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [validationReport, decisionBlocked, decisionNoEan]);
-
   // ── Lancer l'import ─────────────────────────────────────────────────────────
+  // ⚠️ Doit être déclaré AVANT handleImportClick (qui le référence dans ses deps)
+  //    pour éviter la Temporal Dead Zone (TDZ ReferenceError) au rendu.
   const runImport = useCallback(async () => {
     if (!parsed) return;
     setShowImportConfirm(false);
@@ -202,7 +190,21 @@ export default function DataImporter({ onImportComplete }: Props = {}) {
       setStats({ created:0, updated:0, errors:1, unitsCreated:0, errorDetails:[String(e)] });
       setStep('done');
     }
-  }, [parsed, mapping, normalized, mode, decisionBlocked, decisionNoEan, showImportConfirm, onImportComplete]);
+  // ⚠️ showImportConfirm retiré des deps (seul setShowImportConfirm —stable— est utilisé)
+  }, [parsed, mapping, normalized, mode, decisionBlocked, decisionNoEan, onImportComplete]);
+
+  // ── Vérification avant import : confirmation si décisions en attente ────────
+  const handleImportClick = useCallback(() => {
+    if (!validationReport) return;
+    const hasPendingDecisions =
+      (validationReport.blocked > 0 && decisionBlocked === null) ||
+      (validationReport.noEan   > 0 && decisionNoEan   === null);
+    if (hasPendingDecisions) {
+      setShowImportConfirm(true); // affiche la modale d'avertissement
+    } else {
+      runImport();
+    }
+  }, [validationReport, decisionBlocked, decisionNoEan, runImport]);
 
   // ── Sauvegarder profil ──────────────────────────────────────────────────────
   const handleSaveProfile = () => {
@@ -777,6 +779,15 @@ export default function DataImporter({ onImportComplete }: Props = {}) {
           <h3 style={{ fontSize:18, fontWeight:800, color:C.ink, margin:'0 0 4px' }}>
             {stats.created+stats.updated+(stats.pricesUpdated||0) > 0 ? 'Import terminé !' : 'Aucune donnée importée'}
           </h3>
+          {(stats.cleared || 0) > 0 && (
+            <div style={{
+              display:'inline-flex', alignItems:'center', gap:6, margin:'8px auto 2px',
+              padding:'6px 12px', borderRadius:99, background:C.redLt, color:C.red,
+              fontSize:12, fontWeight:700,
+            }}>
+              ✓ Stock actuel effacé — {stats.cleared} entrée(s) supprimée(s)
+            </div>
+          )}
           <div style={{ display:'flex', gap:8, justifyContent:'center', flexWrap:'wrap', margin:'12px 0 6px' }}>
             {stats.created > 0 && <StatChip color={C.brand} bg={C.brandLt} value={stats.created} label="créés" />}
             {stats.updated > 0 && <StatChip color={C.blue} bg={C.blueLt} value={stats.updated} label="mis à jour" />}

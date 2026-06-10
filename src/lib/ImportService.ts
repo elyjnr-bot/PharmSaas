@@ -118,6 +118,7 @@ export interface ImportStats {
   unitsCreated: number;
   errorDetails: string[];
   pricesUpdated?: number; // mode prices_only
+  cleared?: number;       // mode install : nombre d'entrées de stock supprimées
 }
 
 export type ImportMode = 'install' | 'delivery' | 'prices_only';
@@ -678,6 +679,132 @@ export async function importData(
 }
 
 // ════════════════════════════════════════════════════════════════════════════
+//  RESET TOTAL DU STOCK — fonction unique, robuste et vérifiée
+// ════════════════════════════════════════════════════════════════════════════
+// Utilisée par : (1) le bouton "Supprimer tout" des Paramètres, (2) le mode
+// "Installation (remplacer tout)" de l'import Excel.
+//
+// Pourquoi cette approche marche enfin :
+//   • Un seul DELETE `WHERE user_id = X` supprime TOUTES les lignes correspondantes
+//     (la limite PostgREST `max-rows` ne s'applique qu'au SELECT, jamais au DELETE).
+//   • On demande `count: 'exact'` pour connaître le nombre réellement supprimé.
+//   • On VÉRIFIE ensuite qu'il ne reste 0 ligne ; sinon on boucle en filet de
+//     sécurité (select IDs → delete par IDs) jusqu'à épuisement.
+//   • Toutes les tables liées sont nettoyées (pas seulement `medications`),
+//     ce qui évite les unités/codes-barres orphelins.
+
+export interface ClearStockResult {
+  deleted: number;                       // total de lignes supprimées
+  remaining: number;                     // lignes restantes après nettoyage (doit être 0)
+  ok: boolean;                           // true si tout est bien à 0
+  perTable: Record<string, number>;      // détail par table
+}
+
+// Tables de stock à purger, dans l'ordre (enfants d'abord, parent en dernier).
+const STOCK_TABLES: Array<{ table: string; idCol: string }> = [
+  { table: 'inventory_units',   idCol: 'id' },
+  { table: 'barcodes',          idCol: 'barcode' },
+  { table: 'stock_movements',   idCol: 'id' },
+  { table: 'stock_entries',     idCol: 'id' },
+  { table: 'medication_batches',idCol: 'id' },
+  { table: 'medications',       idCol: 'id' },   // parent : en dernier (FK)
+];
+
+export async function clearAllStock(
+  onMessage?: (msg: string) => void,
+): Promise<ClearStockResult> {
+  const userId = await getCurrentUserId();
+  const result: ClearStockResult = { deleted: 0, remaining: 0, ok: true, perTable: {} };
+
+  // Taille de lot volontairement petite : un DELETE de 13 000 lignes (+ cascade FK)
+  // dépasse le statement_timeout de Supabase et provoque un ROLLBACK total
+  // (0 ligne supprimée). En supprimant par paquets de 500, chaque requête reste
+  // largement sous le timeout et réussit. Les tables enfants sont vidées d'abord
+  // pour que la suppression du parent (medications) n'ait plus aucune cascade.
+  const CHUNK = 500;
+
+  for (const { table, idCol } of STOCK_TABLES) {
+    let deletedHere = 0;
+    let tableMissing = false;
+
+    // Boucle : sélectionner un lot d'IDs → supprimer ce lot → recommencer
+    for (let pass = 0; pass < 500; pass++) {
+      const { data: rows, error: selErr } = await supabase
+        .from(table)
+        .select(idCol)
+        .eq('user_id', userId)
+        .limit(CHUNK);
+
+      if (selErr) {
+        // Table inexistante selon le déploiement → on ignore proprement
+        if (/does not exist|relation|schema cache/i.test(selErr.message)) { tableMissing = true; break; }
+        console.warn(`[clearAllStock] SELECT ${table}:`, selErr.message);
+        break;
+      }
+      if (!rows || rows.length === 0) break;   // plus rien à supprimer
+
+      const ids = rows.map(r => (r as Record<string, unknown>)[idCol] as string);
+      const { error: delErr } = await supabase.from(table).delete().in(idCol, ids);
+      if (delErr) {
+        console.warn(`[clearAllStock] DELETE ${table} (lot ${ids.length}):`, delErr.message);
+        // En cas d'échec sur un lot de 500, on retente en sous-lots de 100
+        let subOk = true;
+        for (let i = 0; i < ids.length && subOk; i += 100) {
+          const sub = ids.slice(i, i + 100);
+          const { error: e2 } = await supabase.from(table).delete().in(idCol, sub);
+          if (e2) { console.warn(`[clearAllStock] sous-lot ${table}:`, e2.message); subOk = false; }
+          else deletedHere += sub.length;
+        }
+        if (!subOk) break;   // échec persistant → on arrête cette table
+      } else {
+        deletedHere += ids.length;
+      }
+      if (onMessage) onMessage(`${table} : ${deletedHere} supprimé(s)…`);
+    }
+
+    if (tableMissing) { result.perTable[table] = 0; continue; }
+
+    // Vérification finale du résiduel pour cette table
+    const { count: rem } = await supabase
+      .from(table)
+      .select(idCol, { count: 'exact', head: true })
+      .eq('user_id', userId);
+    const remainingHere = rem ?? 0;
+
+    result.perTable[table] = deletedHere;
+    result.deleted += deletedHere;
+    result.remaining += remainingHere;
+    if (remainingHere > 0) result.ok = false;
+  }
+
+  // 4. Purge du cache local (IndexedDB)
+  try {
+    await db.products.clear();
+    await db.barcodeLinks.clear();
+    await db.syncQueue.clear();
+    if ((db as unknown as { inventoryUnits?: { clear: () => Promise<void> } }).inventoryUnits) {
+      await (db as unknown as { inventoryUnits: { clear: () => Promise<void> } }).inventoryUnits.clear();
+    }
+  } catch { /* ignore */ }
+
+  // 5. Purge du cache HTTP workbox (CRITIQUE) ─────────────────────────────────
+  // Un instantané périmé des réponses /rest/v1/medications ressuscitait le stock
+  // supprimé à chaque synchro. On efface tous les caches de réponses Supabase.
+  try {
+    if (typeof caches !== 'undefined') {
+      const names = await caches.keys();
+      await Promise.all(
+        names
+          .filter(n => /supabase/i.test(n))
+          .map(n => caches.delete(n)),
+      );
+    }
+  } catch { /* ignore */ }
+
+  return result;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
 //  9. MODE INSTALLATION — remplace tout le catalogue
 // ════════════════════════════════════════════════════════════════════════════
 async function installImport(rows: NormalizedRow[], onProgress: ProgressCallback): Promise<ImportStats> {
@@ -685,26 +812,32 @@ async function installImport(rows: NormalizedRow[], onProgress: ProgressCallback
   const unitMode = isUnitMode();
   if (!rows.length) { stats.errorDetails.push('Aucune ligne valide'); return stats; }
 
-  onProgress(0, rows.length, 'Suppression des données existantes…');
-  for (const [table, col, sentinel] of [
-    ['inventory_units', 'id',      '00000000-0000-0000-0000-000000000000'],
-    ['barcodes',        'barcode', '___DUMMY___'],
-    ['medications',     'id',      '00000000-0000-0000-0000-000000000000'],
-  ] as [string, string, string][]) {
-    try { await supabase.from(table).delete().neq(col, sentinel); } catch { /* ignore */ }
-  }
-  try { await db.products.clear(); await db.barcodeLinks.clear(); } catch { /* ignore */ }
+  // ── FLUX "remplacer tout" : EFFACER → SIGNALER → INSÉRER ────────────────────
+  // 1. On efface TOUT le stock actuel (toutes tables) de façon fiable et vérifiée.
+  // 2. On signale clairement "stock actuel effacé".
+  // 3. On insère le nouvel inventaire.
 
+  // ── ÉTAPE 1 : effacement total du stock existant ────────────────────────────
+  onProgress(0, rows.length, 'Suppression du stock actuel…');
+  const cleared = await clearAllStock();
+  if (!cleared.ok) {
+    // Le résiduel n'est pas vide → on prévient mais on continue (l'insert écrasera)
+    console.warn('[install] Résiduel après nettoyage:', cleared.remaining, cleared.perTable);
+    stats.errorDetails.push(`Attention : ${cleared.remaining} ancienne(s) entrée(s) non supprimée(s)`);
+  }
+
+  // ── ÉTAPE 2 : signal "stock actuel effacé" ──────────────────────────────────
+  stats.cleared = cleared.deleted;
+  onProgress(0, rows.length, `✓ Stock actuel effacé (${cleared.deleted} entrée(s) supprimée(s)) — import du nouvel inventaire…`);
+
+  // ── ÉTAPE 3 : regroupement + insertion des nouveaux produits ────────────────
   onProgress(0, rows.length, 'Regroupement des produits…');
   const groups = groupByName(rows);
   const receptionBatch = `INSTALL-${Date.now()}`;
   const createdByName = new Map<string, string>();
-
-  // ── Insertion produits par GROS batchs (500 vs 50 avant) ─────────────────
-  // Performance × 10 : 10 round-trips pour 5000 produits au lieu de 100.
-  const BATCH = 500;
   const allBarcodesToLink: Array<{ barcode: string; medication_id: string }> = [];
 
+  const BATCH = 500;
   for (let i = 0; i < groups.length; i += BATCH) {
     const slice = groups.slice(i, i + BATCH);
     onProgress(i, groups.length, `Insertion ${i + slice.length}/${groups.length}…`);
@@ -719,10 +852,9 @@ async function installImport(rows: NormalizedRow[], onProgress: ProgressCallback
     const { data: inserted, error } = await insertMedications(payload, 'id, name');
 
     if (error || !inserted) {
-      // Fallback : retry par paquets plus petits (100 au lieu de 1 par 1)
-      const SMALL = 100;
-      for (let j = 0; j < slice.length; j += SMALL) {
-        const sub = slice.slice(j, j + SMALL);
+      // Fallback par lots de 100
+      for (let j = 0; j < slice.length; j += 100) {
+        const sub = slice.slice(j, j + 100);
         const subPayload = sub.map(g => ({
           name: g.name, dosage: '', quantity: unitMode ? 0 : g.totalStock,
           price: g.sellingPrice, wholesale_price: g.buyingPrice,
@@ -732,15 +864,13 @@ async function installImport(rows: NormalizedRow[], onProgress: ProgressCallback
         const { data: arr, error: e1 } = await insertMedications(subPayload, 'id, name');
         if (e1) {
           stats.errors += sub.length;
-          if (stats.errorDetails.length < 10) stats.errorDetails.push(`Batch fallback "${sub[0].name.slice(0, 30)}": ${e1.message}`);
+          if (stats.errorDetails.length < 10) stats.errorDetails.push(`Fallback "${sub[0].name.slice(0,30)}": ${e1.message}`);
         } else if (arr) {
           const rows2 = arr as unknown as { id: string; name: string }[];
           stats.created += rows2.length;
           for (let k = 0; k < rows2.length; k++) {
             createdByName.set(sub[k].key, rows2[k].id);
-            for (const bc of sub[k].barcodes) {
-              if (bc) allBarcodesToLink.push({ barcode: bc, medication_id: rows2[k].id });
-            }
+            for (const bc of sub[k].barcodes) if (bc) allBarcodesToLink.push({ barcode: bc, medication_id: rows2[k].id });
           }
         }
       }
@@ -749,23 +879,23 @@ async function installImport(rows: NormalizedRow[], onProgress: ProgressCallback
       stats.created += rows2.length;
       for (let j = 0; j < rows2.length; j++) {
         createdByName.set(slice[j].key, rows2[j].id);
-        for (const bc of slice[j].barcodes) {
-          if (bc) allBarcodesToLink.push({ barcode: bc, medication_id: rows2[j].id });
-        }
+        for (const bc of slice[j].barcodes) if (bc) allBarcodesToLink.push({ barcode: bc, medication_id: rows2[j].id });
       }
     }
   }
 
-  // ── Insertion BULK des codes-barres en 1-3 requêtes ──────────────────────
+  // 3. Lier les codes-barres
   if (allBarcodesToLink.length > 0) {
     onProgress(groups.length, groups.length, `Liaison de ${allBarcodesToLink.length} codes-barres…`);
     await linkBarcodesBulk(allBarcodesToLink);
   }
 
-  if (unitMode) await createUnitsForRows(rows, createdByName, receptionBatch, 0, stats, onProgress);
+  // ── ÉTAPE 4 : créer les unités individuelles (mode unitaire — FLUX IMPORT) ──
+  // ⚠️ Flux Import : on utilise createImportUnits → codes EAN du fichier, jamais JP-
+  if (unitMode) await createImportUnits(rows, createdByName, receptionBatch, stats, onProgress);
 
   onProgress(rows.length, rows.length, 'Synchronisation…');
-  await syncLocal(true); // forceReplaceLocal = true (mode remplacer tout)
+  await syncLocal(true);
   return stats;
 }
 
@@ -777,7 +907,8 @@ async function deliveryImport(rows: NormalizedRow[], onProgress: ProgressCallbac
   const unitMode = isUnitMode();
   if (!rows.length) { stats.errorDetails.push('Aucune ligne valide'); return stats; }
 
-  let counter = unitMode ? await nextUnitCounter() : 0;
+  // ⚠️ Flux Import : PAS de compteur JP- ici. Les codes viennent des EAN du fichier.
+  const usedCodes = new Set<string>(); // dédup des codes dans ce batch
   onProgress(0, rows.length, 'Chargement du catalogue…');
 
   // ── Filtrer par user_id pour ne récupérer QUE les données du user courant
@@ -820,7 +951,12 @@ async function deliveryImport(rows: NormalizedRow[], onProgress: ProgressCallbac
           barcodeIndex.set(bc, medId);
         }
       }
-      if (unitMode) units.push(mkUnit(unitCode(++counter), medId, row, today, receptionBatch));
+      if (unitMode) {
+        // Flux Import : code de référence = EAN du fichier (jamais JP-)
+        const codeRef = resolveImportUnitCode(row, medId, usedCodes);
+        usedCodes.add(codeRef);
+        units.push(mkImportUnit(medId, row, codeRef, today, receptionBatch));
+      }
     } else {
       // Produit nouveau : on prépare pour insertion bulk
       rowsToCreate.push({ row, addQty });
@@ -886,10 +1022,13 @@ async function deliveryImport(rows: NormalizedRow[], onProgress: ProgressCallbac
         }
 
         // Mode unitaire : créer une unité physique par ligne originale du groupe
+        // Flux Import → code = EAN du fichier, jamais JP-
         if (unitMode) {
           qtyAdd.set(created.id, allRows.length);
           for (const r of allRows) {
-            units.push(mkUnit(unitCode(++counter), created.id, r, today, receptionBatch));
+            const codeRef = resolveImportUnitCode(r, created.id, usedCodes);
+            usedCodes.add(codeRef);
+            units.push(mkImportUnit(created.id, r, codeRef, today, receptionBatch));
           }
         }
       }
@@ -1042,6 +1181,119 @@ interface UnitInsert {
   reception_batch: string; status: string; imported_code: string | null;
 }
 
+// ════════════════════════════════════════════════════════════════════════════
+//  FLUX IMPORT  — codes natifs du fichier  (PAS de génération JP-)
+// ════════════════════════════════════════════════════════════════════════════
+// Règle : pendant un import Excel, l'EAN/barcode du fichier EST le code de
+// référence de la boîte. On ne génère jamais de JP-XXXXXX ici.
+// Les JP-XXXXXX sont EXCLUSIVEMENT réservés aux entrées manuelles (writeService).
+
+/**
+ * Résout le code unitaire pour un IMPORT :
+ *  - utilise l'EAN du fichier si présent et non encore utilisé
+ *  - ajoute un suffixe numérique si l'EAN est dupliqué dans le batch
+ *  - fallback IMP-... si aucun EAN n'est disponible
+ */
+function resolveImportUnitCode(
+  row: NormalizedRow,
+  medId: string,
+  usedCodes: Set<string>,
+): string {
+  const baseCode = row.ean || row.allBarcodes[0];
+  if (baseCode) {
+    if (!usedCodes.has(baseCode)) return baseCode;
+    for (let n = 2; n <= 99999; n++) {
+      const candidate = `${baseCode}-${n}`;
+      if (!usedCodes.has(candidate)) return candidate;
+    }
+  }
+  // Aucun EAN ou tous en conflit → fallback non-JP (préfixe IMP = importé)
+  for (let n = usedCodes.size; n <= usedCodes.size + 999999; n++) {
+    const candidate = `IMP-${medId.slice(0, 8)}-${String(n).padStart(6, '0')}`;
+    if (!usedCodes.has(candidate)) return candidate;
+  }
+  return `IMP-${crypto.randomUUID().slice(0, 12)}`;
+}
+
+/** Construit une UnitInsert pour le flux IMPORT (EAN comme code de référence). */
+function mkImportUnit(
+  medId: string, row: NormalizedRow, codeRef: string, today: string, batch: string,
+): UnitInsert {
+  return {
+    unit_code: codeRef,         // EAN ou alias natif du fichier
+    medication_id: medId,
+    batch_number: batch,        // lot de réception (PAS le code unitaire)
+    expiry_date: row.expiry,
+    entry_date: today,
+    supplier: row.supplier || '',
+    reception_batch: batch,
+    status: 'available',
+    imported_code: codeRef,     // même valeur : c'est déjà le code natif
+  };
+}
+
+/**
+ * Crée toutes les unités d'inventaire pour un import Excel.
+ * Chaque ligne du fichier → 1 boîte physique dont le code = EAN du fichier.
+ * JAMAIS de JP-XXXXXX ici.
+ */
+async function createImportUnits(
+  rows: NormalizedRow[],
+  createdByName: Map<string, string>,
+  receptionBatch: string,
+  stats: ImportStats,
+  onProgress: ProgressCallback,
+): Promise<void> {
+  onProgress(0, rows.length, 'Création des unités individuelles (codes natifs)…');
+  const today = new Date().toISOString().split('T')[0];
+  const units: UnitInsert[] = [];
+  const qtyByMed = new Map<string, number>();
+  const usedCodes = new Set<string>();
+
+  for (const row of rows) {
+    const medId = createdByName.get(row.name.trim().toLowerCase());
+    if (!medId) continue;
+    const codeRef = resolveImportUnitCode(row, medId, usedCodes);
+    usedCodes.add(codeRef);
+    units.push(mkImportUnit(medId, row, codeRef, today, receptionBatch));
+    qtyByMed.set(medId, (qtyByMed.get(medId) || 0) + 1);
+  }
+
+  // Insérer par lots de 500, 3 requêtes en parallèle
+  const userId2 = await getCurrentUserId();
+  const UB = 500;
+  const allBatches: UnitInsert[][] = [];
+  for (let i = 0; i < units.length; i += UB) allBatches.push(units.slice(i, i + UB));
+
+  const PARALLEL = 3;
+  for (let i = 0; i < allBatches.length; i += PARALLEL) {
+    const slice = allBatches.slice(i, i + PARALLEL);
+    onProgress(i * UB, units.length, `Unités ${Math.min((i + slice.length) * UB, units.length)}/${units.length}…`);
+    await Promise.all(slice.map(async b => {
+      try {
+        const { error } = await supabase.from('inventory_units').insert(b.map(u => ({ ...u, user_id: userId2 })));
+        if (error) { stats.errors++; if (stats.errorDetails.length < 10) stats.errorDetails.push(`Unités: ${error.message}`); }
+        else stats.unitsCreated += b.length;
+      } catch (e: unknown) {
+        stats.errors++;
+        if (stats.errorDetails.length < 10) stats.errorDetails.push(`Unités: ${(e as Error)?.message ?? String(e)}`);
+      }
+    }));
+  }
+
+  for (const [medId, count] of qtyByMed) {
+    await updateWithUserId('medications', { quantity: count }, { id: medId });
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  FLUX MANUEL  — JP-XXXXXX  (utilisé par writeService uniquement)
+// ════════════════════════════════════════════════════════════════════════════
+// ⚠️  Ces fonctions NE doivent PAS être appelées depuis installImport /
+//     deliveryImport.  Elles subsistent pour compatibilité avec l'ancien code
+//     de deliveryImport si jamais ce mode est réactivé manuellement.
+
+/** @deprecated - flux import uniquement via mkImportUnit + createImportUnits */
 function mkUnit(code: string, medId: string, row: NormalizedRow, today: string, batch: string): UnitInsert {
   return { unit_code: code, medication_id: medId, batch_number: code, expiry_date: row.expiry, entry_date: today, supplier: row.supplier || '', reception_batch: batch, status: 'available', imported_code: row.ean || null };
 }

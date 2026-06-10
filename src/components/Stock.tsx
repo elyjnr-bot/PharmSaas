@@ -882,14 +882,26 @@ export default function Stock({ initialFilter, onNavigateToSales }: { initialFil
   }, []);
 
   // ── Load units (unit mode) ───────────────────────────────────────────────────
+  // ⚠️ Supabase plafonne à 1000 lignes par requête par défaut.
+  // On pagine par blocs de 1000 jusqu'à tout récupérer.
   const loadUnitsForMedication = useCallback(async (medicationId: string) => {
     setLoadingUnits(true);
     try {
-      const { data, error } = await supabase
-        .from('inventory_units').select('*')
-        .eq('user_id', user?.id).eq('medication_id', medicationId)
-        .eq('status', 'available').order('created_at', { ascending: true });
-      setMedicationUnits(error ? [] : data || []);
+      const PAGE = 1000;
+      const all: InventoryUnit[] = [];
+      let from = 0;
+      while (true) {
+        const { data, error } = await supabase
+          .from('inventory_units').select('*')
+          .eq('user_id', user?.id).eq('medication_id', medicationId)
+          .eq('status', 'available').order('created_at', { ascending: true })
+          .range(from, from + PAGE - 1);
+        if (error) { setMedicationUnits([]); return; }
+        all.push(...(data || []));
+        if (!data || data.length < PAGE) break; // dernière page
+        from += PAGE;
+      }
+      setMedicationUnits(all);
     } catch { setMedicationUnits([]); }
     finally   { setLoadingUnits(false); }
   }, [user?.id]);
