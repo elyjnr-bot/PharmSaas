@@ -462,87 +462,90 @@ function OrdDetail({
 
   return (
     <div>
-      {/* ── Header: avatar · nom · Urgent | boutons à droite ── */}
+      {/* ── Header: avatar · nom+Urgent (inline) · bio — boutons à droite ── */}
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 22 }}>
         <Avatar name={ord.patient_name} idx={avatarIdx} size={62} />
 
-        <div style={{ flex: 1, minWidth: 0, paddingTop: 3 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 7 }}>
-            <span style={{ fontSize: 22, fontWeight: 800, color: C.ink, letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+        <div style={{ flex: 1, minWidth: 0, paddingTop: 2 }}>
+          {/* Nom + Urgent sur la même ligne, sans wrap */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, minWidth: 0 }}>
+            <span style={{ fontSize: 20, fontWeight: 800, color: C.ink, letterSpacing: '-0.025em', lineHeight: 1.15, whiteSpace: 'nowrap', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {ord.patient_name}
             </span>
             {ord.status === 'en_attente' && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: C.redLt, color: C.red, borderRadius: 99, padding: '3px 10px', fontSize: 11.5, fontWeight: 700 }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.red, flexShrink: 0 }} />
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: C.redLt, color: C.red, borderRadius: 99, padding: '3px 10px', fontSize: 11, fontWeight: 700, flexShrink: 0, whiteSpace: 'nowrap' }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: C.red, flexShrink: 0 }} />
                 Urgent
               </span>
             )}
           </div>
-          <div style={{ fontSize: 13, color: C.inkMute, display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
-            {ord.patient_phone && <span>{ord.patient_phone}</span>}
-            {ord.patient_phone && ord.medecin && <span style={{ color: C.inkGhost }}>·</span>}
-            {ord.medecin && <span>{ord.medecin}</span>}
-            {!ord.patient_phone && !ord.medecin && <span style={{ color: C.inkFaint }}>—</span>}
+          {/* Phone · médecin — no-wrap avec nowrap sur la ligne entière */}
+          <div style={{ fontSize: 13, color: C.inkMute, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {[ord.patient_phone, ord.medecin].filter(Boolean).join(' · ') || '—'}
           </div>
         </div>
 
         {/* Boutons droite */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, paddingTop: 4 }}>
-          <button onClick={onEdit} style={{ width: 32, height: 32, border: `1px solid ${C.border}`, borderRadius: 8, background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.inkFaint }}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0, paddingTop: 2 }}>
+          <button onClick={onEdit} title="Modifier" style={{ width: 30, height: 30, border: `1px solid ${C.border}`, borderRadius: 7, background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.inkFaint }}
             onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#f5f5f5'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>
-          <button onClick={onDelete} style={{ width: 32, height: 32, border: `1px solid ${C.border}`, borderRadius: 8, background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.inkFaint }}
+          <button onClick={onDelete} title="Supprimer" style={{ width: 30, height: 30, border: `1px solid ${C.border}`, borderRadius: 7, background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.inkFaint }}
             onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = C.redLt; (e.currentTarget as HTMLButtonElement).style.color = C.red; }}
             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = C.inkFaint; }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
           </button>
 
-          <button onClick={handlePrint} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', border: `1px solid ${C.border}`, borderRadius: 10, background: '#f3f4f6', color: C.inkSoft, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: C.f, boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
-            <div style={{ width: 22, height: 22, borderRadius: '50%', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <span style={{ color: '#fff', fontSize: 10, fontWeight: 800, lineHeight: 1 }}>R</span>
+          <button onClick={handlePrint} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '7px 14px', border: `1px solid ${C.border}`, borderRadius: 9, background: '#f3f4f6', color: C.inkSoft, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: C.f, whiteSpace: 'nowrap' }}>
+            <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <span style={{ color: '#fff', fontSize: 9, fontWeight: 800, lineHeight: 1 }}>R</span>
             </div>
             Historique
           </button>
 
           {(ord.status === 'en_attente' || ord.status === 'partielle') && (
-            <button onClick={() => onStatusChange(ord.id, 'terminee')} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 20px', border: 'none', borderRadius: 10, background: '#111', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: C.f, boxShadow: '0 2px 6px rgba(0,0,0,0.2)' }}>
-              <svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              Valider l'ordonnance
+            <button onClick={() => onStatusChange(ord.id, 'terminee')} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '7px 16px', border: 'none', borderRadius: 9, background: '#111', color: '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: C.f, whiteSpace: 'nowrap', boxShadow: '0 2px 5px rgba(0,0,0,0.18)' }}>
+              <svg width="11" height="9" viewBox="0 0 11 9" fill="none"><polyline points="1,4.5 4,7.5 10,1.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              Valider
             </button>
           )}
           {ord.status === 'terminee' && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10, background: C.brandLt, color: C.brand, fontSize: 13, fontWeight: 700, fontFamily: C.f }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 9, background: C.brandLt, color: C.brand, fontSize: 12.5, fontWeight: 700, fontFamily: C.f, whiteSpace: 'nowrap' }}>
               ✓ Complétée
             </div>
           )}
         </div>
       </div>
 
-      {/* ── Grille info — une ligne : N°ORD · MÉDECIN · DATE · VALIDITÉ · STATUT + bouton violet ── */}
-      <div style={{ border: `1px solid ${C.border}`, borderRadius: 12, padding: '14px 20px', marginBottom: 22, display: 'flex', alignItems: 'center', background: '#fff' }}>
-        {[
-          { lbl: 'N°\nORDONNANCE', val: ord.ref,          mono: true  },
-          { lbl: 'MÉDECIN',        val: ord.medecin || '—', mono: false },
-          { lbl: 'DATE',           val: dateFormatted,      mono: false },
-          { lbl: 'VALIDITÉ',       val: '3 mois',           mono: false },
-        ].map(({ lbl, val, mono }) => (
-          <div key={lbl} style={{ flex: 1, paddingRight: 18, marginRight: 18, borderRight: `1px solid ${C.border}` }}>
-            <div style={{ fontSize: 9.5, fontWeight: 600, color: C.inkFaint, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6, whiteSpace: 'pre-line', lineHeight: 1.3 }}>{lbl}</div>
-            <div style={{ fontSize: 13.5, fontWeight: 700, color: C.ink, fontFamily: mono ? C.fm : C.f }}>{val}</div>
+      {/* ── Grille info (scrollable) : N°ORD · MÉDECIN · DATE · VALIDITÉ · STATUT + bouton violet ── */}
+      <div style={{ border: `1px solid ${C.border}`, borderRadius: 12, marginBottom: 22, background: '#fff' }}>
+        <div style={{ display: 'flex', alignItems: 'stretch', overflowX: 'auto', borderRadius: 12, padding: '0' }}>
+          {[
+            { lbl: 'N° ORD.',  val: ord.ref,           mono: true  },
+            { lbl: 'MÉDECIN',  val: ord.medecin || '—', mono: false },
+            { lbl: 'DATE',     val: dateFormatted,       mono: false },
+            { lbl: 'VALIDITÉ', val: '3 mois',            mono: false },
+          ].map(({ lbl, val, mono }) => (
+            <div key={lbl} style={{ padding: '13px 14px', borderRight: `1px solid ${C.border}`, flexShrink: 0 }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: C.inkFaint, textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 7 }}>{lbl}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: C.ink, fontFamily: mono ? C.fm : C.f, whiteSpace: 'nowrap' }}>{val}</div>
+            </div>
+          ))}
+          <div style={{ padding: '13px 16px', borderRight: `1px solid ${C.border}`, flexShrink: 0 }}>
+            <div style={{ fontSize: 9, fontWeight: 700, color: C.inkFaint, textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 8 }}>STATUT</div>
+            <Pill status={ord.status} />
           </div>
-        ))}
-        <div style={{ paddingRight: 18, marginRight: 18, borderRight: `1px solid ${C.border}`, flexShrink: 0 }}>
-          <div style={{ fontSize: 9.5, fontWeight: 600, color: C.inkFaint, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 7 }}>STATUT</div>
-          <Pill status={ord.status} />
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '12px 16px', minWidth: 160 }}>
+            <button onClick={handlePrint} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 14px', border: 'none', borderRadius: 9, background: '#6e44b0', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: C.f, whiteSpace: 'nowrap', boxShadow: '0 2px 8px rgba(110,68,176,0.3)' }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/>
+              </svg>
+              Voir l'ordonnance
+            </button>
+          </div>
         </div>
-        <button onClick={handlePrint} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', border: 'none', borderRadius: 10, background: '#6e44b0', color: '#fff', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: C.f, whiteSpace: 'nowrap', flexShrink: 0, boxShadow: '0 2px 8px rgba(110,68,176,0.3)' }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
-          </svg>
-          Voir l'ordonnance scannée
-        </button>
       </div>
 
       {/* ── Progression (partielle) ── */}
@@ -912,7 +915,7 @@ export default function Ordonnances() {
           </div>
 
           {/* Right detail */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '28px 32px' }}>
+          <div style={{ flex: 1, overflow: 'auto', padding: '28px 32px', minWidth: 0 }}>
             {!selected ? (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: C.inkFaint, gap: 12 }}>
                 <div style={{ width: 64, height: 64, borderRadius: 16, background: C.brandLt, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
