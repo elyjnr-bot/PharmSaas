@@ -196,6 +196,7 @@ export default function DashboardDesktop() {
   const { profile } = useAuth();
   const [medications, setMedications] = useState<Medication[]>([]);
   const [journal, setJournal] = useState<JournalRow[]>([]);
+  const [creditStats, setCreditStats] = useState<{ totalDu: number; count: number } | null>(null);
   const [period, setPeriod] = useState<typeof PERIODS[number]['id']>('7j');
   const [patientStats, setPatientStats] = useState<PatientStatsData | null>(null);
   const [ordStats, setOrdStats] = useState<OrdStatsData | null>(null);
@@ -388,10 +389,34 @@ export default function DashboardDesktop() {
       })
       .catch(() => { /* silencieux */ });
 
+    // ── Créances en cours ─────────────────────────────────────────────────────
+    const loadCreditStats = () => {
+      supabase
+        .from('credits')
+        .select('total_amount, amount_paid, status')
+        .neq('status', 'paid')
+        .then(({ data }) => {
+          if (!data) return;
+          const totalDu = data.reduce((sum, c) => {
+            const du = (c.total_amount || 0) - (c.amount_paid || 0);
+            return sum + Math.max(0, du);
+          }, 0);
+          setCreditStats({ totalDu, count: data.length });
+        })
+        .catch(() => {});
+    };
+    loadCreditStats();
+
+    const creditSub = supabase
+      .channel('dashboard-credits')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'credits' }, loadCreditStats)
+      .subscribe();
+
     // Cleanup subscriptions au démontage
     return () => {
       supabase.removeChannel(patientsSub);
       supabase.removeChannel(saleSub);
+      supabase.removeChannel(creditSub);
       window.removeEventListener('sale-completed', reloadJournal);
     };
   }, []);
@@ -726,6 +751,21 @@ export default function DashboardDesktop() {
       sub: m.expiring30Count === 0 ? 'Pas de péremption imminente' : m.expiringNames,
       noSpark: true,
     },
+    {
+      lbl: 'Créances en cours',
+      val: creditStats ? fmt(creditStats.totalDu) : '…',
+      unit: 'FC',
+      delta: creditStats
+        ? (creditStats.count === 0 ? '✓ Aucune créance' : `${creditStats.count} client${creditStats.count > 1 ? 's' : ''} débiteur${creditStats.count > 1 ? 's' : ''}`)
+        : '…',
+      pos: creditStats?.count === 0 ? true : false,
+      spark: [0, 0],
+      color: !creditStats || creditStats.count === 0 ? C.brand : C.amber,
+      sub: creditStats && creditStats.count > 0
+        ? `${fmt(creditStats.totalDu)} FC à recouvrer`
+        : 'Aucun impayé',
+      noSpark: true,
+    },
   ];
 
   const chartData = isCustomPeriod && customChartData ? customChartData : m.dailyTotals;
@@ -919,12 +959,12 @@ export default function DashboardDesktop() {
         </button>
       </div>
 
-      {/* KPI Row — 2 rows × 3 cols */}
-      <div data-tour="dash-kpis" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginBottom: 16 }}>
+      {/* KPI Row — 2 rows × 4 cols (7 cards) */}
+      <div data-tour="dash-kpis" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 16 }}>
         {kpis.map((k, i) => (
           <article
             key={i}
-            data-tour={['kpi-ventes', 'kpi-tickets', 'kpi-casemaine', 'kpi-camois', 'kpi-rupture', 'kpi-peremption'][i]}
+            data-tour={['kpi-ventes', 'kpi-tickets', 'kpi-casemaine', 'kpi-camois', 'kpi-rupture', 'kpi-peremption', 'kpi-creances'][i]}
             style={{ ...card, padding: '16px 18px' }}
           >
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
