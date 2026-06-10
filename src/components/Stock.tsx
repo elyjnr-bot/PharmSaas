@@ -2229,8 +2229,10 @@ export default function Stock({ initialFilter, onNavigateToSales }: { initialFil
           units={medicationUnits}
           loading={loadingUnits}
           onClose={() => setSelectedMedication(null)}
-          onAddUnit={handleAddUnitToCart}
-          cartUnitIds={cartUnitIds}
+          onUnitStatusChanged={() => {
+            loadMedications();
+            loadUnitsForMedication(selectedMedication.id);
+          }}
         />
       )}
 
@@ -2393,12 +2395,35 @@ interface UnitDetailsModalProps {
   units: InventoryUnit[];
   loading: boolean;
   onClose: () => void;
-  onAddUnit: (unit: InventoryUnit) => void;
-  cartUnitIds: Set<string>;
+  onUnitStatusChanged: () => void; // recharge la liste après modif
 }
 
-function UnitDetailsModal({ medication, units, loading, onClose, onAddUnit, cartUnitIds }: UnitDetailsModalProps) {
+function UnitDetailsModal({ medication, units, loading, onClose, onUnitStatusChanged }: UnitDetailsModalProps) {
+  const [printUnit, setPrintUnit] = useState<InventoryUnit | null>(null);
+  const [confirmLost, setConfirmLost] = useState<InventoryUnit | null>(null);
+  const [markingLost, setMarkingLost] = useState(false);
+
+  const handleMarkLost = async (unit: InventoryUnit, status: 'damaged' | 'lost') => {
+    setMarkingLost(true);
+    try {
+      await supabase
+        .from('inventory_units')
+        .update({ status })
+        .eq('id', unit.id);
+      // Décrémenter le stock du médicament
+      await supabase
+        .from('medications')
+        .update({ quantity: Math.max(0, (medication.quantity ?? 1) - 1) })
+        .eq('id', medication.id);
+      setConfirmLost(null);
+      onUnitStatusChanged();
+    } finally {
+      setMarkingLost(false);
+    }
+  };
+
   return (
+    <>
     <div style={{
       position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
       zIndex: 50, display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
@@ -2424,13 +2449,7 @@ function UnitDetailsModal({ medication, units, loading, onClose, onAddUnit, cart
               Stock : <span style={{ fontWeight: 600, color: C.brand }}>{medication.quantity} unité(s)</span>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            style={{
-              width: 32, height: 32, borderRadius: 8, background: 'rgba(0,0,0,0.05)',
-              border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}
-          >
+          <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(0,0,0,0.05)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <X size={16} color={C.inkMute} />
           </button>
         </div>
@@ -2438,16 +2457,12 @@ function UnitDetailsModal({ medication, units, loading, onClose, onAddUnit, cart
         {/* Body */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
           <div style={{ fontSize: 12, fontWeight: 600, color: C.inkMute, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            Unités disponibles ({units.length})
+            Unités en stock ({units.length})
           </div>
 
           {loading ? (
             <div style={{ display: 'flex', justifyContent: 'center', padding: '32px 0' }}>
-              <div style={{
-                width: 22, height: 22, borderRadius: 99,
-                border: `2.5px solid ${C.brand}`, borderTopColor: 'transparent',
-                animation: 'spin 0.7s linear infinite',
-              }} />
+              <div style={{ width: 22, height: 22, borderRadius: 99, border: `2.5px solid ${C.brand}`, borderTopColor: 'transparent', animation: 'spin 0.7s linear infinite' }} />
             </div>
           ) : units.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '32px 0', color: C.inkMute }}>
@@ -2457,49 +2472,87 @@ function UnitDetailsModal({ medication, units, loading, onClose, onAddUnit, cart
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {units.map(unit => {
-                const isInCart = cartUnitIds.has(unit.id);
+                const isConfirming = confirmLost?.id === unit.id;
+                const expiry = unit.expiry_date
+                  ? new Date(unit.expiry_date).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })
+                  : null;
+                const isExpiringSoon = unit.expiry_date
+                  ? (new Date(unit.expiry_date).getTime() - Date.now()) < 30 * 24 * 3600 * 1000
+                  : false;
                 return (
-                  <div
-                    key={unit.id}
-                    style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      padding: '10px 12px', borderRadius: 9,
-                      border: `1px solid ${isInCart ? 'rgba(16,120,90,0.3)' : C.hairline}`,
-                      background: isInCart ? 'rgba(16,120,90,0.05)' : C.panelSolid,
-                    }}
-                  >
-                    <div>
-                      <span style={{ fontFamily: C.fm, fontWeight: 700, color: C.brand, fontSize: 13 }}>
-                        {unit.unit_code}
-                      </span>
-                      {unit.imported_code && unit.imported_code !== unit.unit_code && (
-                        <div style={{ fontSize: 10.5, color: C.inkFaint, marginTop: 2 }}>
-                          Code import : {unit.imported_code}
+                  <div key={unit.id} style={{
+                    borderRadius: 10, border: `1px solid ${isConfirming ? 'rgba(220,38,38,0.25)' : C.hairline}`,
+                    background: isConfirming ? 'rgba(220,38,38,0.03)' : C.panelSolid,
+                    overflow: 'hidden', transition: '0.15s',
+                  }}>
+                    {/* Ligne principale */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px' }}>
+                      <div>
+                        <span style={{ fontFamily: C.fm, fontWeight: 700, color: C.brand, fontSize: 13 }}>
+                          {unit.unit_code}
+                        </span>
+                        <div style={{ display: 'flex', gap: 8, marginTop: 3, flexWrap: 'wrap' }}>
+                          {unit.batch_number && (
+                            <span style={{ fontSize: 10, color: C.inkFaint }}>Lot : {unit.batch_number}</span>
+                          )}
+                          {expiry && (
+                            <span style={{ fontSize: 10, fontWeight: 600, color: isExpiringSoon ? '#dc2626' : C.inkFaint }}>
+                              Exp : {expiry}{isExpiringSoon ? ' ⚠️' : ''}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {/* Actions */}
+                      {!isConfirming && (
+                        <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
+                          <button
+                            onClick={() => setPrintUnit(unit)}
+                            title="Imprimer l'étiquette"
+                            style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 9px', background: 'rgba(16,120,90,0.08)', color: C.brand, border: 'none', borderRadius: 99, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
+                          >
+                            <Printer size={11} strokeWidth={1.5} />
+                            Étiquette
+                          </button>
+                          <button
+                            onClick={() => setConfirmLost(unit)}
+                            title="Marquer comme perdue ou abîmée"
+                            style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 9px', background: 'rgba(220,38,38,0.07)', color: '#dc2626', border: 'none', borderRadius: 99, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
+                          >
+                            <AlertTriangle size={11} strokeWidth={1.5} />
+                          </button>
                         </div>
                       )}
                     </div>
-                    {isInCart ? (
-                      <span style={{
-                        display: 'flex', alignItems: 'center', gap: 4,
-                        padding: '5px 10px', background: 'rgba(16,120,90,0.1)', color: C.brand,
-                        borderRadius: 99, fontSize: 11.5, fontWeight: 600,
-                      }}>
-                        <ShoppingCart size={11} strokeWidth={1.5} />
-                        Dans le panier
-                      </span>
-                    ) : (
-                      <button
-                        onClick={() => onAddUnit(unit)}
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: 4,
-                          padding: '5px 12px', background: C.brand, color: '#fff',
-                          border: 'none', borderRadius: 99, fontSize: 11.5, fontWeight: 600,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        <ShoppingCart size={11} strokeWidth={1.5} />
-                        Ajouter
-                      </button>
+
+                    {/* Confirmation perte / casse */}
+                    {isConfirming && (
+                      <div style={{ padding: '10px 12px', borderTop: '1px solid rgba(220,38,38,0.12)', background: 'rgba(220,38,38,0.04)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <p style={{ margin: 0, fontSize: 11.5, color: '#dc2626', fontWeight: 600 }}>
+                          Retirer cette boîte du stock ?
+                        </p>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button
+                            disabled={markingLost}
+                            onClick={() => handleMarkLost(unit, 'damaged')}
+                            style={{ flex: 1, padding: '6px 0', borderRadius: 8, border: 'none', background: '#f59e0b', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                          >
+                            🔨 Abîmée
+                          </button>
+                          <button
+                            disabled={markingLost}
+                            onClick={() => handleMarkLost(unit, 'lost')}
+                            style={{ flex: 1, padding: '6px 0', borderRadius: 8, border: 'none', background: '#dc2626', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                          >
+                            ❌ Perdue
+                          </button>
+                          <button
+                            onClick={() => setConfirmLost(null)}
+                            style={{ padding: '6px 10px', borderRadius: 8, border: `1px solid ${C.hairline}`, background: 'transparent', fontSize: 11, fontWeight: 600, cursor: 'pointer', color: C.inkMute }}
+                          >
+                            Annuler
+                          </button>
+                        </div>
+                      </div>
                     )}
                   </div>
                 );
@@ -2523,6 +2576,26 @@ function UnitDetailsModal({ medication, units, loading, onClose, onAddUnit, cart
         </div>
       </div>
     </div>
+
+    {/* Impression d'étiquette pour une boîte spécifique */}
+    {printUnit && (
+      <PrintUnitsModal
+        units={[{
+          id: printUnit.id,
+          unit_code: printUnit.unit_code,
+          medication_name: medication.name,
+          batch_number: printUnit.batch_number,
+          expiry_date: printUnit.expiry_date,
+          price: medication.price,
+          supplier: medication.supplier ?? undefined,
+        }]}
+        medicationName={medication.name}
+        price={medication.price}
+        supplier={medication.supplier ?? undefined}
+        onClose={() => setPrintUnit(null)}
+      />
+    )}
+    </>
   );
 }
 
