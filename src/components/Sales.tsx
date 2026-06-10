@@ -140,12 +140,16 @@ export default function Sales() {
   const [showScanner, setShowScanner] = useState(false);
   const [scanFeedback, setScanFeedback] = useState<{ msg: string; ok: boolean } | null>(null);
 
-  // ── Scan JP obligatoire (mode unitaire) ───────────────────────────────────────
-  // Quand un produit JP-tracké est cliqué, on demande le scan de la boîte physique
+  // ── Sélection unitaire (mode unitaire) ────────────────────────────────────────
+  // Quand un produit tracké est cliqué : affiche la liste des boîtes + input scan
+  type UnitRow = { id: string; unit_code: string; batch_number: string; expiry_date: string | null };
   const [pendingJpScan, setPendingJpScan] = useState<{
     medication: Medication;
     jpInput: string;
     availableCount: number;
+    units: UnitRow[];
+    loadingUnits: boolean;
+    unitFilter: string;
   } | null>(null);
   const jpInputRef = useRef<HTMLInputElement>(null);
 
@@ -727,16 +731,29 @@ export default function Sales() {
           .limit(1);
 
         if (!error && availableUnits && availableUnits.length > 0) {
-          // Produit JP-tracké → demander le scan de la boîte
-          const { count } = await supabase
-            .from('inventory_units')
-            .select('*', { count: 'exact', head: true })
-            .eq('medication_id', medication.id)
-            .eq('status', 'available');
-
-          setPendingJpScan({ medication, jpInput: '', availableCount: count ?? 0 });
+          // Ouvrir le sélecteur — charger la liste des boîtes en arrière-plan
+          setPendingJpScan({ medication, jpInput: '', availableCount: 0, units: [], loadingUnits: true, unitFilter: '' });
           setTimeout(() => jpInputRef.current?.focus(), 80);
-          return; // ne pas ajouter au panier — attendre le scan
+
+          // Charger toutes les unités disponibles (paginé par 1000)
+          const PAGE = 1000;
+          const allUnits: UnitRow[] = [];
+          let from = 0;
+          while (true) {
+            const { data: page, error: pageErr } = await supabase
+              .from('inventory_units')
+              .select('id, unit_code, batch_number, expiry_date')
+              .eq('medication_id', medication.id)
+              .eq('status', 'available')
+              .order('unit_code', { ascending: true })
+              .range(from, from + PAGE - 1);
+            if (pageErr || !page) break;
+            allUnits.push(...page);
+            if (page.length < PAGE) break;
+            from += PAGE;
+          }
+          setPendingJpScan(prev => prev ? { ...prev, units: allUnits, availableCount: allUnits.length, loadingUnits: false } : null);
+          return; // ne pas ajouter au panier — attendre la sélection
         }
       } catch {
         // Hors-ligne ou erreur → débit global classique
@@ -851,6 +868,26 @@ export default function Sales() {
     setPendingJpScan(null);
   };
 
+  // ── Sélection directe d'une boîte dans la liste ───────────────────────────────
+  const handleSelectUnit = (unitRow: UnitRow) => {
+    if (!pendingJpScan) return;
+    const med = pendingJpScan.medication;
+    const cartUnit = { id: unitRow.id, unit_code: unitRow.unit_code, batch_number: unitRow.batch_number, expiry_date: unitRow.expiry_date };
+    setCart(prev => {
+      const existing = prev.find(i => i.medication.id === med.id);
+      if (existing) {
+        if (existing.units?.some(u => u.id === unitRow.id)) return prev; // déjà dans panier
+        return prev.map(i => i.medication.id === med.id
+          ? { ...i, quantity: i.quantity + 1, units: [...(i.units || []), cartUnit] }
+          : i);
+      }
+      return [...prev, { medication: med, quantity: 1, units: [cartUnit] }];
+    });
+    setScanFeedback({ msg: `✓ ${unitRow.unit_code} ajouté`, ok: true });
+    setTimeout(() => setScanFeedback(null), 2000);
+    setPendingJpScan(null);
+  };
+
   const removeFromCart = (medicationId: string) => {
     setCart(cart.filter(item => item.medication.id !== medicationId));
   };
@@ -864,19 +901,32 @@ export default function Sales() {
     // Le - retire la dernière boîte scannée de units[].
     if (item.units && item.units.length > 0) {
       if (quantity > item.quantity) {
-        // Incrément : demander le scan d'une nouvelle boîte
+        // Incrément : rouvrir le sélecteur (mêmes unités déjà sélectionnées exclues)
         const liveMed = medications.find(m => m.id === medicationId) ?? item.medication;
-        setPendingJpScan({ medication: liveMed, jpInput: '', availableCount: 0 });
-        // Mettre à jour le count disponible en arrière-plan
-        supabase
-          .from('inventory_units')
-          .select('*', { count: 'exact', head: true })
-          .eq('medication_id', medicationId)
-          .eq('status', 'available')
-          .then(({ count }) => {
-            setPendingJpScan(prev => prev ? { ...prev, availableCount: count ?? 0 } : null);
-          });
+        const alreadySelectedIds = new Set((item.units || []).map(u => u.id));
+        setPendingJpScan({ medication: liveMed, jpInput: '', availableCount: 0, units: [], loadingUnits: true, unitFilter: '' });
         setTimeout(() => jpInputRef.current?.focus(), 80);
+        // Charger les unités restantes (paginé)
+        (async () => {
+          const PAGE = 1000;
+          const allUnits: UnitRow[] = [];
+          let from = 0;
+          while (true) {
+            const { data: page } = await supabase
+              .from('inventory_units')
+              .select('id, unit_code, batch_number, expiry_date')
+              .eq('medication_id', medicationId)
+              .eq('status', 'available')
+              .order('unit_code', { ascending: true })
+              .range(from, from + PAGE - 1);
+            if (!page) break;
+            allUnits.push(...page);
+            if (page.length < PAGE) break;
+            from += PAGE;
+          }
+          const remaining = allUnits.filter(u => !alreadySelectedIds.has(u.id));
+          setPendingJpScan(prev => prev ? { ...prev, units: remaining, availableCount: remaining.length, loadingUnits: false } : null);
+        })();
         return;
       } else if (quantity < item.quantity && quantity >= 0) {
         // Décrément : retirer la dernière unité scannée
@@ -2721,59 +2771,118 @@ export default function Sales() {
               </div>
             </div>
 
-            {/* ── Prompt scan JP obligatoire ────────────────────────────── */}
-            {pendingJpScan && (
-              <div style={{ background: 'rgba(255,255,255,0.95)', borderRadius: 14, border: '2px solid #10785a', padding: '14px 16px', flexShrink: 0, boxShadow: '0 4px 20px rgba(16,120,90,0.15)' }}>
-                {/* En-tête */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                  <div>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: '#10785a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      📱 Scannez la boîte
+            {/* ── Sélecteur unitaire ─────────────────────────────────────── */}
+            {pendingJpScan && (() => {
+              const cartUnitIds = new Set(
+                cart.flatMap(i => (i.units || []).map(u => u.id))
+              );
+              const filtered = pendingJpScan.unitFilter
+                ? pendingJpScan.units.filter(u =>
+                    u.unit_code.toLowerCase().includes(pendingJpScan.unitFilter.toLowerCase())
+                  )
+                : pendingJpScan.units;
+
+              return (
+                <div style={{ background: 'rgba(255,255,255,0.95)', borderRadius: 14, border: '2px solid #10785a', padding: '14px 16px', flexShrink: 0, boxShadow: '0 4px 20px rgba(16,120,90,0.15)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+
+                  {/* En-tête */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#10785a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        📦 Choisir une boîte
+                      </div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: '#0a0e14', marginTop: 2 }}>
+                        {pendingJpScan.medication.name}
+                        {pendingJpScan.medication.dosage && <span style={{ color: '#6b7280', fontWeight: 400 }}> · {pendingJpScan.medication.dosage}</span>}
+                      </div>
+                      <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 1 }}>
+                        {pendingJpScan.loadingUnits
+                          ? 'Chargement…'
+                          : `${pendingJpScan.availableCount} boîte${pendingJpScan.availableCount > 1 ? 's' : ''} disponible${pendingJpScan.availableCount > 1 ? 's' : ''}`
+                        }
+                      </div>
                     </div>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: '#0a0e14', marginTop: 2 }}>
-                      {pendingJpScan.medication.name}
-                      {pendingJpScan.medication.dosage && <span style={{ color: '#6b7280', fontWeight: 400 }}> · {pendingJpScan.medication.dosage}</span>}
-                    </div>
-                    <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 2 }}>
-                      {pendingJpScan.availableCount} boîte{pendingJpScan.availableCount > 1 ? 's' : ''} disponible{pendingJpScan.availableCount > 1 ? 's' : ''}
-                    </div>
+                    <button onClick={() => setPendingJpScan(null)}
+                      style={{ width: 26, height: 26, borderRadius: 7, background: 'rgba(0,0,0,0.06)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <X style={{ width: 12, height: 12, color: '#6b7280' }} />
+                    </button>
                   </div>
-                  <button
-                    onClick={() => setPendingJpScan(null)}
-                    style={{ width: 26, height: 26, borderRadius: 7, background: 'rgba(0,0,0,0.06)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                  >
-                    <X style={{ width: 12, height: 12, color: '#6b7280' }} />
-                  </button>
-                </div>
-                {/* Input code unitaire (EAN import ou JP- manuel) */}
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <div style={{ position: 'relative', flex: 1 }}>
+
+                  {/* Input scan / filtre */}
+                  <div style={{ display: 'flex', gap: 6 }}>
                     <input
                       ref={jpInputRef}
                       type="text"
                       value={pendingJpScan.jpInput}
-                      onChange={e => setPendingJpScan(prev => prev ? { ...prev, jpInput: e.target.value } : null)}
+                      onChange={e => setPendingJpScan(prev => prev
+                        ? { ...prev, jpInput: e.target.value, unitFilter: e.target.value }
+                        : null)}
                       onKeyDown={e => {
                         if (e.key === 'Enter') handleUnitEntry(pendingJpScan.jpInput || e.currentTarget.value);
                         if (e.key === 'Escape') setPendingJpScan(null);
                       }}
-                      placeholder="Scannez ou saisissez le code…"
-                      style={{ width: '100%', height: 36, paddingLeft: 12, paddingRight: 10, borderRadius: 8, border: '1.5px solid rgba(16,120,90,0.35)', fontSize: 13, fontFamily: 'monospace', fontWeight: 600, outline: 'none', boxSizing: 'border-box', background: 'rgba(16,120,90,0.04)' }}
+                      placeholder="Scannez ou filtrez par code…"
+                      style={{ flex: 1, height: 34, paddingLeft: 10, paddingRight: 8, borderRadius: 8, border: '1.5px solid rgba(16,120,90,0.3)', fontSize: 12, fontFamily: 'monospace', fontWeight: 600, outline: 'none', background: 'rgba(16,120,90,0.03)' }}
                       autoFocus
                     />
+                    {pendingJpScan.jpInput && (
+                      <button onClick={() => handleUnitEntry(pendingJpScan.jpInput)}
+                        style={{ height: 34, padding: '0 12px', borderRadius: 8, background: '#10785a', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>
+                        Ajouter
+                      </button>
+                    )}
                   </div>
-                  <button
-                    onClick={() => handleUnitEntry(pendingJpScan.jpInput)}
-                    style={{ height: 36, padding: '0 14px', borderRadius: 8, background: '#10785a', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' }}
-                  >
-                    Ajouter
-                  </button>
+
+                  {/* Liste des boîtes */}
+                  {pendingJpScan.loadingUnits ? (
+                    <div style={{ display: 'flex', justifyContent: 'center', padding: '16px 0' }}>
+                      <div style={{ width: 18, height: 18, borderRadius: 99, border: '2px solid #10785a', borderTopColor: 'transparent', animation: 'spin 0.7s linear infinite' }} />
+                    </div>
+                  ) : filtered.length === 0 ? (
+                    <p style={{ fontSize: 11, color: '#9ca3af', textAlign: 'center', padding: '8px 0', margin: 0 }}>
+                      {pendingJpScan.unitFilter ? 'Aucun code correspondant' : 'Aucune boîte disponible'}
+                    </p>
+                  ) : (
+                    <div style={{ maxHeight: 200, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      {filtered.slice(0, 100).map(u => {
+                        const inCart = cartUnitIds.has(u.id);
+                        return (
+                          <button
+                            key={u.id}
+                            disabled={inCart}
+                            onClick={() => handleSelectUnit(u)}
+                            style={{
+                              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                              padding: '8px 10px', borderRadius: 8, border: `1px solid ${inCart ? 'rgba(16,120,90,0.15)' : 'rgba(16,120,90,0.2)'}`,
+                              background: inCart ? 'rgba(16,120,90,0.04)' : 'rgba(16,120,90,0.06)',
+                              cursor: inCart ? 'not-allowed' : 'pointer', textAlign: 'left', width: '100%',
+                              opacity: inCart ? 0.5 : 1,
+                              transition: '0.1s',
+                            }}
+                          >
+                            <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 700, color: '#10785a' }}>
+                              {u.unit_code}
+                            </span>
+                            <span style={{
+                              fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 99,
+                              background: inCart ? 'rgba(107,114,128,0.1)' : 'rgba(16,120,90,0.12)',
+                              color: inCart ? '#9ca3af' : '#10785a',
+                            }}>
+                              {inCart ? 'Dans le panier' : 'Choisir'}
+                            </span>
+                          </button>
+                        );
+                      })}
+                      {filtered.length > 100 && (
+                        <p style={{ fontSize: 10, color: '#9ca3af', textAlign: 'center', margin: '4px 0 0', padding: 0 }}>
+                          {filtered.length - 100} boîtes supplémentaires — affinez avec le filtre
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
-                <p style={{ fontSize: 10, color: '#9ca3af', marginTop: 7, lineHeight: 1.4 }}>
-                  Scannez l'EAN ou le code JP sur la boîte · ESC pour annuler
-                </p>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Panier vide */}
             {cart.length === 0 && !pendingJpScan ? (
