@@ -98,7 +98,7 @@ function OrdModal({
   onSave: (o: Ordonnance) => void | Promise<void>;
   onClose: () => void;
   saving?: boolean;
-  medications: { name: string; quantity: number; code_produit?: string }[];
+  medications: { id?: string; name: string; quantity: number; code_produit?: string }[];
   patients: Patient[];
 }) {
   const isEdit = !!ord;
@@ -110,6 +110,7 @@ function OrdModal({
   const [notes, setNotes] = useState(ord?.notes || '');
   const [items, setItems] = useState<OrdonnanceItem[]>(ord?.items || []);
   const [newItem, setNewItem] = useState({ name: '', dci: '', dosage: '', qty: '1' });
+  const [selectedMedId, setSelectedMedId] = useState<string | undefined>(undefined);
   const [search, setSearch] = useState('');
   const [patSearch, setPatSearch] = useState('');
   const [showPatDrop, setShowPatDrop] = useState(false);
@@ -146,10 +147,13 @@ function OrdModal({
 
   const addItem = () => {
     const qty = parseInt(newItem.qty) || 1;
-    const med = medications.find(m => m.name.toLowerCase() === newItem.name.toLowerCase());
+    const med = medications.find(m =>
+      selectedMedId ? m.id === selectedMedId : m.name.toLowerCase() === newItem.name.toLowerCase()
+    );
     const stockAvail = med?.quantity ?? 0;
     const item: OrdonnanceItem = {
       id: `__item__${Date.now()}`,  // temp id — replaced by UUID after DB save
+      medication_id: selectedMedId || med?.id,
       name: newItem.name.trim(),
       dci: newItem.dci.trim(),
       dosage: newItem.dosage.trim(),
@@ -160,6 +164,7 @@ function OrdModal({
     };
     setItems(prev => [...prev, item]);
     setNewItem({ name: '', dci: '', dosage: '', qty: '1' });
+    setSelectedMedId(undefined);
     setSearch('');
   };
 
@@ -353,6 +358,7 @@ function OrdModal({
                       {medicationSuggestions.map(m => (
                         <button key={m.name} onClick={() => {
                           setNewItem(p => ({ ...p, name: m.name }));
+                          setSelectedMedId((m as any).id);
                           setSearch('');
                         }} style={{ display: 'block', width: '100%', padding: '8px 12px', textAlign: 'left', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 12.5, color: C.ink, borderBottom: `1px solid ${C.border}`, fontFamily: C.f }}>
                           <span style={{ fontWeight: 550 }}>{m.name}</span>
@@ -665,7 +671,13 @@ export default function Ordonnances() {
   };
 
   const handleConvertToSale = (ord: Ordonnance) => {
-    setPendingOrdCart(ord.items.map(i => ({ name: i.name, qty: i.qty, ordonnanceRef: ord.ref })));
+    // Calcule la quantité restante à délivrer (total - déjà livré)
+    // Ignore les articles déjà totalement délivrés
+    const pendingItems = ord.items
+      .map(i => ({ medication_id: i.medication_id, name: i.name, qty: Math.max(0, i.qty - (i.qty_delivered || 0)), ordonnanceRef: ord.ref }))
+      .filter(i => i.qty > 0);
+    if (pendingItems.length === 0) return; // tout déjà délivré
+    setPendingOrdCart(pendingItems);
     window.dispatchEvent(new CustomEvent('navigate-to-tab', { detail: { tab: 'sales' } }));
   };
 
@@ -693,7 +705,7 @@ export default function Ordonnances() {
     }
   };
 
-  const medList = medications.map(m => ({ name: m.name, quantity: m.quantity, code_produit: m.code_produit }));
+  const medList = medications.map(m => ({ id: m.id, name: m.name, quantity: m.quantity, code_produit: m.code_produit }));
 
   // KPIs
   const kpis = useMemo(() => ({

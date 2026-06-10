@@ -3,6 +3,7 @@ import { createContext, useContext, useState, useCallback } from 'react';
 export type WorkflowMode = 'global' | 'unit';
 
 export interface PendingCartItem {
+  medication_id?: string;  // FK vers medications.id — prioritaire pour le matching
   name: string;
   qty: number;
   ordonnanceRef?: string;

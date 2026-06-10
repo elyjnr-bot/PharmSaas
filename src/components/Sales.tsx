@@ -247,7 +247,17 @@ export default function Sales() {
     if (!pendingOrdCart || medications.length === 0) return;
     const newCart: CartItem[] = [];
     for (const pending of pendingOrdCart) {
-      const med = medications.find(m => m.name.toLowerCase() === pending.name.toLowerCase());
+      // Priorité : match par medication_id (fiable), sinon fallback par nom exact,
+      // puis fallback par inclusion partielle du nom (typo / espace)
+      const med =
+        (pending.medication_id
+          ? medications.find(m => m.id === pending.medication_id)
+          : undefined) ??
+        medications.find(m => m.name.toLowerCase() === pending.name.toLowerCase()) ??
+        medications.find(m =>
+          m.name.toLowerCase().includes(pending.name.toLowerCase()) ||
+          pending.name.toLowerCase().includes(m.name.toLowerCase())
+        );
       if (!med || med.quantity <= 0) continue;
       const existing = newCart.find(i => i.medication.id === med.id);
       if (existing) {
@@ -1123,6 +1133,30 @@ export default function Sales() {
         })),
         notes: customerName || undefined,
       });
+
+      // ── Tracer les lignes crédit dans sales_journal (comptabilité de créances) ─
+      // Sans ceci, les ventes à crédit sont invisibles dans les rapports financiers.
+      // payment_method = 'Crédit' → visible dans le CA et les stats du dashboard.
+      const creditJournalEntries = cart.map(item => ({
+        sale_date:       saleDate,
+        medication_id:   item.medication.id,
+        medication_name: `${item.medication.name} ${item.medication.dosage}`,
+        quantity_sold:   item.quantity,
+        unit_price:      item.medication.price || 0,
+        total_price:     (item.medication.price || 0) * item.quantity,
+        payment_method:  'Crédit',
+        stock_after_sale: stockUpdates.find(u => u.id === item.medication.id)?.newQty ?? 0,
+        seller_name:     activeSeller?.name ?? null,
+        synced:          false,
+      }));
+      // Journaliser en local immédiatement (dashboard réactif hors-ligne)
+      creditJournalEntries.forEach(e => offlineStorage.addToSalesJournal(e as any));
+      // Puis persister en Supabase si en ligne
+      if (offlineStorage.isOnline()) {
+        insertWithUserId('sales_journal', creditJournalEntries).catch(err =>
+          console.error('Erreur journal crédit:', err)
+        );
+      }
 
       // Stock sync offline (les mêmes que la vente directe)
       offlineStorage.addToQueue({

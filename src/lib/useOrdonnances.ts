@@ -6,6 +6,7 @@ export type OrdStatus = 'en_attente' | 'partielle' | 'terminee';
 
 export interface OrdonnanceItem {
   id: string;
+  medication_id?: string;   // FK vers medications.id (disponible si sélectionné via autocomplete)
   name: string;
   dci: string;
   dosage: string;
