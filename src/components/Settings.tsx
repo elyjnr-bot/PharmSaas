@@ -17,7 +17,7 @@ import { useTheme, THEMES } from '../lib/themeContext';
 import { useAuth } from '../lib/auth';
 import { useWorkflow } from '../lib/workflowContext';
 import { clearAllLocalData } from '../lib/db';
-import { supabase } from '../lib/supabase';
+import { clearAllStock } from '../lib/ImportService';
 import { useUserSettings } from '../lib/userSettings';
 import { saveSettings, getMarginMethod, setMarginMethod, type MarginMethod } from '../lib/settings';
 import DataImporter from './DataImporter';
@@ -316,18 +316,24 @@ export default function Settings() {
     if (resetText !== 'SUPPRIMER') return;
     setIsResetting(true);
     try {
-      // Supprimer uniquement les médicaments de l'utilisateur courant (via RLS + user_id explicite)
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase.from('medications').delete().eq('user_id', user.id);
-      }
+      // Suppression TOTALE et vérifiée du stock : médicaments, unités, codes-barres,
+      // mouvements, lots… (toutes les tables liées, pas seulement medications).
+      const result = await clearAllStock();
       await clearAllLocalData();
       const keys: string[] = [];
       for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k) keys.push(k); }
       keys.forEach(k => localStorage.removeItem(k));
       localStorage.setItem('pharma_data_reset', '1');
+
+      // Signal clair à l'utilisateur avant rechargement
+      if (result.ok) {
+        alert(`✓ Stock actuel effacé.\n${result.deleted} entrée(s) supprimée(s).`);
+      } else {
+        alert(`⚠️ Suppression partielle : ${result.deleted} supprimée(s), ${result.remaining} restante(s).\nRéessayez si nécessaire.`);
+      }
       window.location.reload();
-    } catch {
+    } catch (e) {
+      alert(`Erreur lors de la suppression : ${String(e)}`);
       setIsResetting(false);
       setShowReset(false);
     }

@@ -39,14 +39,24 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024, // 4 MiB
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
         runtimeCaching: [
+          // ── Données métier (REST PostgREST) : JAMAIS de cache HTTP ──────────────
+          // Un cache HTTP périmé ressuscitait des lignes supprimées (stock fantôme).
+          // L'accès hors-ligne passe déjà par IndexedDB (db.products), pas par ce
+          // cache. On force NetworkOnly : la base reste l'unique source de vérité.
+          {
+            urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/v1\/.*/i,
+            handler: 'NetworkOnly',
+          },
+          // ── Auth / storage / autres : NetworkFirst court ───────────────────────
           {
             urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
             handler: 'NetworkFirst',
             options: {
-              cacheName: 'supabase-cache',
+              cacheName: 'supabase-auth-cache',
+              networkTimeoutSeconds: 5,
               expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24
+                maxEntries: 20,
+                maxAgeSeconds: 60 * 60   // 1 h
               }
             }
           }

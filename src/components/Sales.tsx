@@ -64,6 +64,25 @@ const CATEGORY_GRADIENTS: Record<string, { bg: string; border: string; chevron: 
   'Autre':             { bg: 'linear-gradient(135deg, #ede9f5 0%, #f3f0f9 100%)', border: 'rgba(107,114,128,0.2)', chevron: '#6b7280', shadow: 'rgba(107,114,128,0.18)' },
   default:             { bg: 'linear-gradient(135deg, #ede9f5 0%, #f3f0f9 100%)', border: 'rgba(107,114,128,0.2)', chevron: '#6b7280', shadow: 'rgba(107,114,128,0.18)' },
 };
+// ── Design tokens Chalk Premium ─────────────────────────────────────────────
+const C = {
+  brand:    '#10785a',
+  brandLt:  'rgba(16,120,90,0.08)',
+  ink:      '#0a0e14',
+  inkSoft:  '#1e2a35',
+  inkMute:  '#4b5768',
+  inkFaint: '#8a95a3',
+  inkGhost: '#c4cdd6',
+  red:      '#c81e1e',
+  redLt:    'rgba(200,30,30,0.08)',
+  amber:    '#b75f06',
+  amberLt:  'rgba(183,95,6,0.09)',
+  border:   'rgba(15,15,20,0.1)',
+  hairline: 'rgba(15,15,20,0.07)',
+  panel:    '#f9f9fa',
+  f:        "'Inter', system-ui, sans-serif",
+};
+
 function normalizeSalesPaymentMethod(pm: string | null | undefined): string {
   if (pm && SALES_ALLOWED_METHODS.includes(pm)) return pm;
   return 'Espèces';
@@ -1603,45 +1622,45 @@ export default function Sales() {
         >
           <div style={{ background: '#fff', borderRadius: 18, width: '100%', maxWidth: 520, maxHeight: '85vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.18)' }}>
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #f1f5f9' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: `1px solid ${C.hairline}` }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 34, height: 34, borderRadius: 10, background: '#fff7ed', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Undo2 size={16} color="#ea580c" strokeWidth={1.8} />
+                <div style={{ width: 34, height: 34, borderRadius: 10, background: C.amberLt, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Undo2 size={16} color={C.amber} strokeWidth={1.8} />
                 </div>
                 <div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: '#0a0e14', letterSpacing: '-0.02em' }}>Retour / Avoir</div>
-                  <div style={{ fontSize: 12, color: '#6b7280', marginTop: 1 }}>Sélectionnez la vente à annuler</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: C.ink, letterSpacing: '-0.02em' }}>Retour / Avoir</div>
+                  <div style={{ fontSize: 12, color: C.inkMute, marginTop: 1 }}>Sélectionnez la vente à annuler</div>
                 </div>
               </div>
-              <button onClick={() => setShowReturnPanel(false)} style={{ width: 30, height: 30, borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <X size={14} color="#6b7280" />
+              <button onClick={() => setShowReturnPanel(false)} style={{ width: 30, height: 30, borderRadius: 8, background: C.panel, border: `1px solid ${C.border}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <X size={14} color={C.inkFaint} />
               </button>
             </div>
 
             {/* Feedback succès */}
             {returnSuccess && (
-              <div style={{ margin: '12px 16px 0', padding: '10px 14px', background: 'rgba(5,150,105,0.07)', border: '1px solid rgba(5,150,105,0.2)', borderRadius: 10, fontSize: 13, fontWeight: 600, color: '#059669' }}>
+              <div style={{ margin: '12px 16px 0', padding: '10px 14px', background: C.brandLt, border: `1px solid rgba(16,120,90,0.2)`, borderRadius: 10, fontSize: 13, fontWeight: 600, color: C.brand }}>
                 ✓ {returnSuccess}
               </div>
             )}
 
             {/* Recherche */}
             <div style={{ padding: '12px 16px 8px', position: 'relative' }}>
-              <Search size={14} style={{ position: 'absolute', left: 28, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
+              <Search size={14} style={{ position: 'absolute', left: 28, top: '50%', transform: 'translateY(-50%)', color: C.inkGhost }} />
               <input
                 value={returnSearch}
                 onChange={e => setReturnSearch(e.target.value)}
                 placeholder="Rechercher un produit vendu…"
-                style={{ width: '100%', padding: '9px 10px 9px 34px', borderRadius: 9, border: '1px solid #e2e8f0', fontSize: 13, color: '#0a0e14', outline: 'none', boxSizing: 'border-box' }}
+                style={{ width: '100%', padding: '9px 10px 9px 34px', borderRadius: 9, border: `1px solid ${C.border}`, fontSize: 13, color: C.ink, outline: 'none', boxSizing: 'border-box', background: C.panel, fontFamily: C.f }}
               />
             </div>
 
             {/* Liste */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 16px' }}>
               {returnJournalLoading ? (
-                <div style={{ textAlign: 'center', padding: '32px 0', color: '#9ca3af', fontSize: 13 }}>Chargement…</div>
+                <div style={{ textAlign: 'center', padding: '32px 0', color: C.inkFaint, fontSize: 13 }}>Chargement…</div>
               ) : returnFiltered.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '32px 0', color: '#9ca3af', fontSize: 13 }}>Aucune vente trouvée sur les 30 derniers jours</div>
+                <div style={{ textAlign: 'center', padding: '32px 0', color: C.inkFaint, fontSize: 13 }}>Aucune vente trouvée sur les 30 derniers jours</div>
               ) : returnFiltered.map((row: any) => (
                 <div
                   key={row.id}
@@ -1649,20 +1668,20 @@ export default function Sales() {
                     setReturnSale({ medication_id: row.medication_id, medication_name: row.medication_name, unit_price: row.unit_price, quantity_sold: row.quantity_sold, payment_method: row.payment_method });
                     setShowReturnPanel(false);
                   }}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 12px', borderRadius: 10, marginBottom: 6, background: '#f8fafc', border: '1px solid #e2e8f0', cursor: 'pointer', transition: 'all 0.12s' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#fff7ed'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(234,88,12,0.3)'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#f8fafc'; (e.currentTarget as HTMLElement).style.borderColor = '#e2e8f0'; }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 12px', borderRadius: 10, marginBottom: 6, background: C.panel, border: `1px solid ${C.border}`, cursor: 'pointer', transition: 'all 0.12s' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = C.amberLt; (e.currentTarget as HTMLElement).style.borderColor = `rgba(183,95,6,0.25)`; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = C.panel; (e.currentTarget as HTMLElement).style.borderColor = C.border; }}
                 >
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: '#0a0e14', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.medication_name}</div>
-                    <div style={{ fontSize: 11.5, color: '#6b7280', marginTop: 2 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: C.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.medication_name}</div>
+                    <div style={{ fontSize: 11.5, color: C.inkMute, marginTop: 2 }}>
                       {new Date(row.sale_date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                       {' · '}{row.quantity_sold} unité(s){' · '}{row.payment_method}
                     </div>
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 12 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#0a0e14' }}>{Math.round(row.total_price).toLocaleString()} F</div>
-                    <div style={{ fontSize: 11, color: '#ea580c', fontWeight: 600, marginTop: 2 }}>Retourner →</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: C.ink }}>{Math.round(row.total_price).toLocaleString()} F</div>
+                    <div style={{ fontSize: 11, color: C.amber, fontWeight: 600, marginTop: 2 }}>Retourner →</div>
                   </div>
                 </div>
               ))}
@@ -1694,19 +1713,19 @@ export default function Sales() {
           <div style={{ background: '#fff', borderRadius: 20, padding: '28px 28px 24px', width: 360, boxShadow: '0 24px 64px rgba(0,0,0,0.22)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, background: '#0a0e14', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 38, height: 38, borderRadius: 10, background: C.ink, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 5v14M7 5v14M11 5v14M15 5v14M19 5v14M21 5v2M21 17v2M1 5v2M1 17v2"/></svg>
                 </div>
                 <div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: '#0a0e14' }}>Scanner un produit</div>
-                  <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 1 }}>Scanner USB / Bluetooth</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: C.ink }}>Scanner un produit</div>
+                  <div style={{ fontSize: 12, color: C.inkFaint, marginTop: 1 }}>Scanner USB / Bluetooth</div>
                 </div>
               </div>
-              <button onClick={() => { setShowScanner(false); setDesktopScanInput(''); }} style={{ background: '#f3f4f6', border: 'none', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <button onClick={() => { setShowScanner(false); setDesktopScanInput(''); }} style={{ background: C.panel, border: `1px solid ${C.border}`, borderRadius: 8, width: 32, height: 32, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.inkFaint} strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
-            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: '10px 14px', marginBottom: 16, fontSize: 12, color: '#15803d', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ background: C.brandLt, border: `1px solid rgba(16,120,90,0.2)`, borderRadius: 12, padding: '10px 14px', marginBottom: 16, fontSize: 12, color: C.brand, display: 'flex', alignItems: 'center', gap: 8 }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
               Passez le scanner sur le code-barres — il sera saisi automatiquement
             </div>
@@ -1717,14 +1736,14 @@ export default function Sales() {
               onChange={(e) => setDesktopScanInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter' && desktopScanInput.trim()) handleBarcodeScan(desktopScanInput.trim()); }}
               placeholder="Code-barres…"
-              style={{ width: '100%', padding: '12px 16px', fontSize: 18, fontWeight: 700, fontFamily: 'monospace', letterSpacing: '0.06em', border: '2px solid #e5e7eb', borderRadius: 12, outline: 'none', color: '#0a0e14', background: '#f9fafb', boxSizing: 'border-box' }}
-              onFocus={(e) => { e.target.style.borderColor = '#10785a'; }}
-              onBlur={(e) => { e.target.style.borderColor = '#e5e7eb'; }}
+              style={{ width: '100%', padding: '12px 16px', fontSize: 18, fontWeight: 700, fontFamily: 'monospace', letterSpacing: '0.06em', border: `2px solid ${C.border}`, borderRadius: 12, outline: 'none', color: C.ink, background: C.panel, boxSizing: 'border-box' }}
+              onFocus={(e) => { e.target.style.borderColor = C.brand; }}
+              onBlur={(e) => { e.target.style.borderColor = C.border; }}
               autoComplete="off" autoCorrect="off" spellCheck={false}
             />
             <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-              <button onClick={() => { setShowScanner(false); setDesktopScanInput(''); }} style={{ flex: 1, padding: '11px 0', borderRadius: 12, fontSize: 14, fontWeight: 600, background: '#f3f4f6', border: 'none', color: '#6b7280', cursor: 'pointer' }}>Annuler</button>
-              <button onClick={() => { if (desktopScanInput.trim()) handleBarcodeScan(desktopScanInput.trim()); }} disabled={!desktopScanInput.trim()} style={{ flex: 2, padding: '11px 0', borderRadius: 12, fontSize: 14, fontWeight: 700, background: desktopScanInput.trim() ? '#0a0e14' : '#e5e7eb', border: 'none', color: desktopScanInput.trim() ? '#fff' : '#9ca3af', cursor: desktopScanInput.trim() ? 'pointer' : 'default' }}>Valider</button>
+              <button onClick={() => { setShowScanner(false); setDesktopScanInput(''); }} style={{ flex: 1, padding: '11px 0', borderRadius: 12, fontSize: 14, fontWeight: 600, background: C.panel, border: `1px solid ${C.border}`, color: C.inkMute, cursor: 'pointer' }}>Annuler</button>
+              <button onClick={() => { if (desktopScanInput.trim()) handleBarcodeScan(desktopScanInput.trim()); }} disabled={!desktopScanInput.trim()} style={{ flex: 2, padding: '11px 0', borderRadius: 12, fontSize: 14, fontWeight: 700, background: desktopScanInput.trim() ? C.ink : C.panel, border: `1px solid ${desktopScanInput.trim() ? 'transparent' : C.border}`, color: desktopScanInput.trim() ? '#fff' : C.inkGhost, cursor: desktopScanInput.trim() ? 'pointer' : 'default' }}>Valider</button>
             </div>
           </div>
         </div>
@@ -1744,20 +1763,20 @@ export default function Sales() {
 
   // ── Alertes stock faible (partagé) ───────────────────────────────────────────
   const LowStockAlerts = lowStockAlerts.length > 0 ? (
-    <div className="space-y-2">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       {lowStockAlerts.map(alert => (
-        <div key={alert.id} className="bg-orange-50 border border-orange-300 rounded-xl p-3 flex items-start gap-3">
-          <AlertTriangle className="w-4 h-4 text-orange-600 flex-shrink-0 mt-0.5" />
-          <div className="flex-1 min-w-0">
-            <p className="font-medium text-orange-800 text-sm">Stock faible — {alert.name}</p>
-            <p className="text-xs text-orange-700 mt-0.5">Restant : {alert.stockAfter} (seuil : {alert.minimumStock})</p>
+        <div key={alert.id} style={{ background: C.amberLt, border: `1px solid rgba(183,95,6,0.25)`, borderRadius: 12, padding: '10px 12px', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+          <AlertTriangle style={{ width: 14, height: 14, color: C.amber, flexShrink: 0, marginTop: 1 }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontWeight: 600, color: C.amber, fontSize: 13, margin: 0 }}>Stock faible — {alert.name}</p>
+            <p style={{ fontSize: 11.5, color: C.amber, opacity: 0.8, marginTop: 2, margin: 0 }}>Restant : {alert.stockAfter} (seuil : {alert.minimumStock})</p>
           </div>
-          <button onClick={() => dismissAlert(alert.id)} className="p-1 text-orange-600 hover:bg-orange-100 rounded-lg">
-            <X className="w-3.5 h-3.5" />
+          <button onClick={() => dismissAlert(alert.id)} style={{ padding: 4, background: 'transparent', border: 'none', cursor: 'pointer', color: C.amber, display: 'flex', borderRadius: 6 }}>
+            <X style={{ width: 13, height: 13 }} />
           </button>
         </div>
       ))}
-      <div className="flex gap-2 mt-1">
+      <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
         <button
           onClick={() => {
             const date = new Date().toLocaleDateString('fr-FR');
@@ -1768,11 +1787,11 @@ export default function Sales() {
             msg += `\n_🌿 JunglePharm_`;
             window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
           }}
-          className="flex-1 bg-green-50 border border-green-300 rounded-lg py-1.5 text-xs font-semibold text-green-700 flex items-center justify-center gap-1.5"
+          style={{ flex: 1, background: C.brandLt, border: `1px solid rgba(16,120,90,0.25)`, borderRadius: 8, padding: '6px 0', fontSize: 12, fontWeight: 600, color: C.brand, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
         >
           📲 WhatsApp
         </button>
-        <button onClick={dismissAllAlerts} className="flex-1 text-center text-xs text-orange-600 py-1.5 hover:underline">
+        <button onClick={dismissAllAlerts} style={{ flex: 1, background: 'transparent', border: 'none', textAlign: 'center', fontSize: 12, color: C.amber, padding: '6px 0', cursor: 'pointer' }}>
           Fermer tout
         </button>
       </div>
