@@ -1403,21 +1403,18 @@ export default function Stock({ initialFilter, onNavigateToSales }: { initialFil
             }).length;
 
             // ── Catégories dynamiques ───────────────────────────────────────
-            // 1. Priorité : champ name_rayon ou category si renseigné
-            // 2. Fallback : détection automatique par mots-clés dans le nom
+            // Par médicament : priorité name_rayon/category, sinon détection auto DCI
             const catMap: Record<string, number> = {};
-            let hasRealCategories = false;
             medications.forEach(m => {
-              const cat = m.name_rayon || m.category || '';
-              if (cat) { catMap[cat] = (catMap[cat] || 0) + 1; hasRealCategories = true; }
-            });
-            // Fallback : si pas de catégories renseignées, détection auto par mots-clés
-            if (!hasRealCategories) {
-              medications.forEach(m => {
+              const manualCat = m.name_rayon || m.category;
+              if (manualCat) {
+                catMap[manualCat] = (catMap[manualCat] || 0) + 1;
+              } else {
+                // Détection automatique via base DCI OMS (~300 substances ATC)
                 const detected = matchKeywordCategory(m);
                 if (detected) catMap[detected] = (catMap[detected] || 0) + 1;
-              });
-            }
+              }
+            });
             const categories = Object.entries(catMap)
               .sort((a, b) => b[1] - a[1])
               .slice(0, 12);
