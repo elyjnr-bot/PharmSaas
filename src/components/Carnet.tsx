@@ -252,11 +252,14 @@ function NewCreditModal({ onClose, onCreated }: { onClose: () => void; onCreated
 export default function Carnet() {
   const [credits, setCredits]           = useState<Credit[]>([]);
   const [loading, setLoading]           = useState(true);
+  const [refreshing, setRefreshing]     = useState(false);
   const [filter, setFilter]             = useState<AccFilter>('tous');
   const [search, setSearch]             = useState('');
   const [payModal, setPayModal]         = useState<Credit | null>(null);
   const [payLoading, setPayLoading]     = useState(false);
   const [showNewModal, setShowNewModal] = useState(false);
+  const [showAllMvt, setShowAllMvt]     = useState(false);
+  const [showPicker, setShowPicker]     = useState(false);
 
   useEffect(() => {
     const h = (e: Event) => { if ((e as CustomEvent<{action:string}>).detail.action === 'add-credit') setShowNewModal(true); };
@@ -371,8 +374,24 @@ export default function Carnet() {
 
   // ── Recent movements (individual credits sorted by date) ──────────────────
   const movements = useMemo(() =>
-    [...credits].sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 12),
+    [...credits].sort((a, b) => b.created_at.localeCompare(a.created_at)),
   [credits]);
+
+  const visibleMovements = showAllMvt ? movements : movements.slice(0, 5);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadCredits();
+    setRefreshing(false);
+  };
+
+  // "Enregistrer un paiement" : logique selon nombre d'impayés
+  const handleCtaPayment = () => {
+    const unpaid = credits.filter(c => c.status !== 'paid');
+    if (unpaid.length === 0) { setShowNewModal(true); return; }   // aucun impayé → créer nouveau
+    if (unpaid.length === 1) { setPayModal(unpaid[0]); return; }  // 1 seul → ouvrir directement
+    setShowPicker(true);                                           // plusieurs → picker
+  };
 
   const fmtDate = (iso: string) => new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
 
@@ -454,8 +473,8 @@ export default function Carnet() {
               ))}
             </div>
 
-            <button onClick={loadCredits} title="Rafraîchir" style={{ background: C.panel2, border: `1px solid ${C.hairline}`, borderRadius: 7, width: 32, height: 32, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <RefreshCw size={12} color={C.inkMute} />
+            <button onClick={handleRefresh} title="Rafraîchir" style={{ background: C.panel2, border: `1px solid ${C.hairline}`, borderRadius: 7, width: 32, height: 32, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <RefreshCw size={12} color={C.inkMute} style={{ animation: refreshing ? 'spin 0.7s linear infinite' : 'none' }} />
             </button>
             <button onClick={() => setShowNewModal(true)} style={{ background: C.ink, color: '#fff', border: 'none', borderRadius: 8, padding: '7px 14px', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, fontFamily: C.f }}>
               <Plus size={13} strokeWidth={2.5} /> Nouveau compte
@@ -542,14 +561,17 @@ export default function Carnet() {
           <div style={{ ...glass, overflow: 'hidden' }}>
             <div style={{ padding: '14px 16px', borderBottom: `1px solid ${C.hairline}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: C.ink }}>Mouvements récents</span>
-              <button style={{ fontSize: 11.5, color: C.brand, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 3, fontFamily: C.f }}>
-                Tout voir <ArrowRight size={11} strokeWidth={2} />
+              <button
+                onClick={() => setShowAllMvt(v => !v)}
+                style={{ fontSize: 11.5, color: C.brand, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 3, fontFamily: C.f }}
+              >
+                {showAllMvt ? 'Réduire' : 'Tout voir'} <ArrowRight size={11} strokeWidth={2} style={{ transition: 'transform 0.2s', transform: showAllMvt ? 'rotate(90deg)' : 'none' }} />
               </button>
             </div>
             <div>
               {movements.length === 0 ? (
                 <div style={{ padding: '24px 16px', textAlign: 'center', fontSize: 12.5, color: C.inkFaint, fontStyle: 'italic' }}>Aucun mouvement</div>
-              ) : movements.map((cr, i) => {
+              ) : visibleMovements.map((cr, i) => {
                 const vs = cr.status === 'paid' ? 'solde' : isOverdue(cr) ? 'retard' : 'ouvert';
                 const statusCfg = {
                   solde:  { label: 'Payé',      bg: C.brandLt, fg: C.brand },
@@ -557,7 +579,7 @@ export default function Carnet() {
                   ouvert: { label: 'Ouvert',     bg: C.amberLt, fg: C.amber },
                 }[vs];
                 return (
-                  <div key={cr.id} style={{ padding: '10px 16px', borderBottom: i < movements.length - 1 ? `1px solid ${C.hairline}` : 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div key={cr.id} style={{ padding: '10px 16px', borderBottom: i < visibleMovements.length - 1 ? `1px solid ${C.hairline}` : 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{ width: 30, height: 30, borderRadius: 8, background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <TrendingUp size={13} color={C.inkMute} strokeWidth={1.5} />
                     </div>
@@ -577,14 +599,20 @@ export default function Carnet() {
 
           {/* CTA */}
           <div
-            onClick={() => { const unpaid = credits.filter(c => c.status !== 'paid'); if (unpaid.length > 0) setPayModal(unpaid[0]); }}
-            style={{ ...glass, padding: '16px 18px', cursor: credits.some(c => c.status !== 'paid') ? 'pointer' : 'default', display: 'flex', alignItems: 'center', gap: 12, background: C.brandLt, border: `1px solid ${C.brandMid}` }}
-            onMouseEnter={e => { if (credits.some(c => c.status !== 'paid')) e.currentTarget.style.background = C.brandMid; }}
+            onClick={handleCtaPayment}
+            style={{ ...glass, padding: '16px 18px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, background: C.brandLt, border: `1px solid ${C.brandMid}` }}
+            onMouseEnter={e => { e.currentTarget.style.background = C.brandMid; }}
             onMouseLeave={e => { e.currentTarget.style.background = C.brandLt; }}>
             <div style={{ width: 38, height: 38, borderRadius: 10, background: C.brand, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 20 }}>💳</div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: C.brand }}>Enregistrer un paiement</div>
-              <div style={{ fontSize: 11.5, color: C.inkMute }}>Espèces, Mobile Money ou virement</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: C.brand }}>
+                {credits.filter(c => c.status !== 'paid').length === 0 ? 'Nouveau crédit' : 'Enregistrer un paiement'}
+              </div>
+              <div style={{ fontSize: 11.5, color: C.inkMute }}>
+                {credits.filter(c => c.status !== 'paid').length === 0
+                  ? 'Créer un compte client'
+                  : `${credits.filter(c => c.status !== 'paid').length} compte${credits.filter(c => c.status !== 'paid').length > 1 ? 's' : ''} impayé${credits.filter(c => c.status !== 'paid').length > 1 ? 's' : ''}`}
+              </div>
             </div>
             <ArrowRight size={16} color={C.brand} />
           </div>
@@ -597,6 +625,49 @@ export default function Carnet() {
       )}
       {showNewModal && (
         <NewCreditModal onClose={() => setShowNewModal(false)} onCreated={c => { setCredits(prev => [c, ...prev]); setShowNewModal(false); }} />
+      )}
+
+      {/* Picker — sélectionner quel crédit impayé encaisser */}
+      {showPicker && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 999, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+          onClick={() => setShowPicker(false)}>
+          <div style={{ background: '#fff', borderRadius: 16, width: '100%', maxWidth: 420, overflow: 'hidden', boxShadow: '0 24px 64px rgba(0,0,0,0.2)', fontFamily: C.f }}
+            onClick={e => e.stopPropagation()}>
+            <div style={{ padding: '18px 22px 14px', borderBottom: `1px solid ${C.hairline}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: C.ink }}>Choisir un compte</div>
+                <div style={{ fontSize: 12, color: C.inkMute, marginTop: 2 }}>Sélectionne le crédit à encaisser</div>
+              </div>
+              <button onClick={() => setShowPicker(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: C.inkFaint, lineHeight: 1, padding: 4 }}>✕</button>
+            </div>
+            <div style={{ maxHeight: 360, overflowY: 'auto' }}>
+              {credits.filter(c => c.status !== 'paid').map((cr, i, arr) => (
+                <button
+                  key={cr.id}
+                  onClick={() => { setShowPicker(false); setPayModal(cr); }}
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '13px 22px', border: 'none', borderBottom: i < arr.length - 1 ? `1px solid ${C.hairline}` : 'none',
+                    background: 'transparent', cursor: 'pointer', textAlign: 'left', transition: 'background 0.1s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = C.brandLt; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                >
+                  <div style={{ width: 40, height: 40, borderRadius: 10, background: `linear-gradient(135deg, ${C.amber}, #e08533)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 14, fontWeight: 700, flexShrink: 0 }}>
+                    {cr.client_name.trim().split(/\s+/).map((w: string) => w[0]).slice(0, 2).join('').toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: C.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cr.client_name}</div>
+                    <div style={{ fontSize: 11.5, color: C.inkMute, marginTop: 1 }}>
+                      Solde dû : <span style={{ fontWeight: 700, color: isOverdue(cr) ? C.red : C.amber, fontFamily: C.fm }}>{fmt(cr.total_amount - (cr.amount_paid ?? 0))} FC</span>
+                    </div>
+                  </div>
+                  <ArrowRight size={14} color={C.inkFaint} />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
