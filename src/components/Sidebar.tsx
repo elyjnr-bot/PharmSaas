@@ -91,11 +91,15 @@ const NAV_ITEMS: { id: string; icon: IconName; label: string; kbd: string; manag
   { id: 'ordonnances', icon: 'rx',       label: 'Ordonnances',  kbd: 'R' },
   { id: 'carnet',      icon: 'mone',     label: 'Crédits',      kbd: 'C' },
   { id: 'equipe',      icon: 'users',    label: 'Équipe',       kbd: 'E' },
-  { id: 'expirations', icon: 'calendar', label: 'Péremptions',  kbd: 'X' },
-  { id: 'mouvements',  icon: 'arrows',   label: 'Mouvements',   kbd: 'M' },
-  { id: 'commandes',    icon: 'truck',    label: 'Commandes',    kbd: 'O' },
-  { id: 'fournisseurs', icon: 'building',  label: 'Fournisseurs', kbd: 'F', managerOnly: true },
   { id: 'rapports',    icon: 'chart',    label: 'Rapports',     kbd: 'G', managerOnly: true },
+];
+
+// Onglets regroupés sous "Gestion" (rarement utilisés, max 1-2x/semaine)
+const GESTION_ITEMS: { id: string; icon: IconName; label: string; kbd: string; managerOnly?: boolean }[] = [
+  { id: 'expirations',  icon: 'calendar', label: 'Péremptions',  kbd: 'X' },
+  { id: 'mouvements',   icon: 'arrows',   label: 'Mouvements',   kbd: 'M' },
+  { id: 'commandes',    icon: 'truck',    label: 'Commandes',    kbd: 'O' },
+  { id: 'fournisseurs', icon: 'building', label: 'Fournisseurs', kbd: 'F', managerOnly: true },
 ];
 
 // ── Catalog complet des raccourcis disponibles ────────────────────────────────
@@ -145,6 +149,8 @@ export default function Sidebar({ activeView, onNavigate, onSettingsClick, isMan
   const [pressed, setPressed]           = useState<string | null>(null);
   const [favIds, setFavIds]             = useState<string[]>(() => loadFavIds());
   const [editingFavs, setEditingFavs]   = useState(false);
+  const gestionIds = GESTION_ITEMS.map(i => i.id);
+  const [gestionOpen, setGestionOpen]   = useState(() => gestionIds.includes(activeView));
 
   // ── Nom de la pharmacie — lit les deux sources et prend la première valide ──
   const getPharmName = () => {
@@ -190,6 +196,12 @@ export default function Sidebar({ activeView, onNavigate, onSettingsClick, isMan
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [favDropOpen]);
+
+  // Auto-expand groupe Gestion si l'onglet actif en fait partie
+  useEffect(() => {
+    if (gestionIds.includes(activeView)) setGestionOpen(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeView]);
 
   const catalog = SHORTCUT_CATALOG.filter(s => isManager || !s.managerOnly);
   const activeFavs = favIds
@@ -342,6 +354,101 @@ export default function Sidebar({ activeView, onNavigate, onSettingsClick, isMan
             </button>
           );
         })}
+
+        {/* ── Groupe Gestion (collapsible) ── */}
+        <div style={{ marginTop: 2 }}>
+          {/* En-tête du groupe */}
+          <button
+            onClick={() => setGestionOpen(v => !v)}
+            onMouseEnter={() => setHovered('__gestion')}
+            onMouseLeave={() => { setHovered(null); setPressed(null); }}
+            onMouseDown={() => setPressed('__gestion')}
+            onMouseUp={() => setPressed(null)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              width: '100%', padding: '6px 10px', borderRadius: 7,
+              background: hovered === '__gestion' ? 'rgba(255,255,255,0.12)' : 'transparent',
+              border: 'none', cursor: 'pointer', textAlign: 'left',
+              transition: pressed === '__gestion' ? 'transform 0.07s ease' : 'transform 0.15s ease, background 0.12s',
+              transform: pressed === '__gestion' ? 'scale(0.97)' : 'scale(1)',
+            }}
+          >
+            {/* Icône boîte à outils */}
+            <span style={{ flexShrink: 0, display: 'flex' }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={gestionIds.includes(activeView) ? C.brand : C.inkMute} strokeWidth={gestionIds.includes(activeView) ? 1.8 : 1.5} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+              </svg>
+            </span>
+            <span style={{
+              fontSize: 13, flex: 1,
+              fontWeight: gestionIds.includes(activeView) ? 600 : 450,
+              color: gestionIds.includes(activeView) ? C.ink : C.inkSoft,
+              letterSpacing: '-0.01em',
+            }}>
+              Gestion
+            </span>
+            {/* Point indicateur si un onglet Gestion est actif mais groupe fermé */}
+            {!gestionOpen && gestionIds.includes(activeView) && (
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.brand, flexShrink: 0, marginRight: 4 }} />
+            )}
+            <ChevronDown
+              size={13} color={C.inkFaint} strokeWidth={2}
+              style={{ transition: 'transform 0.2s', transform: gestionOpen ? 'rotate(180deg)' : 'rotate(0deg)', flexShrink: 0 }}
+            />
+          </button>
+
+          {/* Items du groupe — animés */}
+          <div style={{
+            overflow: 'hidden',
+            maxHeight: gestionOpen ? '300px' : '0px',
+            transition: 'max-height 0.22s cubic-bezier(0.4,0,0.2,1)',
+          }}>
+            <div style={{ paddingLeft: 6, paddingTop: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {GESTION_ITEMS.filter(item => isManager || !item.managerOnly).map(({ id, icon, label, kbd }) => {
+                const isActive = activeView === id;
+                const isHov = hovered === id;
+                return (
+                  <button
+                    key={id}
+                    onClick={() => onNavigate(id)}
+                    onMouseEnter={() => setHovered(id)}
+                    onMouseLeave={() => { setHovered(null); setPressed(null); }}
+                    onMouseDown={() => setPressed(id)}
+                    onMouseUp={() => setPressed(null)}
+                    onTouchStart={() => setPressed(id)}
+                    onTouchEnd={() => setPressed(null)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      padding: '6px 10px', borderRadius: 7,
+                      background: isActive ? C.panel : isHov ? 'rgba(255,255,255,0.12)' : 'transparent',
+                      boxShadow: isActive ? `0 1px 0 ${C.hairline}, 0 0 0 1px ${C.hairline}` : 'none',
+                      cursor: 'pointer',
+                      transition: pressed === id ? 'transform 0.07s ease' : 'transform 0.15s ease, background 0.12s',
+                      transform: pressed === id ? 'scale(0.96)' : 'scale(1)',
+                      border: 'none', width: '100%', textAlign: 'left',
+                    }}
+                  >
+                    {/* Trait de connexion vertical */}
+                    <span style={{ width: 14, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                      <span style={{ width: 1, height: 14, background: isActive ? C.brand : 'rgba(15,15,20,0.12)', borderRadius: 1 }} />
+                    </span>
+                    <span style={{ flexShrink: 0, display: 'flex' }}>
+                      <NavIcon name={icon} size={14} sw={isActive ? 1.8 : 1.5} color={isActive ? C.brand : C.inkMute} />
+                    </span>
+                    <span style={{
+                      fontSize: 12.5, fontWeight: isActive ? 600 : 450,
+                      color: isActive ? C.ink : C.inkSoft,
+                      letterSpacing: '-0.01em', flex: 1,
+                    }}>
+                      {label}
+                    </span>
+                    <Kbd>{kbd}</Kbd>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
 
         {/* ── Favoris ── */}
         <div style={{ padding: '14px 10px 4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
