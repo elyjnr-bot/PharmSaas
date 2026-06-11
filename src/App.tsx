@@ -527,13 +527,13 @@ function AppContent() {
               onNewSale={() => handleTabChange('sales')}
             />
             {/* Vues plein-écran (deux panneaux, pas de scroll externe) */}
-            {['ordonnances', 'patients', 'carnet'].includes(activeTab) ? (
+            {['ordonnances', 'patients'].includes(activeTab) ? (
               <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                 {renderContent()}
               </div>
             ) : (
               <div style={{ flex: 1, overflowY: 'auto' }} className="smooth-scroll scrollbar-thin">
-                <div style={{ padding: '16px 16px', maxWidth: 1600, margin: '0 auto' }}>
+                <div style={{ padding: '16px 24px', maxWidth: 1600, margin: '0 auto' }}>
                   {renderContent()}
                 </div>
               </div>
