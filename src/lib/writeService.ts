@@ -120,12 +120,29 @@ export async function offlineSafeInsertMedication(
       const { error } = await supabase
         .from('medications')
         .insert([{ id, ...data, user_id: userId }]);
-      if (!error) return { id };
+      if (!error) {
+        // ── Historique initial : tracer l'entrée de stock ─────────────────
+        if ((data.quantity ?? 0) > 0) {
+          try {
+            await insertWithUserId('stock_movements', {
+              medication_id:   id,
+              movement_type:  'entrée',
+              quantity:        data.quantity,
+              reason:          'Création produit (scan)',
+              batch_number:    data.batch_number ?? null,
+              expiry_date:     data.expiry_date   ?? null,
+              supplier:        data.supplier      ?? null,
+              created_at:      now,
+            });
+          } catch { /* mouvement non bloquant */ }
+        }
+        return { id, code_produit: data.code_produit };
+      }
     } catch {}
   }
 
   offlineStorage.addToQueue({ type: 'insert', table: 'medications', data: { id, ...data } });
-  return { id };
+  return { id, code_produit: data.code_produit };
 }
 
 export async function offlineSafeUpdateMedication(

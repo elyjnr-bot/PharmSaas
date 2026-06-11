@@ -779,6 +779,8 @@ function CreateTab({ code, gs1, onSuccess, onDismiss, onUnitsGenerated }: {
 
       if (form.supplier) setLastSupplier(form.supplier);
 
+      // code_produit = EAN scanné → permet à la Caisse de retrouver le produit
+      // via m.code_produit === barcode (localMatch) sans requête Supabase
       const created = await offlineSafeInsertMedication({
         name:          mergedName,
         dosage:        form.dosage || '',
@@ -788,6 +790,7 @@ function CreateTab({ code, gs1, onSuccess, onDismiss, onUnitsGenerated }: {
         minimum_stock: 0,
         price,
         supplier:      form.supplier || null,
+        code_produit:  code,   // ← EAN comme code interne du produit
       });
 
       // Enregistrer le code-barres

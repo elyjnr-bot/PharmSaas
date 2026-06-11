@@ -13,6 +13,7 @@ import ZReportModal from './ZReportModal';
 import StupefiantModal, { StupefiantFormData } from './StupefiantModal';
 import BarcodeScanner from './BarcodeScanner';
 import { detectCategory } from '../lib/dciCategories';
+import { barcodeCache } from '../lib/barcodeCache';
 import { useSeller } from '../lib/sellerContext';
 import { useWorkflow } from '../lib/workflowContext';
 import { getSellerPermissions } from '../lib/permissions';
@@ -423,7 +424,24 @@ export default function Sales() {
     // Peu importe le format du code (EAN, CIP, code interne, JP-XXXXX…),
     // on fait un seul SELECT sur la table `barcodes`. Si ça rate, on tente
     // aussi inventory_units.imported_code (EAN importé en mode unitaire).
-    // Avant de requêter Supabase, on vérifie le cache local (rapide).
+
+    // ── 2.0 Cache localStorage (peuplé par ScanEntrySheet après création) ───
+    const cachedMedId = barcodeCache.get(barcode);
+    if (cachedMedId) {
+      let med = medications.find(m => m.id === cachedMedId);
+      if (!med && offlineStorage.isOnline()) {
+        const { data: medRow } = await supabase.from('medications').select('*').eq('id', cachedMedId).single();
+        med = medRow ?? undefined;
+      }
+      if (med) {
+        await addToCart(med);
+        setScanFeedback({ msg: `✓ ${med.name} ${med.dosage} ajouté`, ok: true });
+        setTimeout(() => setScanFeedback(null), 3000);
+        return;
+      }
+    }
+
+    // ── 2.1 Cache mémoire local (code_produit = EAN défini sur le médicament) ─
     const localMatch = medications.find(m =>
       m.code_produit === barcode || (m as any).barcode === barcode
     );
