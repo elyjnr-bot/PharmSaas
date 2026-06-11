@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, ShoppingCart, Plus, ScanLine, Package, Layers, CheckCircle, AlertCircle, Loader2, RefreshCw, Printer } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { insertWithUserId } from '../lib/supabaseHelpers';
 import { parseGS1Code } from '../lib/dataMatrixParser';
 import { getLastSupplier, setLastSupplier } from '../lib/settings';
 import { useUserSettings } from '../lib/userSettings';
@@ -348,6 +349,22 @@ export default function AddMedicationModal({
         if (formData.supplier !== undefined) updateFields.supplier = formData.supplier || null;
 
         await offlineSafeUpdateMedication(medicationId, updateFields);
+
+        // ── Historique : réapprovisionnement ─────────────────────────────
+        try {
+          await insertWithUserId('stock_movements', {
+            medication_id:   medicationId,
+            medication_name: existingMed.name,
+            dosage:          existingMed.dosage || null,
+            movement_type:  'reception_bl',
+            quantity_before: existingMed.quantity,
+            quantity_change: quantity,
+            quantity_after:  finalQuantity,
+            supplier:        formData.supplier || null,
+            reference:       formData.batch_number ? `Lot: ${formData.batch_number}` : null,
+            notes:           'Réapprovisionnement manuel',
+          });
+        } catch { /* non bloquant */ }
       } else {
         const result = await offlineSafeInsertMedication({
           name: mergedName,

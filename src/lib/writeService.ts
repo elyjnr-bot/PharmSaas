@@ -121,18 +121,20 @@ export async function offlineSafeInsertMedication(
         .from('medications')
         .insert([{ id, ...data, user_id: userId }]);
       if (!error) {
-        // ── Historique initial : tracer l'entrée de stock ─────────────────
+        // ── Historique initial : tracer la réception de stock ────────────
         if ((data.quantity ?? 0) > 0) {
           try {
             await insertWithUserId('stock_movements', {
               medication_id:   id,
-              movement_type:  'entrée',
-              quantity:        data.quantity,
-              reason:          'Création produit (scan)',
-              batch_number:    data.batch_number ?? null,
-              expiry_date:     data.expiry_date   ?? null,
+              medication_name: data.name,
+              dosage:          data.dosage || null,
+              movement_type:  'reception_bl',
+              quantity_before: 0,
+              quantity_change: data.quantity,
+              quantity_after:  data.quantity,
               supplier:        data.supplier      ?? null,
-              created_at:      now,
+              reference:       data.batch_number  ? `Lot: ${data.batch_number}` : null,
+              notes:           'Création produit',
             });
           } catch { /* mouvement non bloquant */ }
         }

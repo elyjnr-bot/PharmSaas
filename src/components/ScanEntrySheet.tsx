@@ -26,7 +26,7 @@ import {
   formatUnitCode,
   type OfflineInventoryUnit,
 } from '../lib/writeService';
-import { upsertWithUserId, updateWithUserId } from '../lib/supabaseHelpers';
+import { upsertWithUserId, updateWithUserId, insertWithUserId } from '../lib/supabaseHelpers';
 import { barcodeCache } from '../lib/barcodeCache';
 import { getLastSupplier, setLastSupplier } from '../lib/settings';
 
@@ -181,6 +181,22 @@ function FoundPanel({ code, gs1, medication, onSuccess, onDismiss, onUnitsGenera
       }
 
       await offlineSafeUpdateMedication(medication.id, updateFields);
+
+      // ── Historique : réception par scan ──────────────────────────────────
+      try {
+        await insertWithUserId('stock_movements', {
+          medication_id:   medication.id,
+          medication_name: medication.name,
+          dosage:          medication.dosage || null,
+          movement_type:  'reception_bl',
+          quantity_before: medication.quantity,
+          quantity_change: qty,
+          quantity_after:  newQty,
+          supplier:        supplier || null,
+          reference:       lot ? `Lot: ${lot}` : null,
+          notes:           'Réception par scan',
+        });
+      } catch { /* non bloquant */ }
 
       // ── MODE UNITAIRE : générer N codes JP ─────────────────────────────────
       if (unitMode) {

@@ -158,6 +158,21 @@ export default function QuickEditModal({ medication, onClose, onSave }: QuickEdi
         const newQty = (medication.quantity || 0) + newBatch.quantity;
         await offlineSafeUpdateMedication(medication.id, { quantity: newQty });
 
+        // ── Historique : réception lot (mode unitaire) ───────────────────
+        try {
+          await insertWithUserId('stock_movements', {
+            medication_id:   medication.id,
+            medication_name: medication.name,
+            dosage:          medication.dosage || null,
+            movement_type:  'reception_bl',
+            quantity_before: medication.quantity || 0,
+            quantity_change: newBatch.quantity,
+            quantity_after:  newQty,
+            reference:       `Lot: ${newBatch.batch_number}`,
+            notes:           'Ajout de lot (mode unitaire)',
+          });
+        } catch { /* non bloquant */ }
+
         setGeneratedUnits(generatedCodes.map(u => ({
           unit_code: u.unit_code,
           medication_name: medication.name,
@@ -167,6 +182,21 @@ export default function QuickEditModal({ medication, onClose, onSave }: QuickEdi
 
         await loadUnits();
       } else {
+        // ── Historique : réception lot (mode global) ─────────────────────
+        const newQtyGlobal = (medication.quantity || 0) + newBatch.quantity;
+        try {
+          await insertWithUserId('stock_movements', {
+            medication_id:   medication.id,
+            medication_name: medication.name,
+            dosage:          medication.dosage || null,
+            movement_type:  'reception_bl',
+            quantity_before: medication.quantity || 0,
+            quantity_change: newBatch.quantity,
+            quantity_after:  newQtyGlobal,
+            reference:       `Lot: ${newBatch.batch_number}`,
+            notes:           'Ajout de lot (mode global)',
+          });
+        } catch { /* non bloquant */ }
         await loadBatches();
       }
 
