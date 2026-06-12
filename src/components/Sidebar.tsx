@@ -329,7 +329,7 @@ export default function Sidebar({ activeView, onNavigate, onSettingsClick, isMan
               <span style={{
                 fontSize: 13,
                 fontWeight: isActive ? 600 : 450,
-                color: isActive ? C.ink : C.inkSoft,
+                color: isActive ? C.brand : C.inkSoft,
                 letterSpacing: '-0.01em',
                 flex: 1,
                 transition: 'color 0.12s',
@@ -368,7 +368,7 @@ export default function Sidebar({ activeView, onNavigate, onSettingsClick, isMan
             <span style={{
               fontSize: 13, flex: 1,
               fontWeight: gestionIds.includes(activeView) ? 600 : 450,
-              color: gestionIds.includes(activeView) ? C.ink : C.inkSoft,
+              color: gestionIds.includes(activeView) ? C.brand : C.inkSoft,
               letterSpacing: '-0.01em',
             }}>
               Gestion
@@ -423,7 +423,7 @@ export default function Sidebar({ activeView, onNavigate, onSettingsClick, isMan
                     </span>
                     <span style={{
                       fontSize: 12.5, fontWeight: isActive ? 600 : 450,
-                      color: isActive ? C.ink : C.inkSoft,
+                      color: isActive ? C.brand : C.inkSoft,
                       letterSpacing: '-0.01em', flex: 1,
                     }}>
                       {label}

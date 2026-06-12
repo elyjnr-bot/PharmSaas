@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { AlertTriangle, Calendar, Package, Download, Share2, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { AlertTriangle, Calendar, Package, Download, Share2, TrendingUp, TrendingDown, Minus, CheckCircle2 } from 'lucide-react';
 import { fetchAllMedications, Medication, supabase } from '../lib/supabase';
 import { isExpired, expiresInThreeMonths } from '../lib/dateUtils';
 import { useResponsive } from '../lib/useResponsive';
@@ -305,18 +305,54 @@ export default function Dashboard() {
 
       {/* 2×2 KPI grid */}
       <div className="grid grid-cols-2 gap-3" data-tour="dash-kpis">
-        {[
-          { label: 'RUPTURES',     value: String(outOfStock),                 sub: 'hors stock',    color: '#dc2626', bg: '#fef2f2', Icon: AlertTriangle },
-          { label: 'PÉREMPTIONS',  value: String(expiringSoon + expiredCount), sub: 'à traiter',     color: '#f97316', bg: '#fff7ed', Icon: Calendar },
-          { label: 'CA · 7 JOURS', value: fmtCurrency(last7),                 sub: 'FCFA',          color: '#537d14', bg: '#f0fdf4', Icon: TrendingUp },
-          { label: 'UNITÉS',       value: totalUnits.toLocaleString('fr-FR'),  sub: 'en inventaire', color: '#0ea5e9', bg: '#f0f9ff', Icon: Package },
-        ].map(({ label, value, sub, color, bg, Icon }) => (
+        {(() => {
+          const peremCount = expiringSoon + expiredCount;
+          const ruptureOk  = outOfStock === 0 && medications.length > 0;
+          const peremOk    = peremCount === 0 && medications.length > 0;
+          const noStock    = medications.length === 0;
+          return [
+            {
+              label: 'RUPTURES',
+              value: ruptureOk ? '✓' : String(outOfStock),
+              sub: ruptureOk ? 'Aucune rupture' : outOfStock > 0 ? 'hors stock' : '—',
+              color: ruptureOk ? '#537d14' : '#dc2626',
+              bg: ruptureOk ? '#f0fdf4' : '#fef2f2',
+              Icon: ruptureOk ? CheckCircle2 : AlertTriangle,
+              valueColor: ruptureOk ? '#537d14' : 'var(--color-text)',
+            },
+            {
+              label: 'PÉREMPTIONS',
+              value: peremOk ? '✓' : String(peremCount),
+              sub: peremOk ? 'Stock frais' : peremCount > 0 ? 'à traiter' : '—',
+              color: peremOk ? '#537d14' : '#f97316',
+              bg: peremOk ? '#f0fdf4' : '#fff7ed',
+              Icon: peremOk ? CheckCircle2 : Calendar,
+              valueColor: peremOk ? '#537d14' : 'var(--color-text)',
+            },
+            {
+              label: 'CA · 7 JOURS',
+              value: last7 === 0 ? '—' : fmtCurrency(last7),
+              sub: last7 === 0 ? 'Prêt à vendre ?' : 'FCFA',
+              color: '#537d14', bg: '#f0fdf4', Icon: TrendingUp,
+              valueColor: last7 === 0 ? 'var(--color-text-faint)' : 'var(--color-text)',
+            },
+            {
+              label: 'UNITÉS',
+              value: noStock ? '—' : totalUnits.toLocaleString('fr-FR'),
+              sub: noStock ? 'Importez votre stock' : 'en inventaire',
+              color: noStock ? '#f97316' : '#0ea5e9',
+              bg: noStock ? '#fff7ed' : '#f0f9ff',
+              Icon: Package,
+              valueColor: noStock ? 'var(--color-text-faint)' : 'var(--color-text)',
+            },
+          ];
+        })().map(({ label, value, sub, color, bg, Icon, valueColor }) => (
           <div key={label} className="rounded-ios p-3.5" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sm)' }}>
             <div className="w-8 h-8 rounded-[10px] flex items-center justify-center mb-2.5" style={{ background: bg }}>
               <Icon className="w-4 h-4" style={{ color }} strokeWidth={2} />
             </div>
             <p className="kpi-label">{label}</p>
-            <p className="font-extrabold mt-0.5" style={{ fontSize: '22px', letterSpacing: '-0.04em', color: 'var(--color-text)', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>{value}</p>
+            <p className="font-extrabold mt-0.5" style={{ fontSize: '22px', letterSpacing: '-0.04em', color: valueColor, lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>{value}</p>
             <p style={{ fontSize: '11px', color: 'var(--color-text-faint)', marginTop: 2 }}>{sub}</p>
           </div>
         ))}

@@ -602,7 +602,7 @@ export default function Login() {
     ? <SignupForm onSwitchToLogin={() => setShowSignup(false)} />
     : <LoginForm />;
 
-  const cardTitle   = showSignup ? 'Créer votre espace 🏥' : 'Accès Pharmacie 🏥';
+  const cardTitle   = showSignup ? 'Créer votre espace' : 'Accès Pharmacie';
   const cardSubtitle = showSignup
     ? 'Configurez JunglePharm pour votre pharmacie'
     : 'Connectez-vous à votre espace JunglePharm';
@@ -684,8 +684,8 @@ export default function Login() {
         </div>
 
         {/* Right panel */}
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 40px' }}>
-          <div style={{ width: '100%', maxWidth: 440, animation: 'fadeUp 0.35s ease' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '56px 48px 40px', gap: 0 }}>
+          <div style={{ width: '100%', maxWidth: 420, animation: 'fadeUp 0.35s ease' }}>
             <div style={{ marginBottom: 28 }}>
               <h2 style={{ margin: '0 0 4px', fontSize: 24, fontWeight: 800, color: C.ink, letterSpacing: '-0.03em' }}>{cardTitle}</h2>
               <p style={{ margin: 0, fontSize: 14, color: C.inkMute }}>{cardSubtitle}</p>
@@ -699,6 +699,14 @@ export default function Login() {
                 </button>
               </p>
             )}
+          </div>
+          {/* Footer trust */}
+          <div style={{ width: '100%', maxWidth: 420, marginTop: 40, paddingTop: 24, borderTop: `1px solid rgba(0,0,0,0.06)`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.brand} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <span style={{ fontSize: 11.5, color: C.inkMute, fontWeight: 500 }}>Données chiffrées et sécurisées</span>
+            </div>
+            <span style={{ fontSize: 11, color: C.inkFaint }}>© {new Date().getFullYear()} JunglePharm</span>
           </div>
         </div>
       </div>
