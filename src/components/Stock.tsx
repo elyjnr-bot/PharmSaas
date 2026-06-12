@@ -708,6 +708,10 @@ export default function Stock({ initialFilter, onNavigateToSales }: { initialFil
   const [searchQuery, setSearchQuery]     = useState('');
   const [activeCat, setActiveCat]         = useState(initialFilter || 'Tous');
   const [filters, setFilters]             = useState<Filters>(EMPTY_FILTERS);
+  // Référence temporelle pour le filtre "Récents" (7 derniers jours) — niveau composant
+  const sevenDaysAgo = useMemo(() => {
+    const d = new Date(); d.setDate(d.getDate() - 7); return d;
+  }, []);
   const [showFilters, setShowFilters]     = useState(false);
   const [isModalOpen, setIsModalOpen]     = useState(false);
   // ── Scan state (remplace isHandlingScanRef / quickScanFallback / quickNotification) ──
@@ -1011,8 +1015,6 @@ export default function Stock({ initialFilter, onNavigateToSales }: { initialFil
         const s = getMedStatus(med);
         if (s !== 'out' && s !== 'low') return false;
       } else if (activeCat === '__recent__') {
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
         if (!med.created_at || new Date(med.created_at) < sevenDaysAgo) return false;
       } else if (activeCat !== 'Tous') {
         // Priorité : name_rayon ou category renseignés
@@ -1423,8 +1425,6 @@ export default function Stock({ initialFilter, onNavigateToSales }: { initialFil
               .sort((a, b) => b[1] - a[1])
               .slice(0, 12);
 
-            const sevenDaysAgo = new Date();
-            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
             const recentCount = medications.filter(m =>
               m.created_at && new Date(m.created_at) > sevenDaysAgo
             ).length;
