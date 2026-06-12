@@ -118,7 +118,7 @@ const TABS: { id: SubTab; icon: React.ReactNode; label: string }[] = [
 export default function Mouvements() {
   const { activeSeller } = useSeller();
   const { isDesktop } = useResponsive();
-  const [subTab, setSubTab] = useState<SubTab>('reception');
+  const [subTab, setSubTab] = useState<SubTab>('historique');
   const [medications, setMedications] = useState<Medication[]>([]);
 
   // ── Charger les médicaments ───────────────────────────────────────────────

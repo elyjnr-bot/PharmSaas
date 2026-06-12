@@ -196,7 +196,7 @@ function FoundPanel({ code, gs1, medication, onSuccess, onDismiss, onUnitsGenera
           reference:       lot ? `Lot: ${lot}` : null,
           notes:           'Réception par scan',
         });
-      } catch { /* non bloquant */ }
+      } catch (e) { console.error('[stock_movements] scan réception:', e); }
 
       // ── MODE UNITAIRE : générer N codes JP ─────────────────────────────────
       if (unitMode) {

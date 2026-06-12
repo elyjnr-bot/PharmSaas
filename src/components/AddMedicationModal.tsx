@@ -364,7 +364,7 @@ export default function AddMedicationModal({
             reference:       formData.batch_number ? `Lot: ${formData.batch_number}` : null,
             notes:           'Réapprovisionnement manuel',
           });
-        } catch { /* non bloquant */ }
+        } catch (e) { console.error('[stock_movements] réappro:', e); }
       } else {
         const result = await offlineSafeInsertMedication({
           name: mergedName,

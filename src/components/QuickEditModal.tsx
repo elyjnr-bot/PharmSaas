@@ -171,7 +171,7 @@ export default function QuickEditModal({ medication, onClose, onSave }: QuickEdi
             reference:       `Lot: ${newBatch.batch_number}`,
             notes:           'Ajout de lot (mode unitaire)',
           });
-        } catch { /* non bloquant */ }
+        } catch (e) { console.error('[stock_movements] lot:', e); }
 
         setGeneratedUnits(generatedCodes.map(u => ({
           unit_code: u.unit_code,
@@ -196,7 +196,7 @@ export default function QuickEditModal({ medication, onClose, onSave }: QuickEdi
             reference:       `Lot: ${newBatch.batch_number}`,
             notes:           'Ajout de lot (mode global)',
           });
-        } catch { /* non bloquant */ }
+        } catch (e) { console.error('[stock_movements] lot:', e); }
         await loadBatches();
       }
 

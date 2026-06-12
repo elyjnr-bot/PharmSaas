@@ -136,7 +136,7 @@ export async function offlineSafeInsertMedication(
               reference:       data.batch_number  ? `Lot: ${data.batch_number}` : null,
               notes:           'Création produit',
             });
-          } catch { /* mouvement non bloquant */ }
+          } catch (e) { console.error('[stock_movements] création:', e); }
         }
         return { id, code_produit: data.code_produit };
       }
