@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+// html5-qrcode est chargé en dynamique : il ne rejoint pas le bundle principal
+// (la caméra n'est utilisée que sur mobile, et seulement quand l'utilisateur
+//  clique « Scanner avec la caméra »).
 import { X, Camera, CameraOff, RefreshCw } from 'lucide-react';
 
 interface BarcodeScannerProps {
@@ -16,7 +18,8 @@ const SCANNER_ELEMENT_ID = 'html5-qrcode-scanner';
 const SCAN_COOLDOWN_MS = 2000;
 
 export default function BarcodeScanner({ onScan, onClose, continuous = false, title = 'Scanner', subtitle }: BarcodeScannerProps) {
-  const scannerRef = useRef<Html5Qrcode | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const scannerRef = useRef<any>(null);
   const lastScannedRef = useRef<string>('');
   const lastScannedTimeRef = useRef<number>(0);
   const firedRef = useRef(false);
@@ -51,6 +54,9 @@ export default function BarcodeScanner({ onScan, onClose, continuous = false, ti
 
     const el = document.getElementById(SCANNER_ELEMENT_ID);
     if (!el) return;
+
+    // Import dynamique : html5-qrcode ne charge que quand la caméra est demandée
+    const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import('html5-qrcode');
 
     const scanner = new Html5Qrcode(SCANNER_ELEMENT_ID, {
       formatsToSupport: [

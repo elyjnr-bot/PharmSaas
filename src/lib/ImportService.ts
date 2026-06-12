@@ -5,7 +5,9 @@
 //  validation EAN, conflits, prix-only, historique.
 // ════════════════════════════════════════════════════════════════════════════
 import Papa from 'papaparse';
-import * as XLSX from 'xlsx';
+// xlsx est importé dynamiquement dans les fonctions qui en ont besoin :
+// il ne rejoint jamais le bundle principal (Settings.tsx importe clearAllStock
+// qui n'utilise pas xlsx, donc le module xlsx reste hors du chemin critique).
 import { supabase } from './supabase';
 import { updateWithUserId, upsertWithUserId, getCurrentUserId } from './supabaseHelpers';
 import { db } from './db';
@@ -209,7 +211,10 @@ export function loadSavedMapping(headers: string[]): Mapping | null {
 // ════════════════════════════════════════════════════════════════════════════
 //  1. TEMPLATE EXCEL TÉLÉCHARGEABLE
 // ════════════════════════════════════════════════════════════════════════════
-export function downloadTemplate(): void {
+export async function downloadTemplate(): Promise<void> {
+  // Import dynamique : xlsx (~450 KB) ne charge que quand le template est demandé
+  const XLSX = await import('xlsx');
+
   const headers = ['Désignation', 'Code EAN', 'Prix Achat (FCFA)', 'Prix Vente (FCFA)', 'Stock initial', 'Date Péremption'];
   const examples = [
     ['DOLIPRANE 1000MG', '3400930000000', '1800', '2500', '15', '05/2027'],
@@ -266,6 +271,8 @@ async function parseCsvFile(file: File): Promise<ParsedFile> {
 }
 
 async function parseExcelFile(file: File, sheetIndex: number): Promise<ParsedFile> {
+  // Import dynamique : xlsx ne charge que quand un fichier Excel est déposé
+  const XLSX = await import('xlsx');
   const buf = await file.arrayBuffer();
   const wb = XLSX.read(buf, { type: 'array', cellDates: false });
   const sheetNames = wb.SheetNames;

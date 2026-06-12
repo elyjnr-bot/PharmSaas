@@ -65,6 +65,26 @@ export default defineConfig({
       }
     })
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        // Découpe les grosses libs vendeur en chunks séparés :
+        // – chargés en parallèle du code app au premier accès
+        // – mis en cache navigateur indépendamment des mises à jour app
+        manualChunks: (id: string) => {
+          if (id.includes('node_modules/xlsx'))           return 'vendor-xlsx';
+          if (id.includes('node_modules/html5-qrcode'))   return 'vendor-scanner';
+          if (id.includes('node_modules/jsbarcode'))      return 'vendor-barcode';
+          if (id.includes('node_modules/tesseract'))      return 'vendor-ocr';
+          if (id.includes('node_modules/@supabase'))      return 'vendor-supabase';
+          if (id.includes('node_modules/dexie'))          return 'vendor-dexie';
+          if (id.includes('node_modules/react-dom'))      return 'vendor-react';
+          if (id.includes('node_modules/papaparse') ||
+              id.includes('node_modules/fuse.js'))        return 'vendor-utils';
+        },
+      },
+    },
+  },
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
