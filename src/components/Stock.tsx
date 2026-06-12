@@ -1010,6 +1010,10 @@ export default function Stock({ initialFilter, onNavigateToSales }: { initialFil
       if (activeCat === '__ruptures__') {
         const s = getMedStatus(med);
         if (s !== 'out' && s !== 'low') return false;
+      } else if (activeCat === '__recent__') {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        if (!med.created_at || new Date(med.created_at) < sevenDaysAgo) return false;
       } else if (activeCat !== 'Tous') {
         // Priorité : name_rayon ou category renseignés
         if (med.name_rayon === activeCat || med.category === activeCat) {
@@ -1419,6 +1423,12 @@ export default function Stock({ initialFilter, onNavigateToSales }: { initialFil
               .sort((a, b) => b[1] - a[1])
               .slice(0, 12);
 
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            const recentCount = medications.filter(m =>
+              m.created_at && new Date(m.created_at) > sevenDaysAgo
+            ).length;
+
             const fmtBig = (n: number) =>
               n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M`
               : n >= 1_000   ? `${(n / 1_000).toFixed(0)}k`
@@ -1529,6 +1539,43 @@ export default function Stock({ initialFilter, onNavigateToSales }: { initialFil
                         </button>
                       );
                     })}
+
+                    {/* ── Tab Récents ── */}
+                    {recentCount > 0 && (() => {
+                      const isActive = activeCat === '__recent__';
+                      return (
+                        <button
+                          onClick={() => setActiveCat(isActive ? 'Tous' : '__recent__')}
+                          onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(16,120,90,0.06)'; }}
+                          onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = '#ffffff'; }}
+                          style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 7,
+                            padding: '8px 18px', borderRadius: 99,
+                            background: isActive ? '#10785a' : '#ffffff',
+                            border: isActive ? 'none' : '1px solid rgba(16,120,90,0.3)',
+                            color: isActive ? '#fff' : '#10785a',
+                            fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                            whiteSpace: 'nowrap', flexShrink: 0,
+                            letterSpacing: '-0.01em',
+                            boxShadow: isActive ? '0 1px 3px rgba(16,120,90,0.25)' : 'none',
+                            transition: 'all 0.15s',
+                          }}
+                        >
+                          <span style={{
+                            width: 7, height: 7, borderRadius: 99,
+                            background: isActive ? 'rgba(255,255,255,0.7)' : '#10785a',
+                            flexShrink: 0,
+                            boxShadow: isActive ? 'none' : '0 0 0 2px rgba(16,120,90,0.15)',
+                          }} />
+                          Récents
+                          <span style={{
+                            fontWeight: 500, fontSize: 12.5,
+                            color: isActive ? 'rgba(255,255,255,0.65)' : 'rgba(16,120,90,0.6)',
+                            fontVariantNumeric: 'tabular-nums',
+                          }}>{recentCount}</span>
+                        </button>
+                      );
+                    })()}
                 </div>
               </>
             );
@@ -1693,6 +1740,7 @@ export default function Stock({ initialFilter, onNavigateToSales }: { initialFil
                       const isExpiringSoon = getMedStatus(med) === 'expiring';
                       const isHovered  = hoveredRowId === (med.code_produit || med.id);
                       const isSelected = selectedIds.has(med.id);
+                      const isNew = med.created_at && new Date(med.created_at) > sevenDaysAgo;
 
                       // Marge selon méthode configurée (sur vente ou sur coût)
                       const margin = computeMargin(med.price, med.wholesale_price);
@@ -1745,12 +1793,22 @@ export default function Stock({ initialFilter, onNavigateToSales }: { initialFil
                           {/* Produit — nom gras + DCI */}
                           <td style={{ padding: '16px 12px', minWidth: 220 }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                              <span style={{
-                                fontSize: 14, fontWeight: 700, color: '#0a0e14',
-                                letterSpacing: '-0.02em', lineHeight: 1.2,
-                              }}>
-                                {med.name}
-                              </span>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                                <span style={{
+                                  fontSize: 14, fontWeight: 700, color: '#0a0e14',
+                                  letterSpacing: '-0.02em', lineHeight: 1.2,
+                                }}>
+                                  {med.name}
+                                </span>
+                                {isNew && (
+                                  <span style={{
+                                    fontSize: 10, fontWeight: 700, letterSpacing: '0.04em',
+                                    color: '#10785a', background: 'rgba(16,120,90,0.1)',
+                                    padding: '2px 7px', borderRadius: 99,
+                                    textTransform: 'uppercase', flexShrink: 0,
+                                  }}>Nouveau</span>
+                                )}
+                              </div>
                               {med.dosage && (
                                 <span style={{ fontSize: 12, color: '#9ca3af', fontWeight: 400 }}>
                                   {med.dosage}
@@ -1926,12 +1984,13 @@ export default function Stock({ initialFilter, onNavigateToSales }: { initialFil
                   const st = chalkStockStatus(med);
                   const isExpiredMed = getMedStatus(med) === 'expired';
                   const isExpiringSoon = getMedStatus(med) === 'expiring';
+                  const isNew = med.created_at && new Date(med.created_at) > sevenDaysAgo;
                   return (
                     <div
                       key={med.code_produit || med.id}
                       onClick={() => handleMedicationClick(med)}
                       style={{
-                        background: C.panel, border: `1px solid ${C.hairline}`,
+                        background: C.panel, border: `1px solid ${isNew ? 'rgba(16,120,90,0.2)' : C.hairline}`,
                         borderRadius: 10, padding: '12px 14px',
                         cursor: unitMode ? 'pointer' : 'default',
                         borderLeft: `3px solid ${st.color === 'red' ? C.red : st.color === 'amber' ? C.amber : C.brand}`,
@@ -1939,8 +1998,18 @@ export default function Stock({ initialFilter, onNavigateToSales }: { initialFil
                     >
                       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 13.5, fontWeight: 600, color: C.ink, letterSpacing: '-0.01em' }}>
-                            {med.name}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
+                            <div style={{ fontSize: 13.5, fontWeight: 600, color: C.ink, letterSpacing: '-0.01em' }}>
+                              {med.name}
+                            </div>
+                            {isNew && (
+                              <span style={{
+                                fontSize: 10, fontWeight: 700, letterSpacing: '0.04em',
+                                color: '#10785a', background: 'rgba(16,120,90,0.1)',
+                                padding: '2px 7px', borderRadius: 99,
+                                textTransform: 'uppercase', flexShrink: 0,
+                              }}>Nouveau</span>
+                            )}
                           </div>
                           {med.dosage && (
                             <div style={{ fontSize: 11.5, color: C.inkMute, marginTop: 1 }}>{med.dosage}</div>
