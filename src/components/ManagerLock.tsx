@@ -71,8 +71,8 @@ function SetupPinScreen({ onDone }: { onDone: () => void }) {
 
         {/* En-tête */}
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{ width: 72, height: 72, borderRadius: 99, background: 'rgba(16,120,90,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-            <KeyRound style={{ width: 32, height: 32, color: '#10785a' }} />
+          <div style={{ width: 72, height: 72, borderRadius: 99, background: 'rgba(83,125,20,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+            <KeyRound style={{ width: 32, height: 32, color: '#537d14' }} />
           </div>
           <h2 style={{ fontSize: 18, fontWeight: 700, color: '#0a0e14', margin: '0 0 6px' }}>
             {step === 'create' ? 'Créer votre code Manager' : 'Confirmer le code'}
@@ -90,10 +90,10 @@ function SetupPinScreen({ onDone }: { onDone: () => void }) {
             {[0,1,2,3].map(i => (
               <div key={i} style={{
                 width: 52, height: 52, borderRadius: 12,
-                border: `2px solid ${error ? '#dc2626' : current.length > i ? '#10785a' : '#e5e7eb'}`,
-                background: error ? 'rgba(220,38,38,0.05)' : current.length > i ? 'rgba(16,120,90,0.08)' : '#f9fafb',
+                border: `2px solid ${error ? '#dc2626' : current.length > i ? '#537d14' : '#e5e7eb'}`,
+                background: error ? 'rgba(220,38,38,0.05)' : current.length > i ? 'rgba(83,125,20,0.08)' : '#f9fafb',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 20, fontWeight: 700, color: '#10785a',
+                fontSize: 20, fontWeight: 700, color: '#537d14',
                 transition: 'all 0.12s',
                 transform: current.length > i ? 'scale(1.05)' : 'scale(1)',
               }}>
@@ -138,7 +138,7 @@ function SetupPinScreen({ onDone }: { onDone: () => void }) {
         {/* Étapes */}
         <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginTop: 20 }}>
           {['create','confirm'].map(s => (
-            <div key={s} style={{ width: 24, height: 4, borderRadius: 99, background: step === s ? '#10785a' : '#e5e7eb', transition: 'background 0.2s' }} />
+            <div key={s} style={{ width: 24, height: 4, borderRadius: 99, background: step === s ? '#537d14' : '#e5e7eb', transition: 'background 0.2s' }} />
           ))}
         </div>
 

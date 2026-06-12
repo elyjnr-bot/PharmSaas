@@ -235,8 +235,8 @@ export default function ProductTour({ tourId, userId, steps, forceShow, onFinish
           to   { opacity: 1; transform: ${rect ? 'translateY(0)'  : 'translate(-50%, -50%)'}; }
         }
         @keyframes jp-tour-pulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(16,120,90,0.5), 0 0 0 9999px rgba(10,14,20,0.55); }
-          50%      { box-shadow: 0 0 0 8px rgba(16,120,90,0.15), 0 0 0 9999px rgba(10,14,20,0.55); }
+          0%, 100% { box-shadow: 0 0 0 0 rgba(83,125,20,0.5), 0 0 0 9999px rgba(10,14,20,0.55); }
+          50%      { box-shadow: 0 0 0 8px rgba(83,125,20,0.15), 0 0 0 9999px rgba(10,14,20,0.55); }
         }
       `}</style>
 
@@ -270,7 +270,7 @@ export default function ProductTour({ tourId, userId, steps, forceShow, onFinish
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
           <span style={{
             fontSize: 11, fontWeight: 700, letterSpacing: '0.08em',
-            color: '#10785a', textTransform: 'uppercase',
+            color: '#537d14', textTransform: 'uppercase',
             display: 'inline-flex', alignItems: 'center', gap: 5,
           }}>
             <Sparkles size={11} /> Étape {index + 1} sur {steps.length}
@@ -310,8 +310,8 @@ export default function ProductTour({ tourId, userId, steps, forceShow, onFinish
             onClick={() => { markTourSeen(tourId, userId); setVisible(false); step.cta!.onClick(); }}
             style={{
               width: '100%', padding: '8px 12px', borderRadius: 8,
-              background: 'rgba(16,120,90,0.08)', border: '1px solid rgba(16,120,90,0.2)',
-              color: '#10785a', fontWeight: 600, fontSize: 13, cursor: 'pointer',
+              background: 'rgba(83,125,20,0.08)', border: '1px solid rgba(83,125,20,0.2)',
+              color: '#537d14', fontWeight: 600, fontSize: 13, cursor: 'pointer',
               marginBottom: 10,
             }}
           >
@@ -351,10 +351,10 @@ export default function ProductTour({ tourId, userId, steps, forceShow, onFinish
               style={{
                 display: 'flex', alignItems: 'center', gap: 4,
                 padding: '7px 14px', borderRadius: 8,
-                background: 'linear-gradient(135deg, #10785a, #149a73)',
+                background: 'linear-gradient(135deg, #537d14, #6a9e28)',
                 border: 'none', color: '#fff',
                 fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
-                boxShadow: '0 2px 8px rgba(16,120,90,0.25)',
+                boxShadow: '0 2px 8px rgba(83,125,20,0.25)',
               }}
             >
               {isLast ? 'Terminer' : 'Suivant'}

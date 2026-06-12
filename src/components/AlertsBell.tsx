@@ -18,7 +18,7 @@ import {
 
 // ── Design tokens (Chalk Premium) ────────────────────────────────
 const C = {
-  brand:    '#10785a',
+  brand:    '#537d14',
   ink:      '#0a0e14',
   inkSoft:  '#2c3138',
   inkMute:  '#6b7280',
@@ -32,7 +32,7 @@ const C = {
   amber:    '#b75f06',
   amberBg:  'rgba(183,95,6,0.08)',
   amberBd:  'rgba(183,95,6,0.20)',
-  green:    '#059669',
+  green:    '#537d14',
 };
 
 // ── Config par sévérité ──────────────────────────────────────────
@@ -275,8 +275,8 @@ export default function AlertsBell({ size = 16, iconColor = '#6b7280' }: AlertsB
                 style={{
                   width: '100%', padding: '8px', borderRadius: 8,
                   fontSize: 12, fontWeight: 600,
-                  border: `1px solid rgba(16,120,90,0.25)`,
-                  background: 'rgba(16,120,90,0.06)',
+                  border: `1px solid rgba(83,125,20,0.25)`,
+                  background: 'rgba(83,125,20,0.06)',
                   color: C.brand,
                   cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,

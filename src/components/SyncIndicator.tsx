@@ -57,10 +57,10 @@ export default function SyncIndicator() {
   return (
     <div
       className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
-      style={{ background: 'rgba(5,150,105,0.08)', border: '1px solid rgba(5,150,105,0.2)' }}
+      style={{ background: 'rgba(83,125,20,0.08)', border: '1px solid rgba(83,125,20,0.2)' }}
     >
-      <Cloud className="w-3.5 h-3.5" style={{ color: '#059669' }} />
-      <span className="text-xs font-medium" style={{ color: '#047857' }}>Synchronise</span>
+      <Cloud className="w-3.5 h-3.5" style={{ color: '#537d14' }} />
+      <span className="text-xs font-medium" style={{ color: '#5a8520' }}>Synchronise</span>
     </div>
   );
 }

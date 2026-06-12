@@ -27,10 +27,10 @@ import { TAB_TOURS } from '../lib/tourRegistry';
 
 // ── Chalk Premium tokens ──────────────────────────────────────────
 const C = {
-  brand:    '#10785a',
-  brandHi:  '#149a73',
-  brandLt:  'rgba(16,120,90,0.08)',
-  brandBd:  'rgba(16,120,90,0.20)',
+  brand:    '#537d14',
+  brandHi:  '#6a9e28',
+  brandLt:  'rgba(83,125,20,0.08)',
+  brandBd:  'rgba(83,125,20,0.20)',
   ink:      '#0a0e14',
   inkSoft:  '#2c3138',
   inkMute:  '#6b7280',

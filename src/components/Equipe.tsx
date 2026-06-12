@@ -12,8 +12,8 @@ import { getSellerPermissions, setSellerPermissions, SellerPermissions } from '.
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const C = {
-  brand:   '#10785a',
-  brandLt: 'rgba(16,120,90,0.08)',
+  brand:   '#537d14',
+  brandLt: 'rgba(83,125,20,0.08)',
   ink:     '#0a0e14',
   inkSoft: '#374151',
   inkMute: '#6b7280',
@@ -41,7 +41,7 @@ function initials(name: string) {
 }
 function avatarColor(name: string): [string, string] {
   const p: [string,string][] = [
-    ['#10785a','#d1fae5'],['#2563eb','#dbeafe'],['#7c3aed','#ede9fe'],
+    ['#537d14','#eef7cc'],['#2563eb','#dbeafe'],['#7c3aed','#ede9fe'],
     ['#db2777','#fce7f3'],['#d97706','#fef3c7'],['#0891b2','#cffafe'],
   ];
   return p[name.charCodeAt(0) % p.length];
@@ -254,7 +254,7 @@ function ActiveSessionCard({ seller, perms, onDisconnect, onStats }: {
 }) {
   const stats = useSellerStats(seller.name); // ✅ hook au top-level du composant
   return (
-    <div style={{ borderRadius:18, overflow:'hidden', background:'linear-gradient(135deg, #065f46 0%, #10785a 100%)', color:'#fff', padding:18 }}>
+    <div style={{ borderRadius:18, overflow:'hidden', background:'linear-gradient(135deg, #253804 0%, #537d14 100%)', color:'#fff', padding:18 }}>
       <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:perms.showDailyTotal?14:0 }}>
         <div style={{ width:44, height:44, borderRadius:14, background:'rgba(255,255,255,0.2)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, fontWeight:700 }}>
           {initials(seller.name)}
@@ -295,7 +295,7 @@ function VendorView({ sellerName, perms }: { sellerName: string; perms: SellerPe
   const stats = useSellerStats(sellerName); // ✅ hook au top-level du composant
   return (
     <>
-      <div style={{ borderRadius:18, overflow:'hidden', background:'linear-gradient(135deg, #065f46 0%, #10785a 100%)', color:'#fff', padding:18 }}>
+      <div style={{ borderRadius:18, overflow:'hidden', background:'linear-gradient(135deg, #253804 0%, #537d14 100%)', color:'#fff', padding:18 }}>
         <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:perms.showDailyTotal?14:0 }}>
           <div style={{ width:44, height:44, borderRadius:14, background:'rgba(255,255,255,0.2)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, fontWeight:700 }}>
             {initials(sellerName)}
@@ -375,7 +375,7 @@ function SellerStatsModal({ seller, onClose }: { seller:Seller; onClose:()=>void
         </div>
         {/* Classement + Total cumulé */}
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-          <div style={{ background:C.brandLt, borderRadius:12, padding:'12px 16px', border:`1px solid rgba(16,120,90,0.15)` }}>
+          <div style={{ background:C.brandLt, borderRadius:12, padding:'12px 16px', border:`1px solid rgba(83,125,20,0.15)` }}>
             <p style={{ fontSize:11, fontWeight:600, color:C.brand, marginBottom:4 }}>Total cumulé</p>
             <p style={{ fontSize:18, fontWeight:800, color:C.brand }}>{stats.totalCA.toLocaleString('fr-FR')} F</p>
             <p style={{ fontSize:11, color:C.inkFaint, marginTop:2 }}>{stats.totalTickets} ticket{stats.totalTickets!==1?'s':''}</p>
@@ -674,7 +674,7 @@ export default function Equipe() {
             </p>
           </div>
           <button onClick={() => { setNewName(''); setNewPin(''); setAddModal(true); }}
-            style={{ display:'flex', alignItems:'center', gap:6, fontSize:13, fontWeight:700, color:'#fff', background:C.brand, border:'none', borderRadius:10, padding:'9px 14px', cursor:'pointer', boxShadow:'0 2px 8px rgba(16,120,90,0.3)' }}>
+            style={{ display:'flex', alignItems:'center', gap:6, fontSize:13, fontWeight:700, color:'#fff', background:C.brand, border:'none', borderRadius:10, padding:'9px 14px', cursor:'pointer', boxShadow:'0 2px 8px rgba(83,125,20,0.3)' }}>
             <Plus size={15} strokeWidth={2.5}/> Ajouter
           </button>
         </div>
@@ -718,7 +718,7 @@ export default function Equipe() {
               const [tc, bg] = avatarColor(seller.name);
               return (
                 <button key={seller.id} onClick={() => openPinModal(seller)}
-                  style={{ width:'100%', display:'flex', alignItems:'center', gap:14, padding:'12px 16px', background:isActive?'rgba(16,120,90,0.05)':'transparent', border:'none', borderTop:i>0?`1px solid ${C.hairline}`:'none', cursor:'pointer', textAlign:'left' }}
+                  style={{ width:'100%', display:'flex', alignItems:'center', gap:14, padding:'12px 16px', background:isActive?'rgba(83,125,20,0.05)':'transparent', border:'none', borderTop:i>0?`1px solid ${C.hairline}`:'none', cursor:'pointer', textAlign:'left' }}
                   onMouseEnter={e => { if(!isActive)(e.currentTarget as HTMLButtonElement).style.background='rgba(0,0,0,0.025)'; }}
                   onMouseLeave={e => { if(!isActive)(e.currentTarget as HTMLButtonElement).style.background='transparent'; }}
                 >

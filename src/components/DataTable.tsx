@@ -113,7 +113,7 @@ export default function DataTable({ medications, onRowClick }: DataTableProps) {
                             ? { background: '#fffbeb', color: '#d97706' }
                             : qty <= 20
                             ? { background: '#fff7ed', color: '#ea580c' }
-                            : { background: '#f0fdf4', color: '#059669' }
+                            : { background: '#f0fdf4', color: '#537d14' }
                         }
                       >
                         {qty}

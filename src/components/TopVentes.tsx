@@ -7,9 +7,9 @@ const C = {
   panel:    'rgba(255,255,255,0.72)',
   hairline: 'rgba(15,15,20,0.07)',
   border:   'rgba(15,15,20,0.06)',
-  brand:    '#10785a',
-  brandLt:  'rgba(16,120,90,0.08)',
-  brandMid: 'rgba(16,120,90,0.16)',
+  brand:    '#537d14',
+  brandLt:  'rgba(83,125,20,0.08)',
+  brandMid: 'rgba(83,125,20,0.16)',
   ink:      '#0a0e14',
   inkSoft:  '#2c3138',
   inkMute:  '#6b7280',
@@ -306,7 +306,7 @@ export default function TopVentes() {
                 borderBottom: `1px solid ${C.hairline}`,
                 transition: 'background 0.1s',
               }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(16,120,90,0.03)')}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(83,125,20,0.03)')}
               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
             >
               {/* Rank */}

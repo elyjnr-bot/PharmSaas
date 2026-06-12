@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Search, ChevronDown, MoreHorizontal } from 'lucide-react';
+import { LogoIcon } from './LogoIcon';
 import { useAuth } from '../lib/auth';
 import { useSeller } from '../lib/sellerContext';
 import AlertsBell from './AlertsBell';
@@ -35,9 +36,9 @@ const C = {
   panel2:   'rgba(255,255,255,0.40)',
   hairline: 'rgba(255,255,255,0.55)',
   border:   'rgba(15,15,20,0.06)',
-  brand:    '#10785a',
-  brandHi:  '#149a73',
-  brandLt:  'rgba(16,120,90,0.08)',
+  brand:    '#537d14',
+  brandHi:  '#6a9e28',
+  brandLt:  'rgba(83,125,20,0.08)',
   ink:      '#0a0e14',
   inkSoft:  '#2c3138',
   inkMute:  '#6b7280',
@@ -45,15 +46,6 @@ const C = {
   red:      '#c81e1e',
   amber:    '#b75f06',
 };
-
-// Leaf SVG icon (brand)
-function LeafIcon({ size = 14, color = '#fff' }: { size?: number; color?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M11 20A7 7 0 0 1 4 13c0-1 0-9 9-9 .5 5 0 9-3 11M11 20s.5-7 9-8"/>
-    </svg>
-  );
-}
 
 // Keyboard shortcut badge
 function Kbd({ children }: { children: string }) {
@@ -124,7 +116,7 @@ const SHORTCUT_CATALOG: ShortcutDef[] = [
   { id: 'mouvements', label: 'Mouvements',         color: '#9aa0a8', route: 'mouvements',  hint: 'Historique des entrées/sorties' },
   { id: 'rapports',   label: 'Rapports',           color: '#0651bc', route: 'rapports',    hint: 'Rapports & exports', managerOnly: true },
   { id: 'carnet',      label: 'Crédits clients',   color: '#c81e1e', route: 'carnet',       hint: 'Comptes clients' },
-  { id: 'fournisseurs',label: 'Fournisseurs',      color: '#10785a', route: 'fournisseurs', hint: 'Gestion des fournisseurs', managerOnly: true },
+  { id: 'fournisseurs',label: 'Fournisseurs',      color: '#537d14', route: 'fournisseurs', hint: 'Gestion des fournisseurs', managerOnly: true },
 ];
 
 const FAV_STORAGE_KEY = 'jp_sidebar_favs_v1';
@@ -248,14 +240,8 @@ export default function Sidebar({ activeView, onNavigate, onSettingsClick, isMan
           display: 'flex', alignItems: 'center', gap: 10,
           padding: '4px 6px', borderRadius: 8, cursor: 'pointer',
         }}>
-          <div style={{
-            width: 28, height: 28, borderRadius: 8,
-            background: `linear-gradient(135deg, ${C.brand}, ${C.brandHi})`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 1px 2px rgba(16,120,90,0.3), inset 0 1px 0 rgba(255,255,255,0.2)',
-            flexShrink: 0,
-          }}>
-            <LeafIcon size={14} />
+          <div style={{ flexShrink: 0 }}>
+            <LogoIcon size={28} radius={8} />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             {/* Mode white-label léger : nom pharmacie en avant, JunglePharm en attribution */}
@@ -490,7 +476,7 @@ export default function Sidebar({ activeView, onNavigate, onSettingsClick, isMan
                     background: 'transparent', cursor: 'pointer',
                     padding: '7px 10px', textAlign: 'left', transition: 'background 0.1s',
                   }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(16,120,90,0.05)')}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(83,125,20,0.05)')}
                   onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                 >
                   <span style={{
@@ -583,12 +569,12 @@ export default function Sidebar({ activeView, onNavigate, onSettingsClick, isMan
                         display: 'flex', alignItems: 'center', gap: 10,
                         width: '100%', padding: '9px 14px',
                         borderBottom: i < activeFavs.length - 1 ? `1px solid ${C.border}` : 'none',
-                        background: activeView === f.route ? 'rgba(16,120,90,0.07)' : 'transparent',
+                        background: activeView === f.route ? 'rgba(83,125,20,0.07)' : 'transparent',
                         border: 'none',
                         cursor: 'pointer', textAlign: 'left',
                         transition: 'background 0.1s, transform 0.07s ease',
                       }}
-                      onMouseEnter={e => { if (activeView !== f.route) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(16,120,90,0.04)'; }}
+                      onMouseEnter={e => { if (activeView !== f.route) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(83,125,20,0.04)'; }}
                       onMouseLeave={e => { if (activeView !== f.route) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
                       onMouseDown={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.96)'; }}
                       onMouseUp={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}

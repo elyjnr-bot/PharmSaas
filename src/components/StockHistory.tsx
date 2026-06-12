@@ -18,7 +18,7 @@ interface Movement {
 const TYPE_LABEL: Record<Movement['type'], { label: string; color: string; bg: string; icon: React.ReactNode }> = {
   sale:       { label: 'Vente',    color: '#dc2626', bg: 'rgba(220,38,38,0.07)',   icon: <ArrowDownCircle size={14}/> },
   return:     { label: 'Retour',   color: '#2563eb', bg: 'rgba(37,99,235,0.07)',   icon: <RotateCcw size={14}/> },
-  entry:      { label: 'Entrée',   color: '#059669', bg: 'rgba(5,150,105,0.07)',   icon: <ArrowUpCircle size={14}/> },
+  entry:      { label: 'Entrée',   color: '#537d14', bg: 'rgba(83,125,20,0.07)',   icon: <ArrowUpCircle size={14}/> },
   adjustment: { label: 'Ajust.',   color: '#b75f06', bg: 'rgba(183,95,6,0.07)',    icon: <TrendingUp size={14}/> },
 };
 
@@ -161,7 +161,7 @@ export default function StockHistory() {
       {/* List */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: '40px 0', color: '#9ca3af' }}>
-          <div style={{ width: 28, height: 28, border: '2px solid #e5e7eb', borderTopColor: '#10785a', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
+          <div style={{ width: 28, height: 28, border: '2px solid #e5e7eb', borderTopColor: '#537d14', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
           Chargement…
         </div>
       ) : filtered.length === 0 ? (
@@ -201,7 +201,7 @@ export default function StockHistory() {
 
                 {/* Quantity */}
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: m.quantity >= 0 ? '#059669' : '#dc2626', fontFamily: 'monospace' }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: m.quantity >= 0 ? '#537d14' : '#dc2626', fontFamily: 'monospace' }}>
                     {m.quantity >= 0 ? '+' : '−'}{Math.abs(m.quantity)}
                   </div>
                   {m.total !== 0 && (

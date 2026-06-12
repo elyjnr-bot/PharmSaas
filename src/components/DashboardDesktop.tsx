@@ -31,10 +31,10 @@ const C = {
   hairline: 'rgba(255,255,255,0.55)',
   border:   'rgba(15,15,20,0.06)',
   bgTab:    'rgba(232,239,233,0.6)',
-  brand:    '#10785a',
-  brandHi:  '#149a73',
-  brandLt:  'rgba(16,120,90,0.08)',
-  brandMid: 'rgba(16,120,90,0.16)',
+  brand:    '#537d14',
+  brandHi:  '#6a9e28',
+  brandLt:  'rgba(83,125,20,0.08)',
+  brandMid: 'rgba(83,125,20,0.16)',
   ink:      '#0a0e14',
   inkSoft:  '#2c3138',
   inkMute:  '#6b7280',
@@ -828,7 +828,7 @@ export default function DashboardDesktop() {
 
         {/* Progress banner */}
         <div style={{
-          background: `linear-gradient(135deg, ${C.brandDk ?? '#0a5240'} 0%, #064e3b 100%)`,
+          background: `linear-gradient(135deg, ${C.brandDk ?? '#2a4009'} 0%, #1e3006 100%)`,
           borderRadius: 16, padding: '24px 28px', marginBottom: 24,
           display: 'flex', alignItems: 'center', gap: 20,
           position: 'relative', overflow: 'hidden',
@@ -839,7 +839,7 @@ export default function DashboardDesktop() {
             <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 4 }}>
               Pharmacie configurée avec succès ✓
             </div>
-            <div style={{ fontSize: 13, color: 'rgba(167,243,208,0.75)', lineHeight: 1.5 }}>
+            <div style={{ fontSize: 13, color: 'rgba(188,217,110,0.75)', lineHeight: 1.5 }}>
               Votre compte est isolé — toutes vos données sont privées et sécurisées.<br />
               Commencez par remplir votre stock pour que le tableau de bord s'active.
             </div>
@@ -1534,7 +1534,7 @@ export default function DashboardDesktop() {
           {m.sellerRanking.length === 0 ? (
             <div style={{ padding: '20px 0', textAlign: 'center', fontSize: 12.5, color: C.inkMute }}>Aucune vente aujourd'hui</div>
           ) : (() => {
-            const SELLER_COLORS = ['#10785a','#0651bc','#6e44b0','#b75f06','#0f7e5e'];
+            const SELLER_COLORS = ['#537d14','#0651bc','#6e44b0','#b75f06','#0f7e5e'];
             const maxCA = m.sellerRanking[0]?.ca || 1;
             const getInitials = (name: string) =>
               name.split(/[\s\-]+/).slice(0, 2).map(w => w[0]?.toUpperCase() || '').join('');
@@ -1926,20 +1926,20 @@ export default function DashboardDesktop() {
                   style={{
                     display: 'flex', alignItems: 'center', gap: 6,
                     padding: '5px 11px', borderRadius: 7, cursor: 'pointer',
-                    background: 'rgba(16,120,90,0.08)',
-                    border: '1px solid rgba(16,120,90,0.22)',
+                    background: 'rgba(83,125,20,0.08)',
+                    border: '1px solid rgba(83,125,20,0.22)',
                     color: C.brand,
                     fontSize: 11, fontWeight: 700, letterSpacing: '-0.005em',
                     fontFamily: C.f,
                     transition: 'all 0.12s',
                   }}
                   onMouseEnter={e => {
-                    (e.currentTarget as HTMLButtonElement).style.background = 'rgba(16,120,90,0.14)';
-                    (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(16,120,90,0.32)';
+                    (e.currentTarget as HTMLButtonElement).style.background = 'rgba(83,125,20,0.14)';
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(83,125,20,0.32)';
                   }}
                   onMouseLeave={e => {
-                    (e.currentTarget as HTMLButtonElement).style.background = 'rgba(16,120,90,0.08)';
-                    (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(16,120,90,0.22)';
+                    (e.currentTarget as HTMLButtonElement).style.background = 'rgba(83,125,20,0.08)';
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(83,125,20,0.22)';
                   }}
                   title="Clôturer la journée et générer le Rapport Z"
                 >

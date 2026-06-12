@@ -46,9 +46,9 @@ const C = {
   panel:    'rgba(255,255,255,0.97)',
   hairline: 'rgba(15,15,20,0.08)',
   border:   'rgba(15,15,20,0.12)',
-  brand:    '#10785a',
-  brandLt:  'rgba(16,120,90,0.08)',
-  brandMid: 'rgba(16,120,90,0.18)',
+  brand:    '#537d14',
+  brandLt:  'rgba(83,125,20,0.08)',
+  brandMid: 'rgba(83,125,20,0.18)',
   ink:      '#0a0e14',
   inkSoft:  '#2c3138',
   inkMute:  '#6b7280',
@@ -334,8 +334,8 @@ function FoundPanel({ code, gs1, medication, onSuccess, onDismiss, onUnitsGenera
         <div style={{
           margin: '10px 20px 0',
           padding: '8px 12px',
-          background: 'rgba(16,120,90,0.07)',
-          border: '1px solid rgba(16,120,90,0.20)',
+          background: 'rgba(83,125,20,0.07)',
+          border: '1px solid rgba(83,125,20,0.20)',
           borderRadius: 9,
           display: 'flex', alignItems: 'center', gap: 8,
           fontSize: 12, color: C.brand, fontWeight: 600,
@@ -444,7 +444,7 @@ function FoundPanel({ code, gs1, medication, onSuccess, onDismiss, onUnitsGenera
           disabled={submitting}
           style={{
             height: 46, borderRadius: 10, border: 'none',
-            background: submitting ? 'rgba(16,120,90,0.5)' : C.brand,
+            background: submitting ? 'rgba(83,125,20,0.5)' : C.brand,
             color: '#fff', fontSize: 14, fontWeight: 700,
             cursor: submitting ? 'default' : 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -936,7 +936,7 @@ function CreateTab({ code, gs1, onSuccess, onDismiss, onUnitsGenerated }: {
         disabled={submitting}
         style={{
           height: 46, borderRadius: 10, border: 'none', marginTop: 2,
-          background: submitting ? 'rgba(16,120,90,0.5)' : C.brand,
+          background: submitting ? 'rgba(83,125,20,0.5)' : C.brand,
           color: '#fff', fontSize: 14, fontWeight: 700,
           cursor: submitting ? 'default' : 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,

@@ -101,12 +101,12 @@ export default function TourHost({ activeTab, userId, enabled }: Props) {
               width: 48px; height: 48px; border-radius: 999px;
               border: none; cursor: pointer; color: #fff;
               display: flex; align-items: center; justify-content: center;
-              background: linear-gradient(135deg, #10785a, #149a73);
-              box-shadow: 0 6px 20px rgba(16,120,90,0.38), 0 2px 6px rgba(0,0,0,0.12);
+              background: linear-gradient(135deg, #537d14, #6a9e28);
+              box-shadow: 0 6px 20px rgba(83,125,20,0.38), 0 2px 6px rgba(0,0,0,0.12);
               animation: jp-help-in 0.25s cubic-bezier(0.34,1.56,0.64,1);
               transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
             }
-            .jp-help-fab:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 10px 28px rgba(16,120,90,0.45); }
+            .jp-help-fab:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 10px 28px rgba(83,125,20,0.45); }
             .jp-help-fab:active { transform: scale(0.96); }
             /* Sur mobile, remonter au-dessus de la barre de navigation (~72px). */
             @media (max-width: 900px) {

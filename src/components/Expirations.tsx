@@ -33,7 +33,7 @@ const SEV_META: Record<Severity, { label: string; bg: string; fg: string; border
   expired:  { label: 'Expiré',     bg: 'rgba(200,30,30,0.07)',  fg: '#c81e1e', border: 'rgba(200,30,30,0.25)' },
   critical: { label: '< 30 j',     bg: 'rgba(183,95,6,0.07)',   fg: '#b75f06', border: 'rgba(183,95,6,0.25)'  },
   warning:  { label: '30 – 90 j',  bg: 'rgba(202,138,4,0.06)',  fg: '#92400e', border: 'rgba(202,138,4,0.2)'  },
-  ok:       { label: '> 90 j',     bg: 'rgba(16,120,90,0.06)',  fg: '#10785a', border: 'rgba(16,120,90,0.18)' },
+  ok:       { label: '> 90 j',     bg: 'rgba(83,125,20,0.06)',  fg: '#537d14', border: 'rgba(83,125,20,0.18)' },
 };
 
 function csvCell(v: unknown): string {

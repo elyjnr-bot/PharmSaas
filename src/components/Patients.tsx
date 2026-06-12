@@ -10,9 +10,9 @@ const C = {
   hairline:   'rgba(15,15,20,0.08)',
   border:     'rgba(15,15,20,0.10)',
   bg:         'rgba(15,15,20,0.028)',
-  brand:      '#10785a',
-  brandLt:    'rgba(16,120,90,0.08)',
-  brandMid:   'rgba(16,120,90,0.14)',
+  brand:      '#537d14',
+  brandLt:    'rgba(83,125,20,0.08)',
+  brandMid:   'rgba(83,125,20,0.14)',
   ink:        '#0a0e14',
   inkSoft:    '#2c3138',
   inkMute:    '#6b7280',
@@ -32,7 +32,7 @@ const GRADIENTS = [
   'linear-gradient(135deg,#c81e1e,#e85555)',
   'linear-gradient(135deg,#b75f06,#e08533)',
   'linear-gradient(135deg,#0651bc,#3b86e0)',
-  'linear-gradient(135deg,#10785a,#149a73)',
+  'linear-gradient(135deg,#537d14,#6a9e28)',
   'linear-gradient(135deg,#6e44b0,#9b6dd6)',
   'linear-gradient(135deg,#0891b2,#22d3ee)',
 ];
@@ -64,7 +64,7 @@ function relativeDate(iso: string) {
 const ORD_STATUS: Record<OrdStatus, { label: string; bg: string; fg: string }> = {
   en_attente: { label: 'En attente', bg: 'rgba(183,95,6,0.09)',  fg: '#b75f06' },
   partielle:  { label: 'En cours',   bg: 'rgba(6,81,188,0.09)',  fg: '#0651bc' },
-  terminee:   { label: 'Terminée',   bg: 'rgba(16,120,90,0.08)', fg: '#10785a' },
+  terminee:   { label: 'Terminée',   bg: 'rgba(83,125,20,0.08)', fg: '#537d14' },
 };
 
 // ── Avatar ─────────────────────────────────────────────────────────────────────
@@ -85,7 +85,7 @@ function Avatar({ name, idx, size = 40, round = false }: { name: string; idx: nu
 
 // ── TypePill ──────────────────────────────────────────────────────────────────
 const TYPE_STYLE: Record<PatientType, { bg: string; text: string }> = {
-  fidèle:     { bg: 'rgba(16,120,90,0.1)',  text: '#10785a' },
+  fidèle:     { bg: 'rgba(83,125,20,0.1)',  text: '#537d14' },
   récurrent:  { bg: 'rgba(6,81,188,0.1)',   text: '#0651bc' },
   occasionnel:{ bg: 'rgba(0,0,0,0.06)',      text: '#6b7280' },
 };
@@ -462,7 +462,7 @@ function PatientDetail({ patient, idx, patOrdonnances, onEdit, onDelete, onAddPu
                   </div>
                 </div>
                 {/* Médicaments fréquents */}
-                <div style={{ background: 'rgba(16,120,90,0.06)', borderRadius: 10, padding: '10px 12px', border: `1px solid rgba(16,120,90,0.12)` }}>
+                <div style={{ background: 'rgba(83,125,20,0.06)', borderRadius: 10, padding: '10px 12px', border: `1px solid rgba(83,125,20,0.12)` }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: C.brand, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 5 }}>Médicaments fréquents</div>
                   <div style={{ fontSize: 12.5, color: C.brand, lineHeight: 1.5 }}>
                     {freqMeds.length > 0 ? freqMeds.join(', ') : <span style={{ color: C.inkFaint, fontStyle: 'italic' }}>Calculé depuis l'historique</span>}
@@ -656,7 +656,7 @@ function PatientOverview({ patients, urgentIds, onSelect, onAdd }: {
 
             {/* Quick add CTA */}
             <button onClick={onAdd}
-              style={{ background: C.brandLt, border: `1px solid rgba(16,120,90,0.18)`, borderRadius: 14, padding: '18px 20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, fontFamily: C.f, textAlign: 'left', transition: 'background 0.12s' }}
+              style={{ background: C.brandLt, border: `1px solid rgba(83,125,20,0.18)`, borderRadius: 14, padding: '18px 20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, fontFamily: C.f, textAlign: 'left', transition: 'background 0.12s' }}
               onMouseEnter={e => (e.currentTarget.style.background = C.brandMid)}
               onMouseLeave={e => (e.currentTarget.style.background = C.brandLt)}>
               <div style={{ width: 40, height: 40, borderRadius: 12, background: C.brand, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>

@@ -42,6 +42,7 @@ import { WorkflowProvider } from './lib/workflowContext';
 import { ThemeProvider, useTheme } from './lib/themeContext';
 import { useResponsive } from './lib/useResponsive';
 import { X, Lock, KeyRound, ShieldCheck } from 'lucide-react';
+import { LogoIcon } from './components/LogoIcon';
 const CommandPalette  = React.lazy(() => import('./components/CommandPalette'));
 
 // ── Spinner affiché pendant le chargement d'un onglet lazy ───────────────────
@@ -51,7 +52,7 @@ function TabLoader() {
       <div style={{
         width: 32, height: 32, borderRadius: '50%',
         border: '3px solid #e5e7eb',
-        borderTopColor: '#10785a',
+        borderTopColor: '#537d14',
         animation: 'spin 0.6s linear infinite',
       }} />
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
@@ -109,20 +110,20 @@ function FirstTimePinSetup({ onDone }: { onDone: () => void }) {
 
   if (done) {
     return (
-      <div style={{ minHeight: '100svh', background: 'linear-gradient(150deg,#0a5240 0%,#064e3b 45%,#065f46 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <div style={{ minHeight: '100svh', background: 'linear-gradient(150deg,#2a4009 0%,#1e3006 45%,#253804 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
         <div style={{ textAlign: 'center', color: '#fff', animation: 'fadeUp 0.4s ease' }}>
-          <div style={{ width: 80, height: 80, borderRadius: 99, background: 'rgba(52,211,153,0.2)', border: '2px solid rgba(52,211,153,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-            <ShieldCheck style={{ width: 36, height: 36, color: '#34d399' }} />
+          <div style={{ width: 80, height: 80, borderRadius: 99, background: 'rgba(188,217,110,0.2)', border: '2px solid rgba(188,217,110,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+            <ShieldCheck style={{ width: 36, height: 36, color: '#bcd96e' }} />
           </div>
           <h2 style={{ fontSize: 22, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.03em' }}>Code créé !</h2>
-          <p style={{ fontSize: 14, color: 'rgba(167,243,208,0.7)', margin: 0 }}>Accès à JunglePharm en cours…</p>
+          <p style={{ fontSize: 14, color: 'rgba(188,217,110,0.7)', margin: 0 }}>Accès à JunglePharm en cours…</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: '100svh', background: 'linear-gradient(150deg,#0a5240 0%,#064e3b 45%,#065f46 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 20px' }}>
+    <div style={{ minHeight: '100svh', background: 'linear-gradient(150deg,#2a4009 0%,#1e3006 45%,#253804 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 20px' }}>
       <style>{`
         @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
         @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-6px)} 40%,80%{transform:translateX(6px)} }
@@ -131,12 +132,12 @@ function FirstTimePinSetup({ onDone }: { onDone: () => void }) {
       {/* Logo */}
       <div style={{ textAlign: 'center', marginBottom: 32, animation: 'fadeUp 0.4s ease' }}>
         <div style={{ width: 64, height: 64, borderRadius: 20, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
-          <KeyRound style={{ width: 28, height: 28, color: '#34d399' }} />
+          <KeyRound style={{ width: 28, height: 28, color: '#bcd96e' }} />
         </div>
         <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: '#fff', letterSpacing: '-0.03em' }}>
           Créer votre code Gérant
         </h1>
-        <p style={{ margin: '8px 0 0', fontSize: 13.5, color: 'rgba(167,243,208,0.7)', lineHeight: 1.5, maxWidth: 280 }}>
+        <p style={{ margin: '8px 0 0', fontSize: 13.5, color: 'rgba(188,217,110,0.7)', lineHeight: 1.5, maxWidth: 280 }}>
           {step === 'create'
             ? 'Ce code protège l\'accès aux données sensibles de votre pharmacie.'
             : 'Confirmez le code pour l\'activer.'}
@@ -151,10 +152,10 @@ function FirstTimePinSetup({ onDone }: { onDone: () => void }) {
           {[0,1,2,3].map(i => (
             <div key={i} style={{
               width: 56, height: 56, borderRadius: 14,
-              border: `2.5px solid ${error ? '#dc2626' : current.length > i ? '#10785a' : 'rgba(0,0,0,0.12)'}`,
-              background: error ? 'rgba(220,38,38,0.05)' : current.length > i ? 'rgba(16,120,90,0.08)' : '#f9fafb',
+              border: `2.5px solid ${error ? '#dc2626' : current.length > i ? '#537d14' : 'rgba(0,0,0,0.12)'}`,
+              background: error ? 'rgba(220,38,38,0.05)' : current.length > i ? 'rgba(83,125,20,0.08)' : '#f9fafb',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 26, color: '#10785a', fontWeight: 800,
+              fontSize: 26, color: '#537d14', fontWeight: 800,
               transition: 'all 0.12s',
               transform: current.length > i ? 'scale(1.04)' : 'scale(1)',
             }}>
@@ -187,7 +188,7 @@ function FirstTimePinSetup({ onDone }: { onDone: () => void }) {
         {/* Indicateur étapes */}
         <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 18 }}>
           {(['create','confirm'] as const).map(s => (
-            <div key={s} style={{ width: 28, height: 4, borderRadius: 99, background: step === s ? '#10785a' : '#e5e7eb', transition: 'background 0.2s' }} />
+            <div key={s} style={{ width: 28, height: 4, borderRadius: 99, background: step === s ? '#537d14' : '#e5e7eb', transition: 'background 0.2s' }} />
           ))}
         </div>
 
@@ -199,7 +200,7 @@ function FirstTimePinSetup({ onDone }: { onDone: () => void }) {
         )}
       </div>
 
-      <p style={{ marginTop: 20, fontSize: 12, color: 'rgba(167,243,208,0.4)', textAlign: 'center' }}>
+      <p style={{ marginTop: 20, fontSize: 12, color: 'rgba(188,217,110,0.4)', textAlign: 'center' }}>
         Ce code ne pourra pas être récupéré — notez-le en lieu sûr
       </p>
     </div>
@@ -468,11 +469,7 @@ function AppContent() {
       <div className="min-h-screen bg-ios-bg flex items-center justify-center">
         <div className="text-center">
           <div className="mx-auto mb-5 animate-pulse">
-            <svg width="48" height="48" viewBox="0 0 32 32" fill="none">
-              <path d="M16 1L29.856 8.5V23.5L16 31L2.144 23.5V8.5L16 1Z" fill="#059669" />
-              <path d="M16 8C16 8 12 14 12 18C12 20.2 13.8 22 16 22C18.2 22 20 20.2 20 18C20 14 16 8 16 8Z" fill="white" stroke="white" strokeWidth="0.5" strokeLinejoin="round" />
-              <line x1="16" y1="22" x2="16" y2="25" stroke="white" strokeWidth="1.2" strokeLinecap="round" />
-            </svg>
+            <LogoIcon size={48} />
           </div>
           <h2 style={{ fontSize: '17px', letterSpacing: '-0.03em' }}>
             <span className="font-extrabold text-ios-text">Jungle</span>

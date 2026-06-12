@@ -30,10 +30,10 @@ const C = {
   hairline:   'rgba(255,255,255,0.55)',   // ← bordure verre dépoli (BLANC)
   border:     'rgba(15,15,20,0.06)',      // ← bordure inputs/dividers (SOMBRE)
   borderHi:   'rgba(15,15,20,0.10)',
-  brand:      '#10785a',
-  brandHi:    '#149a73',
-  brandLt:    'rgba(16,120,90,0.08)',
-  brandMid:   'rgba(16,120,90,0.16)',
+  brand:      '#537d14',
+  brandHi:    '#6a9e28',
+  brandLt:    'rgba(83,125,20,0.08)',
+  brandMid:   'rgba(83,125,20,0.16)',
   ink:        '#0a0e14',
   inkSoft:    '#2c3138',
   inkMute:    '#6b7280',
@@ -51,7 +51,7 @@ const glassRing = 'inset 0 1px 0 rgba(255,255,255,0.8), inset 0 0 0 0.5px rgba(2
 
 // ── Rayon colours (deterministic hash) ───────────────────────────────────────
 const PALETTE = [
-  '#0651bc', '#10785a', '#6e44b0', '#b75f06', '#0891b2',
+  '#0651bc', '#537d14', '#6e44b0', '#b75f06', '#0891b2',
   '#dc2626', '#9333ea', '#0f766e', '#d97706', '#7c3aed', '#b91c1c', '#0369a1',
 ];
 function rayonColor(rayon: string): string {
@@ -103,11 +103,11 @@ function StatusBadge({ color, label }: { color: ChalkColor; label: string }) {
     bg: string; border: string; dot: string; text: string; glow: string
   }> = {
     green: {
-      bg: 'rgba(16,120,90,0.07)',
-      border: 'rgba(16,120,90,0.2)',
-      dot: '#10785a',
+      bg: 'rgba(83,125,20,0.07)',
+      border: 'rgba(83,125,20,0.2)',
+      dot: '#537d14',
       text: '#0d5c44',
-      glow: 'rgba(16,120,90,0.15)',
+      glow: 'rgba(83,125,20,0.15)',
     },
     amber: {
       bg: 'rgba(217,119,6,0.07)',
@@ -1450,10 +1450,10 @@ export default function Stock({ initialFilter, onNavigateToSales }: { initialFil
                   boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
                 }}>
                   {[
-                    { label: 'Valeur stock',      value: `${fmtBig(totalValue)}`, unit: 'FC',   sub: '+2.1% ce mois', subColor: '#10785a', color: '#0a0e14' },
+                    { label: 'Valeur stock',      value: `${fmtBig(totalValue)}`, unit: 'FC',   sub: '+2.1% ce mois', subColor: '#537d14', color: '#0a0e14' },
                     { label: 'Références',         value: totalRefs.toLocaleString('fr-FR'), unit: '', sub: null, subColor: '', color: '#0a0e14' },
-                    { label: 'Ruptures',           value: String(ruptures), unit: '',           sub: ruptures > 0 ? 'Critique' : 'Aucune', subColor: ruptures > 0 ? '#dc2626' : '#10785a', color: '#0a0e14' },
-                    { label: 'Stock bas',          value: String(lowStock), unit: '',            sub: lowStock > 0 ? 'À surveiller' : 'OK', subColor: lowStock > 0 ? '#d97706' : '#10785a', color: '#0a0e14' },
+                    { label: 'Ruptures',           value: String(ruptures), unit: '',           sub: ruptures > 0 ? 'Critique' : 'Aucune', subColor: ruptures > 0 ? '#dc2626' : '#537d14', color: '#0a0e14' },
+                    { label: 'Stock bas',          value: String(lowStock), unit: '',            sub: lowStock > 0 ? 'À surveiller' : 'OK', subColor: lowStock > 0 ? '#d97706' : '#537d14', color: '#0a0e14' },
                     { label: 'Péremption < 30j',   value: `${expiring30}`, unit: 'lots',         sub: null, subColor: '', color: expiring30 > 0 ? '#dc2626' : '#0a0e14' },
                     { label: 'Catégories',         value: String(categories.length), unit: '',   sub: null, subColor: '', color: '#0a0e14' },
                   ].map((kpi, idx, arr) => (
@@ -1515,31 +1515,31 @@ export default function Stock({ initialFilter, onNavigateToSales }: { initialFil
                       return (
                         <button
                           onClick={() => setActiveCat(isActive ? 'Tous' : '__recent__')}
-                          onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(16,120,90,0.06)'; }}
+                          onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(83,125,20,0.06)'; }}
                           onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = '#ffffff'; }}
                           style={{
                             display: 'inline-flex', alignItems: 'center', gap: 7,
                             padding: '8px 18px', borderRadius: 99,
-                            background: isActive ? '#10785a' : '#ffffff',
-                            border: isActive ? 'none' : '1px solid rgba(16,120,90,0.3)',
-                            color: isActive ? '#fff' : '#10785a',
+                            background: isActive ? '#537d14' : '#ffffff',
+                            border: isActive ? 'none' : '1px solid rgba(83,125,20,0.3)',
+                            color: isActive ? '#fff' : '#537d14',
                             fontSize: 14, fontWeight: 600, cursor: 'pointer',
                             whiteSpace: 'nowrap', flexShrink: 0,
                             letterSpacing: '-0.01em',
-                            boxShadow: isActive ? '0 1px 3px rgba(16,120,90,0.25)' : 'none',
+                            boxShadow: isActive ? '0 1px 3px rgba(83,125,20,0.25)' : 'none',
                             transition: 'all 0.15s',
                           }}
                         >
                           <span style={{
                             width: 7, height: 7, borderRadius: 99,
-                            background: isActive ? 'rgba(255,255,255,0.7)' : '#10785a',
+                            background: isActive ? 'rgba(255,255,255,0.7)' : '#537d14',
                             flexShrink: 0,
-                            boxShadow: isActive ? 'none' : '0 0 0 2px rgba(16,120,90,0.15)',
+                            boxShadow: isActive ? 'none' : '0 0 0 2px rgba(83,125,20,0.15)',
                           }} />
                           Récents
                           <span style={{
                             fontWeight: 500, fontSize: 12.5,
-                            color: isActive ? 'rgba(255,255,255,0.65)' : 'rgba(16,120,90,0.6)',
+                            color: isActive ? 'rgba(255,255,255,0.65)' : 'rgba(83,125,20,0.6)',
                             fontVariantNumeric: 'tabular-nums',
                           }}>{recentCount}</span>
                         </button>
@@ -1748,7 +1748,7 @@ export default function Stock({ initialFilter, onNavigateToSales }: { initialFil
                       const margin = computeMargin(med.price, med.wholesale_price);
 
                       // Fond de ligne contextuel
-                      const rowBg = isSelected ? 'rgba(16,120,90,0.04)' : '#fff';
+                      const rowBg = isSelected ? 'rgba(83,125,20,0.04)' : '#fff';
 
                       // Couleur stock
                       const min = med.minimum_stock || 0;
@@ -1764,7 +1764,7 @@ export default function Stock({ initialFilter, onNavigateToSales }: { initialFil
                           className={`cp-row${isSelected ? ' cp-selected' : ''}`}
                           onClick={() => handleMedicationClick(med)}
                           style={{
-                            background: isSelected ? 'rgba(16,120,90,0.04)' : '#fff',
+                            background: isSelected ? 'rgba(83,125,20,0.04)' : '#fff',
                             cursor: unitMode ? 'pointer' : 'default',
                           }}
                           onMouseEnter={() => setHoveredRowId(med.code_produit || med.id)}
@@ -1805,7 +1805,7 @@ export default function Stock({ initialFilter, onNavigateToSales }: { initialFil
                                 {isNew && (
                                   <span style={{
                                     fontSize: 10, fontWeight: 700, letterSpacing: '0.04em',
-                                    color: '#10785a', background: 'rgba(16,120,90,0.1)',
+                                    color: '#537d14', background: 'rgba(83,125,20,0.1)',
                                     padding: '2px 7px', borderRadius: 99,
                                     textTransform: 'uppercase', flexShrink: 0,
                                   }}>Nouveau</span>
@@ -1865,7 +1865,7 @@ export default function Stock({ initialFilter, onNavigateToSales }: { initialFil
                             {margin !== null
                               ? <span style={{
                                   fontFamily: C.fm, fontSize: 13, fontWeight: 600,
-                                  color: margin >= marginThresholds.good ? '#10785a' : margin >= marginThresholds.ok ? '#d97706' : '#dc2626',
+                                  color: margin >= marginThresholds.good ? '#537d14' : margin >= marginThresholds.ok ? '#d97706' : '#dc2626',
                                 }}>
                                   {margin}%
                                 </span>
@@ -1992,7 +1992,7 @@ export default function Stock({ initialFilter, onNavigateToSales }: { initialFil
                       key={med.code_produit || med.id}
                       onClick={() => handleMedicationClick(med)}
                       style={{
-                        background: C.panel, border: `1px solid ${isNew ? 'rgba(16,120,90,0.2)' : C.hairline}`,
+                        background: C.panel, border: `1px solid ${isNew ? 'rgba(83,125,20,0.2)' : C.hairline}`,
                         borderRadius: 10, padding: '12px 14px',
                         cursor: unitMode ? 'pointer' : 'default',
                         borderLeft: `3px solid ${st.color === 'red' ? C.red : st.color === 'amber' ? C.amber : C.brand}`,
@@ -2007,7 +2007,7 @@ export default function Stock({ initialFilter, onNavigateToSales }: { initialFil
                             {isNew && (
                               <span style={{
                                 fontSize: 10, fontWeight: 700, letterSpacing: '0.04em',
-                                color: '#10785a', background: 'rgba(16,120,90,0.1)',
+                                color: '#537d14', background: 'rgba(83,125,20,0.1)',
                                 padding: '2px 7px', borderRadius: 99,
                                 textTransform: 'uppercase', flexShrink: 0,
                               }}>Nouveau</span>
@@ -2122,7 +2122,7 @@ export default function Stock({ initialFilter, onNavigateToSales }: { initialFil
             borderRight: '1px solid rgba(255,255,255,0.1)',
           }}>
             <span style={{
-              background: '#10785a', color: '#fff', borderRadius: 6,
+              background: '#537d14', color: '#fff', borderRadius: 6,
               padding: '3px 8px', fontSize: 12.5, fontWeight: 800,
               fontVariantNumeric: 'tabular-nums',
             }}>
@@ -2159,7 +2159,7 @@ export default function Stock({ initialFilter, onNavigateToSales }: { initialFil
                 }}
               />
               <button onClick={applyBulkPriceChange} disabled={bulkLoading}
-                style={{ height: 32, padding: '0 14px', borderRadius: 7, border: 'none', background: '#10785a', color: '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
+                style={{ height: 32, padding: '0 14px', borderRadius: 7, border: 'none', background: '#537d14', color: '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
                 {bulkLoading ? '...' : 'Appliquer'}
               </button>
               <button onClick={() => { setBulkAction(null); setBulkValue(''); }}
@@ -2177,7 +2177,7 @@ export default function Stock({ initialFilter, onNavigateToSales }: { initialFil
                 placeholder="Nom du fournisseur"
                 style={{ height: 32, padding: '0 12px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', width: 180 }} />
               <button onClick={applyBulkSupplier} disabled={bulkLoading}
-                style={{ height: 32, padding: '0 14px', borderRadius: 7, border: 'none', background: '#10785a', color: '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
+                style={{ height: 32, padding: '0 14px', borderRadius: 7, border: 'none', background: '#537d14', color: '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
                 {bulkLoading ? '...' : 'Appliquer'}
               </button>
               <button onClick={() => { setBulkAction(null); setBulkValue(''); }}
@@ -2195,7 +2195,7 @@ export default function Stock({ initialFilter, onNavigateToSales }: { initialFil
                 placeholder="Seuil min"
                 style={{ height: 32, padding: '0 12px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', width: 120 }} />
               <button onClick={applyBulkMinStock} disabled={bulkLoading}
-                style={{ height: 32, padding: '0 14px', borderRadius: 7, border: 'none', background: '#10785a', color: '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
+                style={{ height: 32, padding: '0 14px', borderRadius: 7, border: 'none', background: '#537d14', color: '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
                 {bulkLoading ? '...' : 'Appliquer'}
               </button>
               <button onClick={() => { setBulkAction(null); setBulkValue(''); }}
@@ -2281,7 +2281,7 @@ export default function Stock({ initialFilter, onNavigateToSales }: { initialFil
           <div style={{
             display: 'flex', alignItems: 'center', gap: 10,
             padding: '12px 16px', borderRadius: 12,
-            background: scanNotif.type === 'ok' ? '#10785a' : C.red,
+            background: scanNotif.type === 'ok' ? '#537d14' : C.red,
             boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
             color: '#fff',
           }}>
@@ -2309,7 +2309,7 @@ export default function Stock({ initialFilter, onNavigateToSales }: { initialFil
           position: 'fixed', bottom: 88, left: 16, right: 16, zIndex: 50,
         }}>
           <div style={{
-            background: '#10785a', color: '#fff', borderRadius: 16,
+            background: '#537d14', color: '#fff', borderRadius: 16,
             padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12,
             boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
           }}>
@@ -2332,7 +2332,7 @@ export default function Stock({ initialFilter, onNavigateToSales }: { initialFil
                 onClick={() => setShowPrintModal(true)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 5,
-                  padding: '6px 10px', background: '#fff', color: '#10785a',
+                  padding: '6px 10px', background: '#fff', color: '#537d14',
                   border: 'none', borderRadius: 8, fontSize: 11.5, fontWeight: 700,
                   cursor: 'pointer',
                 }}
@@ -2576,7 +2576,7 @@ function UnitDetailsModal({ medication, units, loading, onClose, onUnitStatusCha
                           <button
                             onClick={() => setPrintUnit(unit)}
                             title="Imprimer l'étiquette"
-                            style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 9px', background: 'rgba(16,120,90,0.08)', color: C.brand, border: 'none', borderRadius: 99, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
+                            style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 9px', background: 'rgba(83,125,20,0.08)', color: C.brand, border: 'none', borderRadius: 99, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
                           >
                             <Printer size={11} strokeWidth={1.5} />
                             Étiquette

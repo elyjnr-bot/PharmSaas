@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getManagerPin, setManagerPin, hasManagerPin } from '../lib/sellerContext';
+import { LogoIcon } from './LogoIcon';
 
 // PIN scopé par compte (cf. sellerContext) — plus de clé d'appareil partagée.
 function hasPinConfigured(): boolean {
@@ -8,10 +9,10 @@ function hasPinConfigured(): boolean {
 
 // ── Design tokens ──────────────────────────────────────────────────────────────
 const C = {
-  brand:   '#10785a',
-  brandHi: '#149a73',
-  brandDk: '#0a5240',
-  brandLt: 'rgba(16,120,90,0.08)',
+  brand:   '#537d14',
+  brandHi: '#6a9e28',
+  brandDk: '#2a4009',
+  brandLt: 'rgba(83,125,20,0.08)',
   ink:     '#0a0e14',
   inkSoft: '#2c3138',
   inkMute: '#6b7280',
@@ -38,7 +39,7 @@ function initials(name: string) {
 
 function avatarColor(name: string): [string, string] {
   const p: [string, string][] = [
-    ['#10785a', '#d1fae5'],
+    ['#537d14', '#eef7cc'],
     ['#2563eb', '#dbeafe'],
     ['#7c3aed', '#ede9fe'],
     ['#db2777', '#fce7f3'],
@@ -46,20 +47,6 @@ function avatarColor(name: string): [string, string] {
     ['#0891b2', '#cffafe'],
   ];
   return p[name.charCodeAt(0) % p.length];
-}
-
-// ── SVG Logo ───────────────────────────────────────────────────────────────────
-function LeafLogo({ size = 44 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 44 44" fill="none">
-      <rect width="44" height="44" rx="13" fill={C.brand} />
-      <path
-        d="M22 10c0 0-7 9-7 15 0 3.87 3.13 7 7 7s7-3.13 7-7c0-6-7-15-7-15z"
-        fill="white" stroke="white" strokeWidth="0.5" strokeLinejoin="round"
-      />
-      <line x1="22" y1="32" x2="22" y2="36" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
 }
 
 // ── PIN pad ────────────────────────────────────────────────────────────────────
@@ -321,30 +308,23 @@ export default function SessionLockScreen({ onManagerAccess, onVendorAccess }: P
       `}</style>
       <div className="session-wrap" style={{
         minHeight: '100svh',
-        background: `linear-gradient(150deg, ${C.brandDk} 0%, #064e3b 45%, #065f46 100%)`,
+        background: `linear-gradient(150deg, ${C.brandDk} 0%, #1e3006 45%, #253804 100%)`,
         padding: '24px 20px',
         position: 'relative', overflow: 'hidden',
       }}>
         {/* Background blobs */}
-        <div style={{ position: 'absolute', top: -100, left: -100, width: 350, height: 350, borderRadius: '50%', background: 'radial-gradient(circle, rgba(52,211,153,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', bottom: -120, right: -80, width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(16,120,90,0.18) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: -100, left: -100, width: 350, height: 350, borderRadius: '50%', background: 'radial-gradient(circle, rgba(188,217,110,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: -120, right: -80, width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(83,125,20,0.18) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
         {/* Logo + greeting — affiché en colonne gauche sur desktop ≥ 980px */}
         <div className="session-logo" style={{ position: 'relative', zIndex: 1, animation: 'fadeIn 0.5s ease' }}>
           <div className="session-logo-icon" style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
-            <div style={{
-              width: 60, height: 60, borderRadius: 18,
-              background: 'rgba(255,255,255,0.1)',
-              border: '1px solid rgba(255,255,255,0.15)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <LeafLogo size={42} />
-            </div>
+            <LogoIcon size={60} radius={18} />
           </div>
           <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, letterSpacing: '-0.04em', color: '#fff', lineHeight: 1.1 }}>
-            Jungle<span style={{ color: '#34d399' }}>Pharm</span>
+            Jungle<span style={{ color: '#bcd96e' }}>Pharm</span>
           </h1>
-          <p className="session-greeting" style={{ margin: '6px 0 0', fontSize: 14, color: 'rgba(167,243,208,0.65)' }}>
+          <p className="session-greeting" style={{ margin: '6px 0 0', fontSize: 14, color: 'rgba(188,217,110,0.65)' }}>
             {greeting} — Qui commence la session ?
           </p>
           {/* Tagline desktop uniquement */}
@@ -532,14 +512,14 @@ export default function SessionLockScreen({ onManagerAccess, onVendorAccess }: P
                     onClick={openManagerPin}
                     style={{
                       width: '100%', padding: '13px 0', borderRadius: 12,
-                      border: `1.5px solid rgba(16,120,90,0.22)`,
+                      border: `1.5px solid rgba(83,125,20,0.22)`,
                       background: C.brandLt, color: C.brand,
                       fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                       transition: 'all 0.15s',
                     }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(16,120,90,0.14)'; (e.currentTarget as HTMLButtonElement).style.borderColor = C.brand; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = C.brandLt; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(16,120,90,0.22)'; }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(83,125,20,0.14)'; (e.currentTarget as HTMLButtonElement).style.borderColor = C.brand; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = C.brandLt; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(83,125,20,0.22)'; }}
                   >
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={C.brand} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
@@ -620,7 +600,7 @@ export default function SessionLockScreen({ onManagerAccess, onVendorAccess }: P
         </div>
 
         {/* Bottom hint — centré en bas sur desktop, sous la carte sur mobile */}
-        <p className="session-hint" style={{ marginTop: 20, fontSize: 12, color: 'rgba(167,243,208,0.4)', textAlign: 'center', position: 'relative', zIndex: 1 }}>
+        <p className="session-hint" style={{ marginTop: 20, fontSize: 12, color: 'rgba(188,217,110,0.4)', textAlign: 'center', position: 'relative', zIndex: 1 }}>
           Cette session ne sera demandée qu'une fois par onglet
         </p>
       </div>

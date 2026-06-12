@@ -13,8 +13,8 @@ export default defineConfig({
         name: 'JunglePharm',
         short_name: 'JunglePharm',
         description: 'Gestion intelligente de pharmacie pour l\'Afrique rurale',
-        theme_color: '#2563eb',
-        background_color: '#2563eb',
+        theme_color: '#96c244',
+        background_color: '#96c244',
         display: 'standalone',
         orientation: 'portrait',
         icons: [

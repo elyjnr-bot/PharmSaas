@@ -3,10 +3,10 @@ import { useAuth } from '../lib/auth';
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const C = {
-  brand:    '#10785a',
-  brandHi:  '#149a73',
-  brandDk:  '#0a5240',
-  brandLt:  'rgba(16,120,90,0.08)',
+  brand:    '#537d14',
+  brandHi:  '#6a9e28',
+  brandDk:  '#2a4009',
+  brandLt:  'rgba(83,125,20,0.08)',
   ink:      '#0a0e14',
   inkSoft:  '#2c3138',
   inkMute:  '#6b7280',
@@ -19,20 +19,9 @@ const C = {
   fm:       '"SF Mono","Geist Mono",ui-monospace,Menlo,monospace',
 };
 
-// ── SVG icons ─────────────────────────────────────────────────────────────────
-function LeafLogo({ size = 44 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 44 44" fill="none">
-      <rect width="44" height="44" rx="13" fill={C.brand} />
-      <path
-        d="M22 10c0 0-7 9-7 15 0 3.87 3.13 7 7 7s7-3.13 7-7c0-6-7-15-7-15z"
-        fill="white" stroke="white" strokeWidth="0.5" strokeLinejoin="round"
-      />
-      <line x1="22" y1="32" x2="22" y2="36" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
+import { LogoIcon } from './LogoIcon';
 
+// ── SVG icons ─────────────────────────────────────────────────────────────────
 function IconMail() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.inkFaint} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -140,7 +129,7 @@ function PasswordStrength({ pwd }: { pwd: string }) {
     { label: 'Chiffre', ok: /[0-9]/.test(pwd) },
   ];
   const score = checks.filter(c => c.ok).length;
-  const colors = ['#c81e1e', '#b75f06', '#10785a'];
+  const colors = ['#c81e1e', '#b75f06', '#537d14'];
   const labels = ['Faible', 'Moyen', 'Fort'];
   return (
     <div style={{ marginTop: -4 }}>
@@ -199,7 +188,7 @@ function SuccessBanner({ msg }: { msg: string }) {
   return (
     <div style={{
       display: 'flex', alignItems: 'flex-start', gap: 10,
-      background: C.brandLt, border: `1px solid rgba(16,120,90,0.2)`,
+      background: C.brandLt, border: `1px solid rgba(83,125,20,0.2)`,
       borderRadius: 10, padding: '11px 14px', fontSize: 13, color: C.brand,
     }}>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.brand} strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0, marginTop: 1 }}>
@@ -218,10 +207,10 @@ function SubmitBtn({ loading, label }: { loading: boolean; label: string }) {
       disabled={loading}
       style={{
         width: '100%', height: 50, border: 'none', borderRadius: 12, cursor: loading ? 'not-allowed' : 'pointer',
-        background: loading ? 'rgba(16,120,90,0.5)' : `linear-gradient(135deg, ${C.brand}, ${C.brandHi})`,
+        background: loading ? 'rgba(83,125,20,0.5)' : `linear-gradient(135deg, ${C.brand}, ${C.brandHi})`,
         color: '#fff', fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em',
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-        boxShadow: loading ? 'none' : '0 2px 12px rgba(16,120,90,0.35)',
+        boxShadow: loading ? 'none' : '0 2px 12px rgba(83,125,20,0.35)',
         transition: 'all 0.15s', fontFamily: 'inherit',
       }}
       onMouseEnter={e => { if (!loading) (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)'; }}
@@ -365,7 +354,7 @@ function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
           type="button"
           onClick={onSwitchToLogin}
           style={{
-            background: C.brandLt, border: `1px solid rgba(16,120,90,0.2)`,
+            background: C.brandLt, border: `1px solid rgba(83,125,20,0.2)`,
             borderRadius: 11, padding: '11px 20px', color: C.brand,
             fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
           }}
@@ -412,7 +401,7 @@ function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
       {/* Role badge */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: 10,
-        background: C.brandLt, border: `1px solid rgba(16,120,90,0.2)`,
+        background: C.brandLt, border: `1px solid rgba(83,125,20,0.2)`,
         borderRadius: 11, padding: '10px 14px',
       }}>
         <div style={{
@@ -511,7 +500,7 @@ function VendorInfoTab({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
       <div style={{
         textAlign: 'center', padding: '20px 16px 16px',
         background: C.brandLt,
-        borderRadius: 14, border: `1px solid rgba(16,120,90,0.15)`,
+        borderRadius: 14, border: `1px solid rgba(83,125,20,0.15)`,
       }}>
         <div style={{ fontSize: 36, marginBottom: 10 }}>🔐</div>
         <p style={{ fontSize: 14.5, fontWeight: 700, color: C.ink, margin: '0 0 6px', letterSpacing: '-0.01em' }}>
@@ -528,8 +517,8 @@ function VendorInfoTab({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
         /* Device already configured */
         <>
           <div style={{
-            background: 'rgba(16,120,90,0.04)',
-            borderRadius: 12, border: `1px solid rgba(16,120,90,0.12)`,
+            background: 'rgba(83,125,20,0.04)',
+            borderRadius: 12, border: `1px solid rgba(83,125,20,0.12)`,
             padding: '14px 16px',
           }}>
             <p style={{ fontSize: 12, fontWeight: 600, color: C.inkMute, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 10px' }}>
@@ -595,7 +584,7 @@ function VendorInfoTab({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
           background: `linear-gradient(135deg, ${C.brand}, ${C.brandHi})`,
           color: '#fff', fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em',
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-          boxShadow: '0 2px 12px rgba(16,120,90,0.35)',
+          boxShadow: '0 2px 12px rgba(83,125,20,0.35)',
           fontFamily: 'inherit',
         }}
       >
@@ -632,20 +621,18 @@ export default function Login() {
       {/* ── MOBILE ── */}
       <div style={{
         flexDirection: 'column', minHeight: '100svh',
-        background: `linear-gradient(150deg, ${C.brandDk} 0%, #064e3b 45%, #065f46 100%)`,
+        background: `linear-gradient(150deg, ${C.brandDk} 0%, #1e3006 45%, #253804 100%)`,
         padding: '24px 20px 32px',
         alignItems: 'center', justifyContent: 'flex-start',
       }} className="flex lg:hidden">
         <div style={{ textAlign: 'center', marginTop: 32, marginBottom: 28 }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
-            <div style={{ width: 60, height: 60, borderRadius: 18, background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <LeafLogo size={42} />
-            </div>
+            <LogoIcon size={60} radius={18} />
           </div>
           <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, letterSpacing: '-0.04em', color: '#fff' }}>
-            Jungle<span style={{ color: '#34d399' }}>Pharm</span>
+            Jungle<span style={{ color: '#bcd96e' }}>Pharm</span>
           </h1>
-          <p style={{ margin: '6px 0 0', fontSize: 13, color: 'rgba(167,243,208,0.65)', fontStyle: 'italic' }}>
+          <p style={{ margin: '6px 0 0', fontSize: 13, color: 'rgba(188,217,110,0.65)', fontStyle: 'italic' }}>
             Votre pharmacie, partout.
           </p>
         </div>
@@ -669,28 +656,26 @@ export default function Login() {
       {/* ── DESKTOP ── */}
       <div style={{ minHeight: '100vh', background: C.bg }} className="hidden lg:flex">
         {/* Left panel */}
-        <div style={{ width: '42%', maxWidth: 520, flexShrink: 0, background: `linear-gradient(150deg, ${C.brandDk} 0%, #064e3b 45%, #065f46 100%)`, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '60px 48px', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: -80, left: -80, width: 300, height: 300, borderRadius: 99, background: 'radial-gradient(circle, rgba(52,211,153,0.15) 0%, transparent 70%)' }} />
-          <div style={{ position: 'absolute', bottom: -100, right: -60, width: 400, height: 400, borderRadius: 99, background: 'radial-gradient(circle, rgba(16,120,90,0.2) 0%, transparent 70%)' }} />
+        <div style={{ width: '42%', maxWidth: 520, flexShrink: 0, background: `linear-gradient(150deg, ${C.brandDk} 0%, #1e3006 45%, #253804 100%)`, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '60px 48px', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: -80, left: -80, width: 300, height: 300, borderRadius: 99, background: 'radial-gradient(circle, rgba(188,217,110,0.15) 0%, transparent 70%)' }} />
+          <div style={{ position: 'absolute', bottom: -100, right: -60, width: 400, height: 400, borderRadius: 99, background: 'radial-gradient(circle, rgba(83,125,20,0.2) 0%, transparent 70%)' }} />
           <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 340 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 52 }}>
-              <div style={{ width: 48, height: 48, borderRadius: 15, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <LeafLogo size={36} />
-              </div>
+              <LogoIcon size={48} radius={15} />
               <div>
-                <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.04em', color: '#fff', lineHeight: 1.1 }}>Jungle<span style={{ color: '#34d399' }}>Pharm</span></div>
-                <div style={{ fontSize: 12, color: 'rgba(167,243,208,0.6)', marginTop: 2 }}>Gestion pharmacie</div>
+                <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.04em', color: '#fff', lineHeight: 1.1 }}>Jungle<span style={{ color: '#bcd96e' }}>Pharm</span></div>
+                <div style={{ fontSize: 12, color: 'rgba(188,217,110,0.6)', marginTop: 2 }}>Gestion pharmacie</div>
               </div>
             </div>
             <h2 style={{ margin: '0 0 10px', fontSize: 30, fontWeight: 800, color: '#fff', letterSpacing: '-0.04em', lineHeight: 1.2 }}>Gérez votre pharmacie avec clarté.</h2>
-            <p style={{ margin: '0 0 40px', fontSize: 14, color: 'rgba(167,243,208,0.65)', lineHeight: 1.6 }}>Stock, ventes, patients et rapports — tout en un seul endroit.</p>
+            <p style={{ margin: '0 0 40px', fontSize: 14, color: 'rgba(188,217,110,0.65)', lineHeight: 1.6 }}>Stock, ventes, patients et rapports — tout en un seul endroit.</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {FEATURES.map(f => (
                 <div key={f.label} style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                   <div style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}>{f.icon}</div>
                   <div>
                     <div style={{ fontSize: 13.5, fontWeight: 600, color: 'rgba(255,255,255,0.9)', lineHeight: 1.2 }}>{f.label}</div>
-                    <div style={{ fontSize: 12, color: 'rgba(167,243,208,0.5)', marginTop: 2 }}>{f.sub}</div>
+                    <div style={{ fontSize: 12, color: 'rgba(188,217,110,0.5)', marginTop: 2 }}>{f.sub}</div>
                   </div>
                 </div>
               ))}

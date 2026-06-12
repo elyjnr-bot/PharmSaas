@@ -56,7 +56,7 @@ function ActionCard({
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 14, fontWeight: 700, color: '#0a0e14' }}>{title}</span>
-          {badge && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 99, background: 'rgba(16,120,90,0.1)', color: '#10785a' }}>{badge}</span>}
+          {badge && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 99, background: 'rgba(83,125,20,0.1)', color: '#537d14' }}>{badge}</span>}
         </div>
         <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{description}</div>
       </div>
@@ -164,7 +164,7 @@ function InsuranceBillingSection() {
       .kpi{flex:1;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px}
       .kpi .lbl{font-size:9px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
       .kpi .val{font-size:18px;font-weight:800;letter-spacing:-0.02em}
-      .kpi.blue .val{color:#4f46e5}.kpi.green .val{color:#059669}
+      .kpi.blue .val{color:#4f46e5}.kpi.green .val{color:#537d14}
       table{width:100%;border-collapse:collapse}
       th{background:#f3f4f6;padding:6px 8px;text-align:left;font-size:9.5px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.04em}
       td{padding:6px 8px;border-bottom:1px solid #f3f4f6}
@@ -311,8 +311,8 @@ function InsuranceBillingSection() {
                   <button
                     onClick={e => { e.stopPropagation(); exportBordereau(line); }}
                     title="Exporter CSV"
-                    style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(16,120,90,0.08)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                  ><Download style={{ width: 14, height: 14, color: '#10785a' }} /></button>
+                    style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(83,125,20,0.08)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  ><Download style={{ width: 14, height: 14, color: '#537d14' }} /></button>
                 </div>
               </div>
 
@@ -590,7 +590,7 @@ async function printStockBilan(pharmacyName = 'JunglePharm') {
         <td style="text-align:right;color:#9ca3af">${m.minimum_stock ?? '—'}</td>
         <td style="text-align:right;color:#6b7280">${m.expiry_date ? new Date(m.expiry_date).toLocaleDateString('fr-FR') : '—'}</td>
         <td style="text-align:right;font-weight:600;color:${daysColor}">${daysLabel}</td>
-        <td style="text-align:right;color:#10785a;font-weight:600">${m.price != null ? fmt(m.price) + ' F' : '—'}</td>
+        <td style="text-align:right;color:#537d14;font-weight:600">${m.price != null ? fmt(m.price) + ' F' : '—'}</td>
         <td style="color:#9ca3af;font-size:10px">${m.supplier || '—'}</td>
       </tr>`;
     }).join('');
@@ -625,15 +625,15 @@ async function printStockBilan(pharmacyName = 'JunglePharm') {
     </div>
     <div style="text-align:right;font-size:11px;color:#6b7280;line-height:1.6">
       <strong style="color:#0a0e14">${meds.length}</strong> références<br>
-      Valeur estimée : <strong style="color:#10785a">${fmt(totalValue)} FCFA</strong>
+      Valeur estimée : <strong style="color:#537d14">${fmt(totalValue)} FCFA</strong>
     </div>
   </div>
   <div class="kpi-row">
     <div class="kpi"><div class="lbl">Total références</div><div class="val" style="color:#374151">${meds.length}</div></div>
-    <div class="kpi"><div class="lbl">Ruptures</div><div class="val" style="color:${groups.rupture.length > 0 ? '#dc2626' : '#059669'}">${groups.rupture.length}</div></div>
-    <div class="kpi"><div class="lbl">Stocks critiques</div><div class="val" style="color:${groups.critique.length > 0 ? '#d97706' : '#059669'}">${groups.critique.length}</div></div>
-    <div class="kpi"><div class="lbl">Périmés</div><div class="val" style="color:${groups.perime.length > 0 ? '#be185d' : '#059669'}">${groups.perime.length}</div></div>
-    <div class="kpi"><div class="lbl">Valeur stock</div><div class="val" style="color:#10785a;font-size:13px">${fmt(totalValue)} F</div></div>
+    <div class="kpi"><div class="lbl">Ruptures</div><div class="val" style="color:${groups.rupture.length > 0 ? '#dc2626' : '#537d14'}">${groups.rupture.length}</div></div>
+    <div class="kpi"><div class="lbl">Stocks critiques</div><div class="val" style="color:${groups.critique.length > 0 ? '#d97706' : '#537d14'}">${groups.critique.length}</div></div>
+    <div class="kpi"><div class="lbl">Périmés</div><div class="val" style="color:${groups.perime.length > 0 ? '#be185d' : '#537d14'}">${groups.perime.length}</div></div>
+    <div class="kpi"><div class="lbl">Valeur stock</div><div class="val" style="color:#537d14;font-size:13px">${fmt(totalValue)} F</div></div>
   </div>
   <table>
     <thead><tr>
@@ -708,7 +708,7 @@ async function printVendeurReport(year: number, month: number, pharmacyName = 'J
       <tr>
         <td>${pName}</td>
         <td style="text-align:right">${units}</td>
-        <td style="text-align:right;font-weight:600;color:#10785a">${fmt(revenue)} F</td>
+        <td style="text-align:right;font-weight:600;color:#537d14">${fmt(revenue)} F</td>
       </tr>`).join('');
 
     return `<div class="vcard">
@@ -719,7 +719,7 @@ async function printVendeurReport(year: number, month: number, pharmacyName = 'J
           <div class="vsub">${vd.count} vente${vd.count > 1 ? 's' : ''} &nbsp;·&nbsp; ${part}% du CA</div>
         </div>
         <div style="text-align:right">
-          <div style="font-size:18px;font-weight:800;color:#10785a;letter-spacing:-0.02em">${fmt(vd.total)}</div>
+          <div style="font-size:18px;font-weight:800;color:#537d14;letter-spacing:-0.02em">${fmt(vd.total)}</div>
           <div style="font-size:9px;color:#9ca3af;margin-top:1px">FCFA</div>
         </div>
       </div>
@@ -767,7 +767,7 @@ async function printVendeurReport(year: number, month: number, pharmacyName = 'J
     <div style="text-align:right;font-size:11px;color:#6b7280">Imprimé le ${printDate}</div>
   </div>
   <div class="summary">
-    <div class="scard"><div class="lbl">CA total</div><div class="val" style="color:#10785a">${fmt(grandTotal)}<span style="font-size:12px;color:#9ca3af;font-weight:500"> FCFA</span></div></div>
+    <div class="scard"><div class="lbl">CA total</div><div class="val" style="color:#537d14">${fmt(grandTotal)}<span style="font-size:12px;color:#9ca3af;font-weight:500"> FCFA</span></div></div>
     <div class="scard"><div class="lbl">Transactions</div><div class="val" style="color:#374151">${grandCount}</div></div>
     <div class="scard"><div class="lbl">Vendeurs actifs</div><div class="val" style="color:#374151">${sellers.length}</div></div>
   </div>
@@ -805,7 +805,7 @@ function CommandesSection() {
   const STATUS_META: Record<string, { label: string; bg: string; fg: string }> = {
     brouillon: { label: 'Brouillon', bg: 'rgba(107,114,128,0.08)', fg: '#374151' },
     envoyée:   { label: 'Envoyée',   bg: 'rgba(37,99,235,0.08)',   fg: '#1d4ed8' },
-    reçue:     { label: 'Reçue',     bg: 'rgba(16,120,90,0.08)',   fg: '#10785a' },
+    reçue:     { label: 'Reçue',     bg: 'rgba(83,125,20,0.08)',   fg: '#537d14' },
     annulée:   { label: 'Annulée',   bg: 'rgba(200,30,30,0.08)',   fg: '#c81e1e' },
   };
 
@@ -888,7 +888,7 @@ function CommandesSection() {
               <div style={{ padding: '10px 16px', borderTop: '1px solid rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: 12, color: '#9ca3af' }}>{orders.length} commande{orders.length > 1 ? 's' : ''} au total</span>
                 <button onClick={navigate}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9, background: 'rgba(16,120,90,0.08)', border: 'none', fontSize: 12, fontWeight: 600, color: '#10785a', cursor: 'pointer' }}>
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9, background: 'rgba(83,125,20,0.08)', border: 'none', fontSize: 12, fontWeight: 600, color: '#537d14', cursor: 'pointer' }}>
                   Gérer les commandes →
                 </button>
               </div>
@@ -954,7 +954,7 @@ export default function Rapports() {
           {/* Bloc rapport mensuel */}
           <div style={{ background: 'rgba(255,255,255,0.72)', border: '1.5px solid rgba(255,255,255,0.55)', borderRadius: 16, padding: '18px 20px', backdropFilter: 'blur(12px)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-              <FileText style={{ width: 16, height: 16, color: '#10785a' }} />
+              <FileText style={{ width: 16, height: 16, color: '#537d14' }} />
               <span style={{ fontSize: 14, fontWeight: 700, color: '#0a0e14' }}>Rapport mensuel imprimable</span>
             </div>
             <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -968,7 +968,7 @@ export default function Rapports() {
               </select>
               <button
                 onClick={() => printMonthlyReport(reportYear, reportMonth, pharmacyName)}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 10, background: '#10785a', color: '#fff', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 10, background: '#537d14', color: '#fff', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
               >
                 <Printer style={{ width: 14, height: 14 }} />
                 Imprimer rapport {MONTHS_FR[reportMonth]} {reportYear}
@@ -984,7 +984,7 @@ export default function Rapports() {
                 icon={<BarChart2 style={{ width: 18, height: 18, color: '#fff' }} />}
                 title="Journal des ventes (90 j)"
                 description="Toutes les ventes des 3 derniers mois avec modes de paiement"
-                color="#10785a"
+                color="#537d14"
                 loading={loadingKey === 'sales'}
                 onClick={wrap('sales', exportSalesJournalCsv)}
               />
@@ -1018,13 +1018,13 @@ export default function Rapports() {
 
           {/* Grille exports Excel */}
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#10785a', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>Exports Excel</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#537d14', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>Exports Excel</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 10 }}>
               <ActionCard
                 icon={<BarChart2 style={{ width: 18, height: 18, color: '#fff' }} />}
                 title="Ventes Excel"
                 description="Journal des ventes — Date, Médicament, Qté, Prix, Paiement, Vendeur"
-                color="#10785a"
+                color="#537d14"
                 badge="XLSX"
                 loading={loadingKey === 'sales_xlsx'}
                 onClick={wrap('sales_xlsx', exportVentesXlsx)}

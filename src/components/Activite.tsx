@@ -691,7 +691,7 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
           </div>
           <div className="flex items-center justify-between mt-3 pt-3 border-t" style={{ borderColor: 'rgba(15,15,20,0.05)' }}>
             <span style={{ fontSize: 12, fontWeight: 600, color: '#374151' }}>Bénéfice estimé</span>
-            <span style={{ fontSize: 16, fontWeight: 800, fontVariantNumeric: 'tabular-nums', color: (dayProfit.profit - todayExpTotal) >= 0 ? '#10785a' : '#dc2626', letterSpacing: '-0.02em' }}>
+            <span style={{ fontSize: 16, fontWeight: 800, fontVariantNumeric: 'tabular-nums', color: (dayProfit.profit - todayExpTotal) >= 0 ? '#537d14' : '#dc2626', letterSpacing: '-0.02em' }}>
               {(dayProfit.profit - todayExpTotal) >= 0 ? '+' : ''}{Math.round(dayProfit.profit - todayExpTotal).toLocaleString('fr-FR')}
               <span style={{ fontSize: 10.5, fontWeight: 500, color: '#9aa0a8', marginLeft: 4 }}>FCFA</span>
             </span>
@@ -879,7 +879,7 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
             style={{
               width: '200px',
               height: '200px',
-              background: 'radial-gradient(circle at top right, rgba(5,150,105,0.2) 0%, transparent 65%)',
+              background: 'radial-gradient(circle at top right, rgba(83,125,20,0.2) 0%, transparent 65%)',
             }}
           />
           {/* Large background TrendingUp icon */}
@@ -891,7 +891,7 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
               right: '-16px',
               bottom: '-20px',
               opacity: 0.05,
-              color: '#34d399',
+              color: '#bcd96e',
             }}
           />
 
@@ -900,13 +900,13 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
               <div className="flex items-center gap-1.5 mb-1.5">
                 <div
                   className="w-5 h-5 rounded-md flex items-center justify-center"
-                  style={{ background: 'rgba(52,211,153,0.15)' }}
+                  style={{ background: 'rgba(188,217,110,0.15)' }}
                 >
-                  <TrendingUp className="w-3 h-3" style={{ color: '#34d399' }} />
+                  <TrendingUp className="w-3 h-3" style={{ color: '#bcd96e' }} />
                 </div>
                 <span
                   className="text-[10px] font-bold tracking-[0.12em] uppercase"
-                  style={{ color: '#6ee7b7' }}
+                  style={{ color: '#d8ed96' }}
                 >
                   {selectedPeriod === 'week' ? 'CA Semaine' : selectedPeriod === 'month' ? 'CA Mois' : 'CA Annee'}
                 </span>
@@ -918,7 +918,7 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
                 >
                   {periodTotal.toLocaleString()}
                 </span>
-                <span className="text-[13px] font-semibold" style={{ color: '#6ee7b7' }}>FCFA</span>
+                <span className="text-[13px] font-semibold" style={{ color: '#d8ed96' }}>FCFA</span>
               </div>
             </div>
             <div className="flex gap-1 rounded-full p-1" style={{ background: 'rgba(255,255,255,0.06)' }}>
@@ -929,7 +929,7 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
                   className="px-3 py-1 transition-all text-[10px] font-semibold rounded-full"
                   style={
                     selectedPeriod === p
-                      ? { background: '#10b981', color: '#ffffff', boxShadow: '0 2px 8px rgba(16,185,129,0.3)' }
+                      ? { background: '#96c244', color: '#ffffff', boxShadow: '0 2px 8px rgba(16,185,129,0.3)' }
                       : { color: 'rgba(255,255,255,0.5)' }
                   }
                 >
@@ -947,12 +947,12 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
               </div>
               <div className="font-bold font-mono-num text-white">{periodExpensesTotal.toLocaleString()} <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: '10px' }}>FCFA</span></div>
             </div>
-            <div className="rounded-lg p-2.5" style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.15)' }}>
-              <div className="flex items-center gap-1 mb-1" style={{ color: '#6ee7b7' }}>
+            <div className="rounded-lg p-2.5" style={{ background: 'rgba(188,217,110,0.1)', border: '1px solid rgba(188,217,110,0.15)' }}>
+              <div className="flex items-center gap-1 mb-1" style={{ color: '#d8ed96' }}>
                 <Banknote className="w-3 h-3" />
                 <span>Net</span>
               </div>
-              <div className="font-bold font-mono-num" style={{ color: '#34d399' }}>{periodNet.toLocaleString()} <span style={{ color: 'rgba(52,211,153,0.5)', fontSize: '10px' }}>FCFA</span></div>
+              <div className="font-bold font-mono-num" style={{ color: '#bcd96e' }}>{periodNet.toLocaleString()} <span style={{ color: 'rgba(188,217,110,0.5)', fontSize: '10px' }}>FCFA</span></div>
             </div>
           </div>
 
@@ -973,13 +973,13 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
                       className="w-full max-w-[28px] rounded-t-sm transition-all"
                       style={{
                         height: `${Math.max(height, 4)}%`,
-                        background: isSelected ? '#34d399' : 'rgba(255,255,255,0.18)',
+                        background: isSelected ? '#bcd96e' : 'rgba(255,255,255,0.18)',
                       }}
                     />
                   </div>
                   <span
                     className="text-[9px] font-semibold mt-0.5 truncate max-w-full px-0.5"
-                    style={{ color: isSelected ? '#34d399' : 'rgba(255,255,255,0.45)' }}
+                    style={{ color: isSelected ? '#bcd96e' : 'rgba(255,255,255,0.45)' }}
                   >
                     {day.dayName}
                   </span>
@@ -1000,7 +1000,7 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
                     ? 'text-white shadow-md'
                     : 'text-slate-500 hover:bg-slate-50'
                 }`}
-                style={activeTab === 'ventes' ? { background: '#059669' } : {}}
+                style={activeTab === 'ventes' ? { background: '#537d14' } : {}}
               >
                 Ventes
               </button>
@@ -1038,9 +1038,9 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
               <button
                 onClick={() => alert('Export PDF/Excel à implémenter')}
                 className="ml-3 flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-colors"
-                style={{ background: '#ecfdf5', color: '#047857' }}
-                onMouseEnter={(e) => (e.currentTarget as HTMLButtonElement).style.background = '#d1fae5'}
-                onMouseLeave={(e) => (e.currentTarget as HTMLButtonElement).style.background = '#ecfdf5'}
+                style={{ background: '#f7fce8', color: '#5a8520' }}
+                onMouseEnter={(e) => (e.currentTarget as HTMLButtonElement).style.background = '#eef7cc'}
+                onMouseLeave={(e) => (e.currentTarget as HTMLButtonElement).style.background = '#f7fce8'}
               >
                 <Download className="w-4 h-4" />
                 Exporter
@@ -1064,14 +1064,14 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
                 </button>
                 <div className="text-center">
                   <div className="flex items-center justify-center gap-2">
-                    <Calendar className="w-4 h-4" style={{ color: '#059669' }} />
+                    <Calendar className="w-4 h-4" style={{ color: '#537d14' }} />
                     <span className="font-semibold text-slate-800 capitalize">{formatDate(selectedDate)}</span>
                   </div>
                   {!isToday && (
                     <button
                       onClick={goToToday}
                       className="text-xs hover:underline mt-0.5"
-                      style={{ color: '#059669' }}
+                      style={{ color: '#537d14' }}
                     >
                       Aujourd'hui
                     </button>
@@ -1091,10 +1091,10 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
               <div className="grid grid-cols-2 gap-3 p-3">
                 <div className="text-center">
                   <div className="flex items-center justify-center gap-1 mb-1">
-                    <ArrowUpCircle className="w-4 h-4" style={{ color: '#059669' }} />
+                    <ArrowUpCircle className="w-4 h-4" style={{ color: '#537d14' }} />
                     <p className="text-xs text-slate-500 font-medium">Ventes</p>
                   </div>
-                  <p className="text-2xl font-bold font-mono-num" style={{ color: '#059669' }}>{summary.totalSales.toLocaleString()}</p>
+                  <p className="text-2xl font-bold font-mono-num" style={{ color: '#537d14' }}>{summary.totalSales.toLocaleString()}</p>
                   <p className="text-xs text-slate-400">FCFA</p>
                 </div>
                 <div className="text-center">
@@ -1106,7 +1106,7 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
                   <p className="text-xs text-slate-400">FCFA</p>
                 </div>
               </div>
-              <div className="border-t border-slate-100 px-3 py-3 rounded-b-2xl" style={{ background: 'rgba(5,150,105,0.04)' }}>
+              <div className="border-t border-slate-100 px-3 py-3 rounded-b-2xl" style={{ background: 'rgba(83,125,20,0.04)' }}>
                 {(() => {
                   const dateStr = (() => { const d = new Date(selectedDate); return d.toISOString().split('T')[0]; })();
                   const fond = offlineStorage.getFondDeCaisse(dateStr);
@@ -1119,11 +1119,11 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
                 })()}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Banknote className="w-5 h-5" style={{ color: '#059669' }} />
+                    <Banknote className="w-5 h-5" style={{ color: '#537d14' }} />
                     <span className="font-semibold text-slate-700">Solde en Caisse</span>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold font-mono-num" style={{ color: '#059669' }}>{summary.netAmount.toLocaleString()}</p>
+                    <p className="text-2xl font-bold font-mono-num" style={{ color: '#537d14' }}>{summary.netAmount.toLocaleString()}</p>
                     <p className="text-xs text-slate-400">FCFA</p>
                   </div>
                 </div>
@@ -1134,9 +1134,9 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
                   <button
                     onClick={handleClosureBtnClick}
                     className="w-full text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-md"
-                    style={{ background: '#059669' }}
-                    onMouseEnter={(e) => (e.currentTarget as HTMLButtonElement).style.background = '#047857'}
-                    onMouseLeave={(e) => (e.currentTarget as HTMLButtonElement).style.background = '#059669'}
+                    style={{ background: '#537d14' }}
+                    onMouseEnter={(e) => (e.currentTarget as HTMLButtonElement).style.background = '#5a8520'}
+                    onMouseLeave={(e) => (e.currentTarget as HTMLButtonElement).style.background = '#537d14'}
                   >
                     <FileText className="w-5 h-5" />
                     Cloturer la journee
@@ -1144,7 +1144,7 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
                   <button
                     onClick={() => { const d = new Date(); printMonthlyReport(d.getFullYear(), d.getMonth()); }}
                     className="w-full py-3 rounded-xl font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
-                    style={{ background: 'rgba(16,120,90,0.08)', color: '#10785a', border: '1.5px solid rgba(16,120,90,0.2)' }}
+                    style={{ background: 'rgba(83,125,20,0.08)', color: '#537d14', border: '1.5px solid rgba(83,125,20,0.2)' }}
                   >
                     <Download className="w-4 h-4" />
                     Rapport mensuel PDF
@@ -1159,9 +1159,9 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
               <button
                 onClick={handleClosureBtnClick}
                 className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm text-white active:scale-[0.98] transition-all shadow-md"
-                style={{ background: '#059669' }}
-                onMouseEnter={(e) => (e.currentTarget as HTMLButtonElement).style.background = '#047857'}
-                onMouseLeave={(e) => (e.currentTarget as HTMLButtonElement).style.background = '#059669'}
+                style={{ background: '#537d14' }}
+                onMouseEnter={(e) => (e.currentTarget as HTMLButtonElement).style.background = '#5a8520'}
+                onMouseLeave={(e) => (e.currentTarget as HTMLButtonElement).style.background = '#537d14'}
               >
                 <FileText className="w-4 h-4" />
                 Clôturer la journée
@@ -1187,9 +1187,9 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
                   <p className="text-base font-bold font-mono-num" style={{ color: '#7c3aed' }}>{dayProfit.margin.toFixed(0)}%</p>
                 </div>
               </div>
-              <div className="flex items-center justify-between rounded-xl px-3 py-2.5" style={{ background: dayProfit.profit >= 0 ? 'rgba(5,150,105,0.06)' : 'rgba(239,68,68,0.06)' }}>
+              <div className="flex items-center justify-between rounded-xl px-3 py-2.5" style={{ background: dayProfit.profit >= 0 ? 'rgba(83,125,20,0.06)' : 'rgba(239,68,68,0.06)' }}>
                 <span className="text-sm font-semibold text-slate-700">Bénéfice estimé</span>
-                <span className="text-xl font-bold font-mono-num" style={{ color: dayProfit.profit >= 0 ? '#059669' : '#dc2626' }}>
+                <span className="text-xl font-bold font-mono-num" style={{ color: dayProfit.profit >= 0 ? '#537d14' : '#dc2626' }}>
                   {dayProfit.profit >= 0 ? '+' : ''}{Math.round(dayProfit.profit).toLocaleString()}
                   <span className="text-xs font-medium text-slate-400 ml-1">FCFA</span>
                 </span>
@@ -1252,11 +1252,11 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
                             <div className="flex items-start gap-3">
                               <div
                                 className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
-                                style={{ background: isReturn ? 'rgba(234,88,12,0.1)' : 'rgba(5,150,105,0.1)' }}
+                                style={{ background: isReturn ? 'rgba(234,88,12,0.1)' : 'rgba(83,125,20,0.1)' }}
                               >
                                 {isReturn
                                   ? <Undo2 className="w-5 h-5" style={{ color: '#ea580c' }} />
-                                  : <ArrowUpCircle className="w-5 h-5" style={{ color: '#059669' }} />}
+                                  : <ArrowUpCircle className="w-5 h-5" style={{ color: '#537d14' }} />}
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="font-medium text-slate-800 truncate">
@@ -1302,7 +1302,7 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
                                 </div>
                               </div>
                               <div className="text-right">
-                                <p className="font-bold font-mono-num" style={{ color: isReturn ? '#ea580c' : '#059669' }}>
+                                <p className="font-bold font-mono-num" style={{ color: isReturn ? '#ea580c' : '#537d14' }}>
                                   {isReturn ? '' : '+'}{entry.total_price.toLocaleString()}
                                 </p>
                                 <p className="text-xs text-slate-400">FCFA</p>
@@ -1449,13 +1449,13 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
             </div>
 
             {promotions.length > 0 && (
-              <div className="rounded-2xl p-4" style={{ background: 'rgba(5,150,105,0.06)', border: '1px solid rgba(5,150,105,0.15)' }}>
+              <div className="rounded-2xl p-4" style={{ background: 'rgba(83,125,20,0.06)', border: '1px solid rgba(83,125,20,0.15)' }}>
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <Tag className="w-5 h-5" style={{ color: '#059669' }} />
-                    <h3 className="font-semibold" style={{ color: '#065f46' }}>Promotions actives</h3>
+                    <Tag className="w-5 h-5" style={{ color: '#537d14' }} />
+                    <h3 className="font-semibold" style={{ color: '#253804' }}>Promotions actives</h3>
                   </div>
-                  <span className="text-sm font-bold" style={{ color: '#059669' }}>{promotions.length}</span>
+                  <span className="text-sm font-bold" style={{ color: '#537d14' }}>{promotions.length}</span>
                 </div>
                 <div className="space-y-2">
                   {promotions.map((promo) => (
@@ -1464,8 +1464,8 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
                         <p className="font-medium text-slate-800 text-sm">{promo.medication_name}</p>
                         <div className="flex items-center gap-2 mt-1">
                           <span className="text-xs text-slate-400 line-through font-mono-num">{promo.original_price} FCFA</span>
-                          <span className="text-sm font-bold font-mono-num" style={{ color: '#059669' }}>{promo.promo_price} FCFA</span>
-                          <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(5,150,105,0.1)', color: '#047857' }}>
+                          <span className="text-sm font-bold font-mono-num" style={{ color: '#537d14' }}>{promo.promo_price} FCFA</span>
+                          <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(83,125,20,0.1)', color: '#5a8520' }}>
                             -{promo.discount_percent}%
                           </span>
                         </div>
@@ -1494,7 +1494,7 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
                 </div>
               ) : expiringMedications.length === 0 ? (
                 <div className="p-8 text-center">
-                  <Check className="w-12 h-12 mx-auto mb-3" style={{ color: '#34d399' }} />
+                  <Check className="w-12 h-12 mx-auto mb-3" style={{ color: '#bcd96e' }} />
                   <p className="text-slate-400">Aucun produit proche de la peremption</p>
                 </div>
               ) : (
@@ -1527,9 +1527,9 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
                               setShowPromoModal(true);
                             }}
                             className="flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-1"
-                            style={{ background: 'rgba(5,150,105,0.08)', color: '#047857' }}
-                            onMouseEnter={(e) => (e.currentTarget as HTMLButtonElement).style.background = 'rgba(5,150,105,0.14)'}
-                            onMouseLeave={(e) => (e.currentTarget as HTMLButtonElement).style.background = 'rgba(5,150,105,0.08)'}
+                            style={{ background: 'rgba(83,125,20,0.08)', color: '#5a8520' }}
+                            onMouseEnter={(e) => (e.currentTarget as HTMLButtonElement).style.background = 'rgba(83,125,20,0.14)'}
+                            onMouseLeave={(e) => (e.currentTarget as HTMLButtonElement).style.background = 'rgba(83,125,20,0.08)'}
                           >
                             <Tag className="w-4 h-4" />
                             Promotion
@@ -1684,7 +1684,7 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
                             ? 'text-white shadow-md'
                             : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                         }`}
-                        style={promoForm.discount_percent === val ? { background: '#059669' } : {}}
+                        style={promoForm.discount_percent === val ? { background: '#537d14' } : {}}
                       >
                         -{val}%
                       </button>
@@ -1692,10 +1692,10 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
                   </div>
                 </div>
 
-                <div className="rounded-xl p-4" style={{ background: 'rgba(5,150,105,0.08)', border: '1px solid rgba(5,150,105,0.2)' }}>
+                <div className="rounded-xl p-4" style={{ background: 'rgba(83,125,20,0.08)', border: '1px solid rgba(83,125,20,0.2)' }}>
                   <div className="flex items-center justify-between">
-                    <span className="font-medium" style={{ color: '#065f46' }}>Nouveau prix</span>
-                    <span className="text-2xl font-bold font-mono-num" style={{ color: '#059669' }}>
+                    <span className="font-medium" style={{ color: '#253804' }}>Nouveau prix</span>
+                    <span className="text-2xl font-bold font-mono-num" style={{ color: '#537d14' }}>
                       {Math.round((selectedMedForPromo.price || 0) * (1 - parseInt(promoForm.discount_percent) / 100)).toLocaleString()} FCFA
                     </span>
                   </div>
@@ -1720,9 +1720,9 @@ export default function Activite({ onHideNavigationChange, embedded = false }: A
                 onClick={createPromotion}
                 disabled={!promoForm.end_date}
                 className="w-full text-white py-4 rounded-2xl font-bold text-lg active:scale-[0.98] transition-all disabled:opacity-50 shadow-lg"
-                style={{ background: '#059669' }}
-                onMouseEnter={(e) => (e.currentTarget as HTMLButtonElement).style.background = '#047857'}
-                onMouseLeave={(e) => (e.currentTarget as HTMLButtonElement).style.background = '#059669'}
+                style={{ background: '#537d14' }}
+                onMouseEnter={(e) => (e.currentTarget as HTMLButtonElement).style.background = '#5a8520'}
+                onMouseLeave={(e) => (e.currentTarget as HTMLButtonElement).style.background = '#537d14'}
               >
                 Creer la promotion
               </button>

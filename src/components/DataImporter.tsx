@@ -27,7 +27,7 @@ import { updateColumnsAfterImport } from '../lib/useInventoryColumns';
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
 const C = {
-  brand:'#10785a', brandHi:'#149a73', brandLt:'rgba(16,120,90,0.08)',
+  brand:'#537d14', brandHi:'#6a9e28', brandLt:'rgba(83,125,20,0.08)',
   ink:'#0a0e14', inkMute:'#6b7280', inkFaint:'#9ca3af',
   border:'rgba(15,15,20,0.1)', panel:'#fff', bg:'#f9fafb',
   red:'#dc2626', redLt:'rgba(220,38,38,0.07)',
@@ -260,7 +260,7 @@ export default function DataImporter({ onImportComplete }: Props = {}) {
             {parsing ? (
               <Loader2 size={28} color={C.brand} style={{ margin:'0 auto 10px', display:'block', animation:'jp-spin 0.9s linear infinite' }} />
             ) : (
-              <div style={{ width:52, height:52, borderRadius:14, background:'rgba(16,120,90,0.1)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 12px' }}>
+              <div style={{ width:52, height:52, borderRadius:14, background:'rgba(83,125,20,0.1)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 12px' }}>
                 <UploadCloud size={26} color={C.brand} />
               </div>
             )}
@@ -553,9 +553,9 @@ export default function DataImporter({ onImportComplete }: Props = {}) {
                 )}
 
                 {alreadySet ? (
-                  <div style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 14px', borderRadius:10, background:'rgba(16,120,90,0.1)', border:'1px solid rgba(16,120,90,0.2)' }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 14px', borderRadius:10, background:'rgba(83,125,20,0.1)', border:'1px solid rgba(83,125,20,0.2)' }}>
                     <span style={{ fontSize:16 }}>✅</span>
-                    <span style={{ fontSize:12.5, fontWeight:700, color:'#10785a' }}>Mode unitaire déjà activé — vous êtes prêt !</span>
+                    <span style={{ fontSize:12.5, fontWeight:700, color:'#537d14' }}>Mode unitaire déjà activé — vous êtes prêt !</span>
                     <button onClick={() => setModeDetectionDismissed(true)} style={{ marginLeft:'auto', background:'none', border:'none', cursor:'pointer', color:'#9ca3af', fontSize:16, lineHeight:1 }}>×</button>
                   </div>
                 ) : (
@@ -581,7 +581,7 @@ export default function DataImporter({ onImportComplete }: Props = {}) {
           })()}
 
           {/* ── Bandeau analyse ─────────────────────────────────────────────── */}
-          <div style={{ padding:'14px 16px', borderRadius:12, background:'rgba(16,120,90,0.05)', border:'1px solid rgba(16,120,90,0.18)' }}>
+          <div style={{ padding:'14px 16px', borderRadius:12, background:'rgba(83,125,20,0.05)', border:'1px solid rgba(83,125,20,0.18)' }}>
             <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
               <ShieldCheck size={16} color={C.brand} />
               <span style={{ fontSize:13.5, fontWeight:800, color:C.ink, letterSpacing:'-0.01em' }}>Rapport d'analyse qualité</span>
@@ -713,7 +713,7 @@ export default function DataImporter({ onImportComplete }: Props = {}) {
               (validationReport.blocked > 0 && decisionBlocked === null) ||
               (validationReport.noEan   > 0 && decisionNoEan   === null);
             return (
-              <div style={{ padding:'14px 16px', borderRadius:12, background: C.brandLt, border:`1px solid rgba(16,120,90,0.25)` }}>
+              <div style={{ padding:'14px 16px', borderRadius:12, background: C.brandLt, border:`1px solid rgba(83,125,20,0.25)` }}>
                 <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
                   <div>
                     <div style={{ fontSize:13.5, fontWeight:800, color:C.brand }}>
@@ -733,7 +733,7 @@ export default function DataImporter({ onImportComplete }: Props = {}) {
                   <button
                     onClick={handleImportClick}
                     disabled={willImportCount === 0}
-                    style={{ display:'inline-flex', alignItems:'center', gap:7, padding:'10px 20px', borderRadius:10, border:'none', background: willImportCount===0?'rgba(0,0,0,0.15)':mode==='install'?C.red:`linear-gradient(135deg,${C.brand},${C.brandHi})`, color:'#fff', fontSize:13, fontWeight:700, cursor:willImportCount===0?'not-allowed':'pointer', fontFamily:'inherit', boxShadow:willImportCount===0?'none':mode==='install'?'0 2px 10px rgba(220,38,38,0.3)':'0 2px 10px rgba(16,120,90,0.3)', whiteSpace:'nowrap', opacity:willImportCount===0?0.5:1 }}>
+                    style={{ display:'inline-flex', alignItems:'center', gap:7, padding:'10px 20px', borderRadius:10, border:'none', background: willImportCount===0?'rgba(0,0,0,0.15)':mode==='install'?C.red:`linear-gradient(135deg,${C.brand},${C.brandHi})`, color:'#fff', fontSize:13, fontWeight:700, cursor:willImportCount===0?'not-allowed':'pointer', fontFamily:'inherit', boxShadow:willImportCount===0?'none':mode==='install'?'0 2px 10px rgba(220,38,38,0.3)':'0 2px 10px rgba(83,125,20,0.3)', whiteSpace:'nowrap', opacity:willImportCount===0?0.5:1 }}>
                     {mode==='install'?'⚠ Remplacer tout':'Lancer l\'import'} <ArrowRight size={14}/>
                   </button>
                 </div>
@@ -880,7 +880,7 @@ function MappingRow({ field, headers, sampleRow, value, onChange }: {
 }) {
   const sample = value !== undefined && sampleRow ? sampleRow[value] : '';
   return (
-    <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', background:value!==undefined?C.brandLt:C.bg, border:`1px solid ${value!==undefined?'rgba(16,120,90,0.2)':C.border}`, borderRadius:11 }}>
+    <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', background:value!==undefined?C.brandLt:C.bg, border:`1px solid ${value!==undefined?'rgba(83,125,20,0.2)':C.border}`, borderRadius:11 }}>
       <div style={{ flex:1, minWidth:0 }}>
         <div style={{ fontSize:13, fontWeight:700, color:C.ink }}>
           {field.label}{field.required&&<span style={{ color:C.red, marginLeft:3 }}>*</span>}
@@ -969,7 +969,7 @@ function ConfirmImportModal({
         </div>
 
         {/* Note comportement par défaut */}
-        <div style={{ background:'rgba(16,120,90,0.05)', border:'1px solid rgba(16,120,90,0.15)', borderRadius:8, padding:'10px 12px', marginBottom:20, fontSize:12, color:'#065f46', lineHeight:1.5 }}>
+        <div style={{ background:'rgba(83,125,20,0.05)', border:'1px solid rgba(83,125,20,0.15)', borderRadius:8, padding:'10px 12px', marginBottom:20, fontSize:12, color:'#253804', lineHeight:1.5 }}>
           <strong>Comportement par défaut :</strong> les lignes sans Désignation/Prix seront ignorées. Les produits sans EAN seront importés avec le statut "Configuration douchette requise".
         </div>
 
@@ -980,7 +980,7 @@ function ConfirmImportModal({
             Retour — je vais corriger
           </button>
           <button onClick={onConfirm}
-            style={{ flex:1, padding:'11px 0', borderRadius:10, border:'none', background:`linear-gradient(135deg,${C.brand},${C.brandHi})`, color:'#fff', fontSize:13.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit', boxShadow:'0 2px 10px rgba(16,120,90,0.25)' }}>
+            style={{ flex:1, padding:'11px 0', borderRadius:10, border:'none', background:`linear-gradient(135deg,${C.brand},${C.brandHi})`, color:'#fff', fontSize:13.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit', boxShadow:'0 2px 10px rgba(83,125,20,0.25)' }}>
             Importer quand même
           </button>
         </div>
@@ -1020,11 +1020,11 @@ function DecisionPanel({
           <button key={opt.key} onClick={() => onDecide(opt.key)}
             style={{
               display:'flex', alignItems:'flex-start', gap:10, padding:'10px 12px', borderRadius:9, cursor:'pointer', textAlign:'left', width:'100%', fontFamily:'inherit',
-              background:decision===opt.key ? (opt.danger?'rgba(220,38,38,0.08)':'rgba(16,120,90,0.07)') : '#f9fafb',
-              border:`1.5px solid ${decision===opt.key ? (opt.danger?'rgba(220,38,38,0.35)':'rgba(16,120,90,0.3)') : 'rgba(0,0,0,0.08)'}`,
+              background:decision===opt.key ? (opt.danger?'rgba(220,38,38,0.08)':'rgba(83,125,20,0.07)') : '#f9fafb',
+              border:`1.5px solid ${decision===opt.key ? (opt.danger?'rgba(220,38,38,0.35)':'rgba(83,125,20,0.3)') : 'rgba(0,0,0,0.08)'}`,
               transition:'all 0.1s',
             }}>
-            <div style={{ width:30, height:30, borderRadius:8, flexShrink:0, background:decision===opt.key?(opt.danger?'rgba(220,38,38,0.12)':'rgba(16,120,90,0.12)'):'rgba(0,0,0,0.05)', display:'flex', alignItems:'center', justifyContent:'center', color:decision===opt.key?(opt.danger?C.red:C.brand):'#9ca3af' }}>
+            <div style={{ width:30, height:30, borderRadius:8, flexShrink:0, background:decision===opt.key?(opt.danger?'rgba(220,38,38,0.12)':'rgba(83,125,20,0.12)'):'rgba(0,0,0,0.05)', display:'flex', alignItems:'center', justifyContent:'center', color:decision===opt.key?(opt.danger?C.red:C.brand):'#9ca3af' }}>
               {opt.icon}
             </div>
             <div style={{ flex:1 }}>
@@ -1069,7 +1069,7 @@ function NavRow({ onBack, backLabel, onNext, nextLabel, nextDisabled, danger }: 
       <button onClick={onBack} style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'10px 16px', borderRadius:10, border:`1px solid ${C.border}`, background:C.panel, color:C.inkMute, fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit' }}>
         <ArrowLeft size={14}/> {backLabel}
       </button>
-      <button onClick={onNext} disabled={nextDisabled} style={{ display:'inline-flex', alignItems:'center', gap:7, padding:'10px 20px', borderRadius:10, border:'none', background:nextDisabled?'rgba(0,0,0,0.12)':danger?C.red:`linear-gradient(135deg,${C.brand},${C.brandHi})`, color:'#fff', fontSize:13, fontWeight:700, cursor:nextDisabled?'not-allowed':'pointer', fontFamily:'inherit', boxShadow:nextDisabled?'none':danger?'0 2px 10px rgba(220,38,38,0.3)':'0 2px 10px rgba(16,120,90,0.3)', opacity:nextDisabled?0.6:1 }}>
+      <button onClick={onNext} disabled={nextDisabled} style={{ display:'inline-flex', alignItems:'center', gap:7, padding:'10px 20px', borderRadius:10, border:'none', background:nextDisabled?'rgba(0,0,0,0.12)':danger?C.red:`linear-gradient(135deg,${C.brand},${C.brandHi})`, color:'#fff', fontSize:13, fontWeight:700, cursor:nextDisabled?'not-allowed':'pointer', fontFamily:'inherit', boxShadow:nextDisabled?'none':danger?'0 2px 10px rgba(220,38,38,0.3)':'0 2px 10px rgba(83,125,20,0.3)', opacity:nextDisabled?0.6:1 }}>
         {nextLabel} {!nextDisabled && <ArrowRight size={14}/>}
       </button>
     </div>

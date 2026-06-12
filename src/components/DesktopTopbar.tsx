@@ -11,7 +11,7 @@ const C = {
   panel:    'rgba(255,255,255,0.62)',
   hairline: 'rgba(255,255,255,0.55)',
   border:   'rgba(15,15,20,0.06)',
-  brand:    '#10785a',
+  brand:    '#537d14',
   ink:      '#0a0e14',
   inkSoft:  '#2c3138',
   inkMute:  '#6b7280',
@@ -294,8 +294,8 @@ export default function DesktopTopbar({ activeTab, onNewSale, onFilter, onExport
           <div
             style={{
               display: 'flex', alignItems: 'center', gap: 5,
-              background: 'rgba(16, 120, 90, 0.10)',
-              border: '1px solid rgba(16, 120, 90, 0.22)',
+              background: 'rgba(116, 171, 46, 0.10)',
+              border: '1px solid rgba(116, 171, 46, 0.22)',
               borderRadius: 99, padding: '4px 10px',
               fontSize: 12, fontWeight: 600, color: C.brand,
               animation: 'scanner-flash-in 0.2s ease',

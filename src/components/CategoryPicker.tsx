@@ -22,7 +22,7 @@ import {
 
 // Couleur par catégorie (déterministe, basée sur hash du nom)
 const CATEGORY_PALETTE = [
-  '#0651bc', '#10785a', '#6e44b0', '#b75f06', '#0891b2',
+  '#0651bc', '#537d14', '#6e44b0', '#b75f06', '#0891b2',
   '#dc2626', '#9333ea', '#0f766e', '#d97706', '#7c3aed',
   '#b91c1c', '#0369a1', '#16a34a', '#a16207', '#7e22ce',
 ];
@@ -311,12 +311,12 @@ function CategoryPopover({
                   display: 'flex', alignItems: 'center', gap: 8,
                   width: '100%', padding: '8px 12px',
                   border: 'none',
-                  background: isCurrent ? 'rgba(16,120,90,0.07)' : 'transparent',
+                  background: isCurrent ? 'rgba(83,125,20,0.07)' : 'transparent',
                   cursor: saving ? 'wait' : 'pointer',
                   textAlign: 'left',
                   fontSize: 12.5,
                   fontWeight: isCurrent ? 700 : 500,
-                  color: isCurrent ? '#10785a' : '#374151',
+                  color: isCurrent ? '#537d14' : '#374151',
                   fontFamily: 'inherit',
                   transition: 'background 0.08s',
                 }}
@@ -328,7 +328,7 @@ function CategoryPopover({
                   background: categoryColor(cat), flexShrink: 0,
                 }} />
                 <span style={{ flex: 1 }}>{cat}</span>
-                {isCurrent && <Check size={12} color="#10785a" strokeWidth={2.5} />}
+                {isCurrent && <Check size={12} color="#537d14" strokeWidth={2.5} />}
               </button>
             );
           })

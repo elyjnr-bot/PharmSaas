@@ -8,7 +8,7 @@ interface FondDeCaisseModalProps {
 }
 
 const C = {
-  brand:   '#10785a',
+  brand:   '#537d14',
   ink:     '#0a0e14',
   inkMute: '#6b7280',
   border:  'rgba(15,15,20,0.08)',
@@ -63,7 +63,7 @@ export default function FondDeCaisseModal({ onConfirm, onSkip }: FondDeCaisseMod
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{
               width: 40, height: 40, borderRadius: 10,
-              background: 'rgba(16,120,90,0.1)',
+              background: 'rgba(83,125,20,0.1)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
               <Banknote size={20} color={C.brand} />
@@ -100,8 +100,8 @@ export default function FondDeCaisseModal({ onConfirm, onSkip }: FondDeCaisseMod
                 onClick={() => { setAmount(q.toString()); setError(''); }}
                 style={{
                   padding: '5px 12px', borderRadius: 6, fontSize: 12, fontWeight: 600,
-                  background: amount === q.toString() ? 'rgba(16,120,90,0.1)' : 'rgba(0,0,0,0.04)',
-                  border: `1px solid ${amount === q.toString() ? 'rgba(16,120,90,0.3)' : 'rgba(0,0,0,0.08)'}`,
+                  background: amount === q.toString() ? 'rgba(83,125,20,0.1)' : 'rgba(0,0,0,0.04)',
+                  border: `1px solid ${amount === q.toString() ? 'rgba(83,125,20,0.3)' : 'rgba(0,0,0,0.08)'}`,
                   color: amount === q.toString() ? C.brand : C.inkMute,
                   cursor: 'pointer', transition: 'all 0.1s',
                 }}

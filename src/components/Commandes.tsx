@@ -71,7 +71,7 @@ const inputSt: React.CSSProperties = {
 const STATUS: Record<OrderStatus, { label: string; bg: string; fg: string; border: string }> = {
   brouillon: { label: 'Brouillon', bg: 'rgba(107,114,128,0.07)', fg: '#374151', border: 'rgba(107,114,128,0.2)' },
   envoyée:   { label: 'Envoyée',   bg: 'rgba(37,99,235,0.07)',   fg: '#1d4ed8', border: 'rgba(37,99,235,0.2)'   },
-  reçue:     { label: 'Reçue',     bg: 'rgba(16,120,90,0.07)',   fg: '#10785a', border: 'rgba(16,120,90,0.2)'   },
+  reçue:     { label: 'Reçue',     bg: 'rgba(83,125,20,0.07)',   fg: '#537d14', border: 'rgba(83,125,20,0.2)'   },
   annulée:   { label: 'Annulée',   bg: 'rgba(200,30,30,0.07)',   fg: '#c81e1e', border: 'rgba(200,30,30,0.2)'   },
 };
 
@@ -176,10 +176,10 @@ function SupplierRepsSection({ reps, onReload }: RepsSectionProps) {
         }}
       >
         <div style={{
-          width: 34, height: 34, borderRadius: 9, background: 'rgba(16,120,90,0.1)',
+          width: 34, height: 34, borderRadius: 9, background: 'rgba(83,125,20,0.1)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
         }}>
-          <User style={{ width: 15, height: 15, color: '#10785a' }} />
+          <User style={{ width: 15, height: 15, color: '#537d14' }} />
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 14, fontWeight: 700, color: '#0a0e14' }}>Commerciaux fournisseurs</div>
@@ -213,7 +213,7 @@ function SupplierRepsSection({ reps, onReload }: RepsSectionProps) {
                     {editId === rep.id ? (
                       /* Formulaire édition */
                       <div style={{
-                        padding: '12px', background: 'rgba(16,120,90,0.03)',
+                        padding: '12px', background: 'rgba(83,125,20,0.03)',
                         borderBottom: i < repsList.length - 1 ? '1px solid rgba(0,0,0,0.05)' : 'none',
                       }}>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
@@ -223,7 +223,7 @@ function SupplierRepsSection({ reps, onReload }: RepsSectionProps) {
                         </div>
                         <div style={{ display: 'flex', gap: 6 }}>
                           <button onClick={saveEdit} disabled={saving || !editForm.name.trim()}
-                            style={{ padding: '7px 14px', borderRadius: 8, background: '#10785a', color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                            style={{ padding: '7px 14px', borderRadius: 8, background: '#537d14', color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                             Sauvegarder
                           </button>
                           <button onClick={() => setEditId(null)}
@@ -239,10 +239,10 @@ function SupplierRepsSection({ reps, onReload }: RepsSectionProps) {
                         borderBottom: i < repsList.length - 1 ? '1px solid rgba(0,0,0,0.05)' : 'none',
                       }}>
                         <div style={{
-                          width: 30, height: 30, borderRadius: 8, background: 'rgba(16,120,90,0.1)',
+                          width: 30, height: 30, borderRadius: 8, background: 'rgba(83,125,20,0.1)',
                           display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                         }}>
-                          <User style={{ width: 12, height: 12, color: '#10785a' }} />
+                          <User style={{ width: 12, height: 12, color: '#537d14' }} />
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 13, fontWeight: 600, color: '#0a0e14' }}>{rep.name}</div>
@@ -270,7 +270,7 @@ function SupplierRepsSection({ reps, onReload }: RepsSectionProps) {
 
                 {/* Ajouter commercial à ce fournisseur */}
                 {addingFor === supplierName ? (
-                  <div style={{ padding: '12px', borderTop: '1px solid rgba(0,0,0,0.05)', background: 'rgba(16,120,90,0.02)' }}>
+                  <div style={{ padding: '12px', borderTop: '1px solid rgba(0,0,0,0.05)', background: 'rgba(83,125,20,0.02)' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
                       <input value={newForm.name}  onChange={e => setNewForm(f => ({ ...f, name:  e.target.value }))} placeholder="Nom *"     style={inputSt} autoFocus />
                       <input value={newForm.phone} onChange={e => setNewForm(f => ({ ...f, phone: e.target.value }))} placeholder="Téléphone" style={inputSt} />
@@ -278,7 +278,7 @@ function SupplierRepsSection({ reps, onReload }: RepsSectionProps) {
                     </div>
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button onClick={() => saveNew(supplierName)} disabled={saving || !newForm.name.trim()}
-                        style={{ padding: '7px 14px', borderRadius: 8, background: '#10785a', color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: !newForm.name.trim() ? 0.5 : 1 }}>
+                        style={{ padding: '7px 14px', borderRadius: 8, background: '#537d14', color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: !newForm.name.trim() ? 0.5 : 1 }}>
                         Ajouter
                       </button>
                       <button onClick={cancelAdd}
@@ -290,7 +290,7 @@ function SupplierRepsSection({ reps, onReload }: RepsSectionProps) {
                 ) : (
                   <button
                     onClick={() => { setAddingFor(supplierName); setEditId(null); setNewForm({ name: '', phone: '', email: '' }); }}
-                    style={{ width: '100%', padding: '8px 12px', background: 'transparent', border: 'none', borderTop: '1px solid rgba(0,0,0,0.04)', fontSize: 12, color: '#10785a', fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}
+                    style={{ width: '100%', padding: '8px 12px', background: 'transparent', border: 'none', borderTop: '1px solid rgba(0,0,0,0.04)', fontSize: 12, color: '#537d14', fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}
                   >
                     + Ajouter un commercial
                   </button>
@@ -316,7 +316,7 @@ function SupplierRepsSection({ reps, onReload }: RepsSectionProps) {
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
                   <button onClick={() => saveNew(newSupplier)} disabled={saving || !newForm.name.trim() || !newSupplier.trim()}
-                    style={{ padding: '7px 14px', borderRadius: 8, background: '#10785a', color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: (!newForm.name.trim() || !newSupplier.trim()) ? 0.5 : 1 }}>
+                    style={{ padding: '7px 14px', borderRadius: 8, background: '#537d14', color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: (!newForm.name.trim() || !newSupplier.trim()) ? 0.5 : 1 }}>
                     Ajouter
                   </button>
                   <button onClick={cancelAdd}
@@ -330,9 +330,9 @@ function SupplierRepsSection({ reps, onReload }: RepsSectionProps) {
                 onClick={() => { setAddingFor('__new__'); setEditId(null); setNewForm({ name: '', phone: '', email: '' }); setNewSupplier(''); }}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px',
-                  borderRadius: 10, background: 'rgba(16,120,90,0.07)',
-                  border: '1.5px dashed rgba(16,120,90,0.3)', fontSize: 13, fontWeight: 600,
-                  color: '#10785a', cursor: 'pointer',
+                  borderRadius: 10, background: 'rgba(83,125,20,0.07)',
+                  border: '1.5px dashed rgba(83,125,20,0.3)', fontSize: 13, fontWeight: 600,
+                  color: '#537d14', cursor: 'pointer',
                 }}
               >
                 <Plus style={{ width: 13, height: 13 }} />
@@ -543,9 +543,9 @@ function OrderModal({ onClose, onSaved, medications, reps, initialLowStock = fal
                       const sup = savedSuppliers.find(s => s.name === name);
                       return (
                         <button key={name} onMouseDown={() => { setSupplier(name); setShowSuggest(false); }}
-                          style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 12px', textAlign: 'left', background: name === supplier ? 'rgba(16,120,90,0.06)' : 'transparent', border: 'none', cursor: 'pointer', borderBottom: '1px solid rgba(0,0,0,0.04)' }}>
-                          <div style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(16,120,90,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            <Truck style={{ width: 12, height: 12, color: '#10785a' }} />
+                          style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 12px', textAlign: 'left', background: name === supplier ? 'rgba(83,125,20,0.06)' : 'transparent', border: 'none', cursor: 'pointer', borderBottom: '1px solid rgba(0,0,0,0.04)' }}>
+                          <div style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(83,125,20,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <Truck style={{ width: 12, height: 12, color: '#537d14' }} />
                           </div>
                           <div>
                             <div style={{ fontSize: 13, fontWeight: 600, color: '#0a0e14' }}>{name}</div>
@@ -578,12 +578,12 @@ function OrderModal({ onClose, onSaved, medications, reps, initialLowStock = fal
 
           {/* Carte fournisseur sélectionné — affiche ses coordonnées + accès rapide */}
           {selectedFournisseur && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'rgba(16,120,90,0.05)', border: '1px solid rgba(16,120,90,0.18)', borderRadius: 10, marginBottom: 12 }}>
-              <div style={{ width: 34, height: 34, borderRadius: 9, background: '#10785a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'rgba(83,125,20,0.05)', border: '1px solid rgba(83,125,20,0.18)', borderRadius: 10, marginBottom: 12 }}>
+              <div style={{ width: 34, height: 34, borderRadius: 9, background: '#537d14', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Truck style={{ width: 14, height: 14, color: '#fff' }} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#10785a' }}>{selectedFournisseur.name}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#537d14' }}>{selectedFournisseur.name}</div>
                 {selectedFournisseur.contact_person && (
                   <div style={{ fontSize: 11, color: '#6b7280' }}>Contact : {selectedFournisseur.contact_person}</div>
                 )}
@@ -594,7 +594,7 @@ function OrderModal({ onClose, onSaved, medications, reps, initialLowStock = fal
               {selectedFournisseur.phone && (
                 <div style={{ display: 'flex', gap: 6 }}>
                   <a href={`tel:${selectedFournisseur.phone}`}
-                    style={{ padding: '5px 10px', borderRadius: 7, background: 'rgba(16,120,90,0.1)', border: '1px solid rgba(16,120,90,0.25)', color: '#10785a', fontSize: 11, fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    style={{ padding: '5px 10px', borderRadius: 7, background: 'rgba(83,125,20,0.1)', border: '1px solid rgba(83,125,20,0.25)', color: '#537d14', fontSize: 11, fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
                     <Phone style={{ width: 10, height: 10 }} /> Appeler
                   </a>
                   <a
@@ -625,23 +625,23 @@ function OrderModal({ onClose, onSaved, medications, reps, initialLowStock = fal
                       style={{
                         display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px',
                         borderRadius: 10, cursor: 'pointer', transition: 'all 0.1s',
-                        background: isSelected ? 'rgba(16,120,90,0.1)' : '#f9fafb',
-                        border: `1.5px solid ${isSelected ? 'rgba(16,120,90,0.4)' : 'rgba(0,0,0,0.08)'}`,
+                        background: isSelected ? 'rgba(83,125,20,0.1)' : '#f9fafb',
+                        border: `1.5px solid ${isSelected ? 'rgba(83,125,20,0.4)' : 'rgba(0,0,0,0.08)'}`,
                       }}
                     >
-                      <div style={{ width: 28, height: 28, borderRadius: 7, background: isSelected ? '#10785a' : 'rgba(0,0,0,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ width: 28, height: 28, borderRadius: 7, background: isSelected ? '#537d14' : 'rgba(0,0,0,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <User style={{ width: 12, height: 12, color: isSelected ? '#fff' : '#6b7280' }} />
                       </div>
                       <div style={{ textAlign: 'left' }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: isSelected ? '#10785a' : '#0a0e14' }}>{rep.name}</div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: isSelected ? '#537d14' : '#0a0e14' }}>{rep.name}</div>
                         {rep.phone && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, color: isSelected ? '#10785a' : '#9ca3af' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, color: isSelected ? '#537d14' : '#9ca3af' }}>
                             <Phone style={{ width: 9, height: 9 }} />{rep.phone}
                           </div>
                         )}
                       </div>
                       {isSelected && (
-                        <CheckCircle style={{ width: 14, height: 14, color: '#10785a', marginLeft: 4 }} />
+                        <CheckCircle style={{ width: 14, height: 14, color: '#537d14', marginLeft: 4 }} />
                       )}
                     </button>
                   );
@@ -745,7 +745,7 @@ function OrderModal({ onClose, onSaved, medications, reps, initialLowStock = fal
         {/* Footer */}
         <div style={{ padding: '14px 24px', borderTop: '1px solid rgba(0,0,0,0.06)', display: 'flex', gap: 10 }}>
           {selectedRep && (
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 6, padding: '0 4px', fontSize: 12, color: '#10785a', fontWeight: 600 }}>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 6, padding: '0 4px', fontSize: 12, color: '#537d14', fontWeight: 600 }}>
               <User style={{ width: 12, height: 12 }} />
               Via {selectedRep.name}
               {selectedRep.phone && <span style={{ color: '#9ca3af', fontWeight: 400 }}>· {selectedRep.phone}</span>}
@@ -813,7 +813,7 @@ function ReceiveModal({ order, onClose, onReceived }: { order: Order; onClose: (
               {order.supplier || 'Fournisseur inconnu'} · {new Date(order.order_date).toLocaleDateString('fr-FR')}
             </div>
             {order.rep_name && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#10785a', marginTop: 3, fontWeight: 600 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#537d14', marginTop: 3, fontWeight: 600 }}>
                 <User style={{ width: 11, height: 11 }} />
                 Via {order.rep_name}
                 {order.rep_phone && <span style={{ fontWeight: 400, color: '#6b7280' }}>· {order.rep_phone}</span>}
@@ -843,11 +843,11 @@ function ReceiveModal({ order, onClose, onReceived }: { order: Order; onClose: (
                   style={{
                     width: 70, padding: '7px 8px', textAlign: 'center', outline: 'none', background: '#fff',
                     fontWeight: 700, fontSize: 13, borderRadius: 8,
-                    border: `1.5px solid ${(item.quantity_received ?? item.quantity_ordered) < item.quantity_ordered ? 'rgba(183,95,6,0.4)' : 'rgba(16,120,90,0.4)'}`,
+                    border: `1.5px solid ${(item.quantity_received ?? item.quantity_ordered) < item.quantity_ordered ? 'rgba(183,95,6,0.4)' : 'rgba(83,125,20,0.4)'}`,
                   }}
                 />
               </div>
-              {item.medication_id && <CheckCircle style={{ width: 14, height: 14, color: '#10785a', flexShrink: 0 }} />}
+              {item.medication_id && <CheckCircle style={{ width: 14, height: 14, color: '#537d14', flexShrink: 0 }} />}
             </div>
           ))}
         </div>
@@ -856,7 +856,7 @@ function ReceiveModal({ order, onClose, onReceived }: { order: Order; onClose: (
             Annuler
           </button>
           <button onClick={handleReceive} disabled={saving}
-            style={{ flex: 2, padding: '12px 0', borderRadius: 12, fontSize: 14, fontWeight: 700, background: '#10785a', border: 'none', color: '#fff', cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1 }}>
+            style={{ flex: 2, padding: '12px 0', borderRadius: 12, fontSize: 14, fontWeight: 700, background: '#537d14', border: 'none', color: '#fff', cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1 }}>
             {saving ? 'Mise à jour stock…' : '✓ Confirmer la réception'}
           </button>
         </div>
@@ -1143,9 +1143,9 @@ export default function Commandes({ initialSupplier }: { initialSupplier?: strin
               onClick={() => setExpanded(isExpanded ? null : order.id)}
               style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', cursor: 'pointer' }}
             >
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: order.status === 'reçue' ? 'rgba(16,120,90,0.1)' : 'rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: order.status === 'reçue' ? 'rgba(83,125,20,0.1)' : 'rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 {order.status === 'reçue'
-                  ? <CheckCircle style={{ width: 16, height: 16, color: '#10785a' }} />
+                  ? <CheckCircle style={{ width: 16, height: 16, color: '#537d14' }} />
                   : <Truck       style={{ width: 16, height: 16, color: '#6b7280' }} />
                 }
               </div>
@@ -1162,7 +1162,7 @@ export default function Commandes({ initialSupplier }: { initialSupplier?: strin
                     {estimatedTotal > 0 && ` · ~${Math.round(estimatedTotal).toLocaleString('fr-FR')} F`}
                   </span>
                   {order.rep_name && (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: '#10785a', background: 'rgba(16,120,90,0.08)', padding: '2px 8px', borderRadius: 99 }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: '#537d14', background: 'rgba(83,125,20,0.08)', padding: '2px 8px', borderRadius: 99 }}>
                       <User style={{ width: 9, height: 9 }} />
                       {order.rep_name}
                       {order.rep_phone && <span style={{ color: '#6b7280', fontWeight: 400 }}> · {order.rep_phone}</span>}
@@ -1187,7 +1187,7 @@ export default function Commandes({ initialSupplier }: { initialSupplier?: strin
                 )}
                 {order.status === 'envoyée' && (
                   <button onClick={e => { e.stopPropagation(); setReceiveOrder(order); }}
-                    style={{ padding: '5px 10px', borderRadius: 7, background: 'rgba(16,120,90,0.08)', border: '1px solid rgba(16,120,90,0.2)', color: '#10785a', fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    style={{ padding: '5px 10px', borderRadius: 7, background: 'rgba(83,125,20,0.08)', border: '1px solid rgba(83,125,20,0.2)', color: '#537d14', fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                     ✓ Réceptionner
                   </button>
                 )}
@@ -1221,7 +1221,7 @@ export default function Commandes({ initialSupplier }: { initialSupplier?: strin
                       {item.notes && <div style={{ fontSize: 11, color: '#9ca3af' }}>{item.notes}</div>}
                     </div>
                     <div style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>{item.quantity_ordered}</div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: item.quantity_received !== undefined && item.quantity_received < item.quantity_ordered ? '#b75f06' : '#10785a' }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: item.quantity_received !== undefined && item.quantity_received < item.quantity_ordered ? '#b75f06' : '#537d14' }}>
                       {item.quantity_received !== undefined ? item.quantity_received : (order.status === 'reçue' ? item.quantity_ordered : '—')}
                     </div>
                     <div style={{ fontSize: 12, color: '#6b7280' }}>

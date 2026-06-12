@@ -10,7 +10,7 @@ interface DailyData {
   total: number;
 }
 
-function Sparkline({ data, color = '#059669', height = 52 }: { data: number[]; color?: string; height?: number }) {
+function Sparkline({ data, color = '#537d14', height = 52 }: { data: number[]; color?: string; height?: number }) {
   if (data.length < 2) return <div style={{ height }} />;
   const w = 200; const h = height; const pad = 2;
   const min = Math.min(...data); const max = Math.max(...data); const range = max - min || 1;
@@ -67,7 +67,7 @@ function TrendBadge({ pct }: { pct: number }) {
   );
   const up = pct > 0;
   return (
-    <span className="flex items-center gap-0.5 font-semibold" style={{ fontSize: '11px', color: up ? '#059669' : '#dc2626' }}>
+    <span className="flex items-center gap-0.5 font-semibold" style={{ fontSize: '11px', color: up ? '#537d14' : '#dc2626' }}>
       {up ? <TrendingUp className="w-3 h-3" strokeWidth={2.5} /> : <TrendingDown className="w-3 h-3" strokeWidth={2.5} />}
       {up ? '+' : ''}{pct.toFixed(0)}%
     </span>
@@ -131,7 +131,7 @@ export default function Dashboard() {
   const sparkValues = dailyRevenue.map(d => d.total);
 
   const statusSegments = [
-    { value: medications.filter(m => !isExpired(m.expiry_date) && m.quantity > 0 && m.quantity >= (m.minimum_stock || 0)).length, color: '#059669', label: 'Normal' },
+    { value: medications.filter(m => !isExpired(m.expiry_date) && m.quantity > 0 && m.quantity >= (m.minimum_stock || 0)).length, color: '#537d14', label: 'Normal' },
     { value: outOfStock,   color: '#dc2626', label: 'Rupture' },
     { value: expiringSoon, color: '#f97316', label: 'Péremption' },
     { value: expiredCount, color: '#ef4444', label: 'Périmé' },
@@ -217,7 +217,7 @@ export default function Dashboard() {
     return (
       <div className={`pb-20 px-4 pt-6 min-h-screen`} style={{ background: 'var(--color-bg)' }}>
         <div className="text-center py-16">
-          <div className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin mx-auto" style={{ borderColor: '#059669', borderTopColor: 'transparent' }} />
+          <div className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin mx-auto" style={{ borderColor: '#537d14', borderTopColor: 'transparent' }} />
           <p className="mt-3 font-medium" style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>Chargement...</p>
         </div>
       </div>
@@ -229,7 +229,7 @@ export default function Dashboard() {
       {alerts.length === 0 ? (
         <div className="flex flex-col items-center py-8 gap-2">
           <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: '#f0fdf4' }}>
-            <Package className="w-5 h-5" style={{ color: '#059669' }} />
+            <Package className="w-5 h-5" style={{ color: '#537d14' }} />
           </div>
           <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', fontWeight: 500 }}>Tout est en ordre</p>
         </div>
@@ -308,7 +308,7 @@ export default function Dashboard() {
         {[
           { label: 'RUPTURES',     value: String(outOfStock),                 sub: 'hors stock',    color: '#dc2626', bg: '#fef2f2', Icon: AlertTriangle },
           { label: 'PÉREMPTIONS',  value: String(expiringSoon + expiredCount), sub: 'à traiter',     color: '#f97316', bg: '#fff7ed', Icon: Calendar },
-          { label: 'CA · 7 JOURS', value: fmtCurrency(last7),                 sub: 'FCFA',          color: '#059669', bg: '#f0fdf4', Icon: TrendingUp },
+          { label: 'CA · 7 JOURS', value: fmtCurrency(last7),                 sub: 'FCFA',          color: '#537d14', bg: '#f0fdf4', Icon: TrendingUp },
           { label: 'UNITÉS',       value: totalUnits.toLocaleString('fr-FR'),  sub: 'en inventaire', color: '#0ea5e9', bg: '#f0f9ff', Icon: Package },
         ].map(({ label, value, sub, color, bg, Icon }) => (
           <div key={label} className="rounded-ios p-3.5" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sm)' }}>
@@ -356,7 +356,7 @@ export default function Dashboard() {
       <div className="space-y-2.5 pb-2">
         <button onClick={shareStockOutOnWhatsApp}
           className="w-full text-white py-3.5 rounded-ios font-semibold active:scale-[0.97] transition-all flex items-center justify-center gap-2"
-          style={{ fontSize: '14px', background: '#059669', boxShadow: '0 1px 3px rgba(22,163,74,0.25)', letterSpacing: '-0.01em' }}>
+          style={{ fontSize: '14px', background: '#537d14', boxShadow: '0 1px 3px rgba(22,163,74,0.25)', letterSpacing: '-0.01em' }}>
           <Share2 className="w-4 h-4" strokeWidth={2} />Partager ruptures WhatsApp
         </button>
         <button onClick={generateRestockReport} disabled={restockItems.length === 0}

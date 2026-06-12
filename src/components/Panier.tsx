@@ -480,7 +480,7 @@ export default function Panier() {
             disabled={isProcessing || isCreditProcessing || cart.length === 0 || (paymentMethod === 'Especes' && parseFloat(amountReceived) > 0 && changeAmount < 0)}
             className="flex-1 text-white py-[12px] rounded-[14px] font-bold text-[15px] transition-all duration-200 disabled:opacity-40 active:scale-[0.97]"
             style={{
-              background: '#059669',
+              background: '#537d14',
               boxShadow: '0 4px 12px -2px rgba(22, 163, 74, 0.4)',
             }}
           >

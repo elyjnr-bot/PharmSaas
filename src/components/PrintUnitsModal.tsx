@@ -299,7 +299,7 @@ export default function PrintUnitsModal({
             .expiry-date {
               font-weight: 600;
             }
-            .expiry-ok { color: #059669; }
+            .expiry-ok { color: #537d14; }
             .expiry-warning { color: #d97706; }
             .expiry-critical { color: #dc2626; }
             .expiry-missing { color: #dc2626; font-style: italic; }

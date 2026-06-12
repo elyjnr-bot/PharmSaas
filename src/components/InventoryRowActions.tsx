@@ -18,9 +18,9 @@ import { insertWithUserId } from '../lib/supabaseHelpers';
 
 // ── Tokens (alignés sur Chalk) ────────────────────────────────────────────────
 const C = {
-  brand:   '#10785a',
-  brandLt: 'rgba(16,120,90,0.09)',
-  brandBd: 'rgba(16,120,90,0.22)',
+  brand:   '#537d14',
+  brandLt: 'rgba(83,125,20,0.09)',
+  brandBd: 'rgba(83,125,20,0.22)',
   ink:     '#0a0e14',
   inkSoft: '#2c3138',
   inkMute: '#6b7280',
@@ -290,7 +290,7 @@ function StockStepper({
             onClick={() => setDelta(d => d + p)}
             style={{
               padding: '5px 0', borderRadius: 7, border: `1px solid ${C.hairline}`,
-              background: p > 0 ? 'rgba(16,120,90,0.06)' : 'rgba(200,30,30,0.06)',
+              background: p > 0 ? 'rgba(83,125,20,0.06)' : 'rgba(200,30,30,0.06)',
               color: p > 0 ? C.brand : C.red,
               fontSize: 11.5, fontWeight: 700, cursor: 'pointer',
               transition: 'all 0.1s',
@@ -338,12 +338,12 @@ function StockStepper({
         disabled={saving || delta === 0}
         style={{
           width: '100%', height: 34, borderRadius: 9, border: 'none',
-          background: delta === 0 || saving ? 'rgba(0,0,0,0.08)' : `linear-gradient(135deg,${C.brand},#149a73)`,
+          background: delta === 0 || saving ? 'rgba(0,0,0,0.08)' : `linear-gradient(135deg,${C.brand},#6a9e28)`,
           color: delta === 0 || saving ? C.inkFaint : '#fff',
           fontSize: 13, fontWeight: 700, cursor: delta === 0 || saving ? 'not-allowed' : 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
           transition: 'all 0.15s',
-          boxShadow: delta !== 0 && !saving ? '0 2px 8px rgba(16,120,90,0.25)' : 'none',
+          boxShadow: delta !== 0 && !saving ? '0 2px 8px rgba(83,125,20,0.25)' : 'none',
         }}
       >
         {saving
@@ -500,11 +500,11 @@ function EditModal({
             <button onClick={handleSave} disabled={saving || saved}
               style={{
                 flex: 2, height: 38, borderRadius: 10, border: 'none',
-                background: saved ? 'rgba(16,120,90,0.15)' : `linear-gradient(135deg,${C.brand},#149a73)`,
+                background: saved ? 'rgba(83,125,20,0.15)' : `linear-gradient(135deg,${C.brand},#6a9e28)`,
                 color: saved ? C.brand : '#fff',
                 fontSize: 13, fontWeight: 700, cursor: saving || saved ? 'default' : 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                boxShadow: !saving && !saved ? '0 2px 8px rgba(16,120,90,0.25)' : 'none',
+                boxShadow: !saving && !saved ? '0 2px 8px rgba(83,125,20,0.25)' : 'none',
                 transition: 'all 0.15s',
               }}
             >

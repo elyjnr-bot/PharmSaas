@@ -33,7 +33,7 @@ const SALES_ALLOWED_METHODS = ['Espèces', 'Especes', 'Carte Bancaire', 'MTN Mob
 // ── Palette pastel par catégorie thérapeutique ─────────────────────────────
 // Inspirée du design Chalk Premium — cartes pastel sur fond clair
 const CATEGORY_GRADIENTS: Record<string, { bg: string; border: string; chevron: string; shadow: string }> = {
-  'Antibiotiques':     { bg: 'linear-gradient(135deg, #d8f5e6 0%, #e9faf0 100%)', border: 'rgba(16,120,90,0.18)',  chevron: '#10785a', shadow: 'rgba(16,120,90,0.18)' },
+  'Antibiotiques':     { bg: 'linear-gradient(135deg, #d8f5e6 0%, #e9faf0 100%)', border: 'rgba(83,125,20,0.18)',  chevron: '#537d14', shadow: 'rgba(83,125,20,0.18)' },
   'Antipaludéens':     { bg: 'linear-gradient(135deg, #ede7fb 0%, #f4f0fc 100%)', border: 'rgba(124,58,237,0.18)', chevron: '#7c3aed', shadow: 'rgba(124,58,237,0.18)' },
   'Analgésiques':      { bg: 'linear-gradient(135deg, #dceaff 0%, #ebf3ff 100%)', border: 'rgba(37,99,235,0.18)',  chevron: '#2563eb', shadow: 'rgba(37,99,235,0.18)' },
   'Anti-inflammatoires':{ bg: 'linear-gradient(135deg, #dceaff 0%, #ebf3ff 100%)', border: 'rgba(37,99,235,0.18)', chevron: '#2563eb', shadow: 'rgba(37,99,235,0.18)' },
@@ -50,7 +50,7 @@ const CATEGORY_GRADIENTS: Record<string, { bg: string; border: string; chevron: 
   'Ophtalmologie':     { bg: 'linear-gradient(135deg, #d9eef4 0%, #e8f4f8 100%)', border: 'rgba(8,145,178,0.18)',  chevron: '#0891b2', shadow: 'rgba(8,145,178,0.18)' },
   'ORL':               { bg: 'linear-gradient(135deg, #d9eef4 0%, #e8f4f8 100%)', border: 'rgba(8,145,178,0.18)',  chevron: '#0891b2', shadow: 'rgba(8,145,178,0.18)' },
   'Antiparasitaires':  { bg: 'linear-gradient(135deg, #ede7fb 0%, #f4f0fc 100%)', border: 'rgba(124,58,237,0.18)', chevron: '#7c3aed', shadow: 'rgba(124,58,237,0.18)' },
-  'Antiviraux':        { bg: 'linear-gradient(135deg, #d8f5e6 0%, #e9faf0 100%)', border: 'rgba(16,120,90,0.18)',  chevron: '#10785a', shadow: 'rgba(16,120,90,0.18)' },
+  'Antiviraux':        { bg: 'linear-gradient(135deg, #d8f5e6 0%, #e9faf0 100%)', border: 'rgba(83,125,20,0.18)',  chevron: '#537d14', shadow: 'rgba(83,125,20,0.18)' },
   'Antifongiques':     { bg: 'linear-gradient(135deg, #fdebd0 0%, #fdf2dd 100%)', border: 'rgba(217,119,6,0.18)',  chevron: '#d97706', shadow: 'rgba(217,119,6,0.18)' },
   'Neuro / Psy':       { bg: 'linear-gradient(135deg, #e6dffb 0%, #efe9fc 100%)', border: 'rgba(99,102,241,0.18)', chevron: '#6366f1', shadow: 'rgba(99,102,241,0.18)' },
   'Hormones':          { bg: 'linear-gradient(135deg, #fde4ec 0%, #feeef3 100%)', border: 'rgba(236,72,153,0.18)', chevron: '#ec4899', shadow: 'rgba(236,72,153,0.18)' },
@@ -58,7 +58,7 @@ const CATEGORY_GRADIENTS: Record<string, { bg: string; border: string; chevron: 
   'Maternité':         { bg: 'linear-gradient(135deg, #fde4ec 0%, #feeef3 100%)', border: 'rgba(236,72,153,0.18)', chevron: '#ec4899', shadow: 'rgba(236,72,153,0.18)' },
   'Solutés / Perf':    { bg: 'linear-gradient(135deg, #d9eef4 0%, #e8f4f8 100%)', border: 'rgba(8,145,178,0.18)',  chevron: '#0891b2', shadow: 'rgba(8,145,178,0.18)' },
   'Cosmétique':        { bg: 'linear-gradient(135deg, #ffe5d6 0%, #fff0e3 100%)', border: 'rgba(234,88,12,0.18)',  chevron: '#ea580c', shadow: 'rgba(234,88,12,0.18)' },
-  'Vaccins':           { bg: 'linear-gradient(135deg, #d8f5e6 0%, #e9faf0 100%)', border: 'rgba(16,120,90,0.18)',  chevron: '#10785a', shadow: 'rgba(16,120,90,0.18)' },
+  'Vaccins':           { bg: 'linear-gradient(135deg, #d8f5e6 0%, #e9faf0 100%)', border: 'rgba(83,125,20,0.18)',  chevron: '#537d14', shadow: 'rgba(83,125,20,0.18)' },
   'Hématologie':       { bg: 'linear-gradient(135deg, #fbe0e3 0%, #fce9eb 100%)', border: 'rgba(220,38,38,0.18)',  chevron: '#dc2626', shadow: 'rgba(220,38,38,0.18)' },
   'Urologie':          { bg: 'linear-gradient(135deg, #d8e8f0 0%, #e6efd6 100%)', border: 'rgba(37,99,235,0.18)',  chevron: '#2563eb', shadow: 'rgba(37,99,235,0.18)' },
   'Anesthésie':        { bg: 'linear-gradient(135deg, #ede9f5 0%, #f3f0f9 100%)', border: 'rgba(107,114,128,0.2)', chevron: '#6b7280', shadow: 'rgba(107,114,128,0.18)' },
@@ -67,8 +67,8 @@ const CATEGORY_GRADIENTS: Record<string, { bg: string; border: string; chevron: 
 };
 // ── Design tokens Chalk Premium ─────────────────────────────────────────────
 const C = {
-  brand:    '#10785a',
-  brandLt:  'rgba(16,120,90,0.08)',
+  brand:    '#537d14',
+  brandLt:  'rgba(83,125,20,0.08)',
   ink:      '#0a0e14',
   inkSoft:  '#1e2a35',
   inkMute:  '#4b5768',
@@ -1657,7 +1657,7 @@ export default function Sales() {
 
             {/* Feedback succès */}
             {returnSuccess && (
-              <div style={{ margin: '12px 16px 0', padding: '10px 14px', background: C.brandLt, border: `1px solid rgba(16,120,90,0.2)`, borderRadius: 10, fontSize: 13, fontWeight: 600, color: C.brand }}>
+              <div style={{ margin: '12px 16px 0', padding: '10px 14px', background: C.brandLt, border: `1px solid rgba(83,125,20,0.2)`, borderRadius: 10, fontSize: 13, fontWeight: 600, color: C.brand }}>
                 ✓ {returnSuccess}
               </div>
             )}
@@ -1743,7 +1743,7 @@ export default function Sales() {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.inkFaint} strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
-            <div style={{ background: C.brandLt, border: `1px solid rgba(16,120,90,0.2)`, borderRadius: 12, padding: '10px 14px', marginBottom: 16, fontSize: 12, color: C.brand, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ background: C.brandLt, border: `1px solid rgba(83,125,20,0.2)`, borderRadius: 12, padding: '10px 14px', marginBottom: 16, fontSize: 12, color: C.brand, display: 'flex', alignItems: 'center', gap: 8 }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
               Passez le scanner sur le code-barres — il sera saisi automatiquement
             </div>
@@ -1805,7 +1805,7 @@ export default function Sales() {
             msg += `\n_🌿 JunglePharm_`;
             window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
           }}
-          style={{ flex: 1, background: C.brandLt, border: `1px solid rgba(16,120,90,0.25)`, borderRadius: 8, padding: '6px 0', fontSize: 12, fontWeight: 600, color: C.brand, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
+          style={{ flex: 1, background: C.brandLt, border: `1px solid rgba(83,125,20,0.25)`, borderRadius: 8, padding: '6px 0', fontSize: 12, fontWeight: 600, color: C.brand, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
         >
           📲 WhatsApp
         </button>
@@ -1846,9 +1846,9 @@ export default function Sales() {
           placeholder="Rechercher un patient…"
           style={{
             width: '100%', height: 34, paddingLeft: 30, paddingRight: selectedPatientId ? 30 : 10,
-            border: `1.5px solid ${selectedPatientId ? 'rgba(16,120,90,0.4)' : 'rgba(0,0,0,0.1)'}`,
+            border: `1.5px solid ${selectedPatientId ? 'rgba(83,125,20,0.4)' : 'rgba(0,0,0,0.1)'}`,
             borderRadius: 9, fontSize: 12.5, outline: 'none', boxSizing: 'border-box',
-            background: selectedPatientId ? 'rgba(16,120,90,0.06)' : 'rgba(255,255,255,0.7)',
+            background: selectedPatientId ? 'rgba(83,125,20,0.06)' : 'rgba(255,255,255,0.7)',
             fontWeight: selectedPatientId ? 600 : 400, color: '#0a0e14',
           }}
         />
@@ -1864,7 +1864,7 @@ export default function Sales() {
           {patSuggestions.map(p => (
             <button key={p.id} onClick={() => { setSelectedPatientId(p.id); setSelectedPatientName(p.name); setPatSearch(''); setShowPatDrop(false); }}
               style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', textAlign: 'left', background: 'transparent', border: 'none', borderBottom: '1px solid rgba(0,0,0,0.05)', cursor: 'pointer' }}>
-              <div style={{ width: 26, height: 26, borderRadius: 8, background: 'linear-gradient(135deg,#10785a,#149a73)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div style={{ width: 26, height: 26, borderRadius: 8, background: 'linear-gradient(135deg,#537d14,#6a9e28)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <User style={{ width: 12, height: 12, color: '#fff' }} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -1901,10 +1901,10 @@ export default function Sales() {
                 onClick={() => { setPaymentMethod(value as any); setPaymentMode('direct'); setMixedMode(false); }}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px',
-                  borderRadius: 10, border: `2px solid ${active ? '#10785a' : 'rgba(0,0,0,0.08)'}`,
-                  background: active ? 'rgba(16,120,90,0.07)' : 'rgba(255,255,255,0.7)',
+                  borderRadius: 10, border: `2px solid ${active ? '#537d14' : 'rgba(0,0,0,0.08)'}`,
+                  background: active ? 'rgba(83,125,20,0.07)' : 'rgba(255,255,255,0.7)',
                   cursor: 'pointer', transition: 'all 0.12s',
-                  color: active ? '#10785a' : '#374151',
+                  color: active ? '#537d14' : '#374151',
                 }}
               >
                 {icon}
@@ -1923,12 +1923,12 @@ export default function Sales() {
         const isEnough  = given >= total;
         return (
           <div style={{
-            background: 'rgba(16,120,90,0.05)',
-            border: '1px solid rgba(16,120,90,0.18)',
+            background: 'rgba(83,125,20,0.05)',
+            border: '1px solid rgba(83,125,20,0.18)',
             borderRadius: 10, padding: '10px 12px',
             display: 'flex', flexDirection: 'column', gap: 8,
           }}>
-            <p style={{ fontSize: 11, fontWeight: 700, color: '#10785a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: '#537d14', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               💵 Calculatrice monnaie
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, alignItems: 'center' }}>
@@ -1943,7 +1943,7 @@ export default function Sales() {
                   onChange={e => setCashGiven(e.target.value)}
                   style={{
                     width: '100%', height: 36, padding: '0 8px',
-                    border: `1.5px solid ${isEnough || !cashGiven ? 'rgba(16,120,90,0.25)' : '#dc2626'}`,
+                    border: `1.5px solid ${isEnough || !cashGiven ? 'rgba(83,125,20,0.25)' : '#dc2626'}`,
                     borderRadius: 8, fontSize: 14, fontWeight: 700,
                     background: '#fff', outline: 'none', textAlign: 'right',
                     color: '#0a0e14', boxSizing: 'border-box',
@@ -1956,7 +1956,7 @@ export default function Sales() {
                 </div>
                 <div style={{
                   fontSize: 20, fontWeight: 800,
-                  color: !cashGiven ? '#9ca3af' : change >= 0 ? '#10785a' : '#dc2626',
+                  color: !cashGiven ? '#9ca3af' : change >= 0 ? '#537d14' : '#dc2626',
                   fontFamily: '"SF Mono", monospace',
                 }}>
                   {!cashGiven ? '—' : `${Math.abs(Math.round(change)).toLocaleString('fr-FR')} F`}
@@ -1977,9 +1977,9 @@ export default function Sales() {
                     onClick={() => setCashGiven(String(amount))}
                     style={{
                       padding: '3px 10px', borderRadius: 99, fontSize: 11, fontWeight: 600,
-                      border: `1px solid ${cashGiven === String(amount) ? '#10785a' : 'rgba(16,120,90,0.25)'}`,
-                      background: cashGiven === String(amount) ? 'rgba(16,120,90,0.10)' : 'rgba(16,120,90,0.04)',
-                      color: '#10785a', cursor: 'pointer',
+                      border: `1px solid ${cashGiven === String(amount) ? '#537d14' : 'rgba(83,125,20,0.25)'}`,
+                      background: cashGiven === String(amount) ? 'rgba(83,125,20,0.10)' : 'rgba(83,125,20,0.04)',
+                      color: '#537d14', cursor: 'pointer',
                     }}
                   >
                     {amount.toLocaleString('fr-FR')} F
@@ -2139,7 +2139,7 @@ export default function Sales() {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
                 <span style={{ color: '#6b7280', fontWeight: 600 }}>Part patient</span>
-                <span style={{ fontWeight: 700, color: patientAmount > 0 ? '#b45309' : '#059669' }}>{patientAmount.toLocaleString('fr-FR')} F</span>
+                <span style={{ fontWeight: 700, color: patientAmount > 0 ? '#b45309' : '#537d14' }}>{patientAmount.toLocaleString('fr-FR')} F</span>
               </div>
             </div>
           )}
@@ -2172,7 +2172,7 @@ export default function Sales() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: '#2563eb', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Paiement partagé</span>
             {mixedBalanced
-              ? <span style={{ fontSize: 11, fontWeight: 700, color: '#059669' }}>✓ Équilibré</span>
+              ? <span style={{ fontSize: 11, fontWeight: 700, color: '#537d14' }}>✓ Équilibré</span>
               : <span style={{ fontSize: 11, color: '#dc2626' }}>Reste : {Math.abs(mixedDiff).toFixed(0)} F</span>
             }
           </div>
@@ -2231,7 +2231,7 @@ export default function Sales() {
               ? '#4f46e5'
               : mixedMode
                 ? '#2563eb'
-                : '#10785a',
+                : '#537d14',
           boxShadow: submitDisabled ? 'none' : '0 4px 16px rgba(0,0,0,0.15)',
         }}
       >
@@ -2263,7 +2263,7 @@ export default function Sales() {
       {sellerStats && getSellerPermissions().showDailyTotal && (
         <div data-tour="sales-stats" style={{ display: 'flex', gap: 8 }}>
           {[
-            { label: 'CA du jour',    value: sellerStats.revenue === 0 ? '—' : `${Math.round(sellerStats.revenue).toLocaleString('fr-FR')} F`, accent: '#10785a' },
+            { label: 'CA du jour',    value: sellerStats.revenue === 0 ? '—' : `${Math.round(sellerStats.revenue).toLocaleString('fr-FR')} F`, accent: '#537d14' },
             { label: 'Tickets',       value: String(sellerStats.tickets), accent: '#0a0e14' },
             { label: 'Unités vendues',value: String(sellerStats.units),   accent: '#0a0e14' },
             { label: 'Panier moyen',  value: sellerStats.avg === 0 ? '—' : `${sellerStats.avg.toLocaleString('fr-FR')} F`, accent: '#0651bc' },
@@ -2298,7 +2298,7 @@ export default function Sales() {
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             style={{ width: '100%', padding: '10px 12px 10px 36px', fontSize: 14, border: '1.5px solid rgba(255,255,255,0.55)', borderRadius: 10, background: 'rgba(255,255,255,0.7)', color: '#0a0e14', outline: 'none', boxSizing: 'border-box' }}
-            onFocus={e => { e.target.style.borderColor = '#10785a'; }}
+            onFocus={e => { e.target.style.borderColor = '#537d14'; }}
             onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.55)'; }}
           />
         </div>
@@ -2324,7 +2324,7 @@ export default function Sales() {
 
       {/* Feedback scan */}
       {scanFeedback && (
-        <div style={{ padding: '9px 14px', borderRadius: 10, fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, background: scanFeedback.ok ? 'rgba(5,150,105,0.08)' : 'rgba(220,38,38,0.07)', color: scanFeedback.ok ? '#059669' : '#dc2626', border: `1px solid ${scanFeedback.ok ? 'rgba(5,150,105,0.2)' : 'rgba(220,38,38,0.15)'}` }}>
+        <div style={{ padding: '9px 14px', borderRadius: 10, fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, background: scanFeedback.ok ? 'rgba(83,125,20,0.08)' : 'rgba(220,38,38,0.07)', color: scanFeedback.ok ? '#537d14' : '#dc2626', border: `1px solid ${scanFeedback.ok ? 'rgba(83,125,20,0.2)' : 'rgba(220,38,38,0.15)'}` }}>
           {scanFeedback.msg}
         </div>
       )}
@@ -2357,11 +2357,11 @@ export default function Sales() {
                   style={{
                     flexShrink: 0, minWidth: 140, maxWidth: 200,
                     padding: '10px 12px', borderRadius: 12, textAlign: 'left',
-                    background: inCart ? 'rgba(16,120,90,0.09)' : 'rgba(255,255,255,0.82)',
-                    border: `1.5px solid ${inCart ? '#10785a' : 'rgba(255,255,255,0.6)'}`,
+                    background: inCart ? 'rgba(83,125,20,0.09)' : 'rgba(255,255,255,0.82)',
+                    border: `1.5px solid ${inCart ? '#537d14' : 'rgba(255,255,255,0.6)'}`,
                     cursor: 'pointer',
                     boxShadow: inCart
-                      ? '0 0 0 3px rgba(16,120,90,0.12)'
+                      ? '0 0 0 3px rgba(83,125,20,0.12)'
                       : '0 1px 4px rgba(0,0,0,0.06)',
                     transition: 'all 0.12s',
                     position: 'relative',
@@ -2388,8 +2388,8 @@ export default function Sales() {
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <span style={{
                       fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 99,
-                      background: isLow ? 'rgba(245,158,11,0.1)' : 'rgba(5,150,105,0.09)',
-                      color: isLow ? '#b45309' : '#059669',
+                      background: isLow ? 'rgba(245,158,11,0.1)' : 'rgba(83,125,20,0.09)',
+                      color: isLow ? '#b45309' : '#537d14',
                     }}>
                       {p.stock}
                     </span>
@@ -2398,7 +2398,7 @@ export default function Sales() {
                     </span>
                   </div>
                   {inCart && (
-                    <div style={{ marginTop: 6, fontSize: 10, fontWeight: 700, color: '#10785a', textAlign: 'center', background: 'rgba(16,120,90,0.09)', borderRadius: 6, padding: '2px 0' }}>
+                    <div style={{ marginTop: 6, fontSize: 10, fontWeight: 700, color: '#537d14', textAlign: 'center', background: 'rgba(83,125,20,0.09)', borderRadius: 6, padding: '2px 0' }}>
                       × {inCart.quantity} dans le panier
                     </div>
                   )}
@@ -2494,12 +2494,12 @@ export default function Sales() {
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8,
           padding: '7px 12px',
-          background: 'rgba(16,120,90,0.08)',
-          border: '1px solid rgba(16,120,90,0.18)',
+          background: 'rgba(83,125,20,0.08)',
+          border: '1px solid rgba(83,125,20,0.18)',
           borderRadius: 10,
           fontSize: 12.5,
         }}>
-          <span style={{ color: '#10785a', fontWeight: 600 }}>Catégorie :</span>
+          <span style={{ color: '#537d14', fontWeight: 600 }}>Catégorie :</span>
           <strong style={{ color: '#0a0e14' }}>{categoryFilter}</strong>
           <span style={{ color: '#9ca3af', marginLeft: 'auto' }}>
             {filteredMedications.length} produit{filteredMedications.length > 1 ? 's' : ''}
@@ -2544,12 +2544,12 @@ export default function Sales() {
                 disabled={isOut}
                 style={{
                   padding: '12px', borderRadius: 12, textAlign: 'left',
-                  background: inCart ? 'rgba(16,120,90,0.08)' : 'rgba(255,255,255,0.7)',
-                  border: `1.5px solid ${inCart ? '#10785a' : 'rgba(255,255,255,0.55)'}`,
+                  background: inCart ? 'rgba(83,125,20,0.08)' : 'rgba(255,255,255,0.7)',
+                  border: `1.5px solid ${inCart ? '#537d14' : 'rgba(255,255,255,0.55)'}`,
                   cursor: isOut ? 'not-allowed' : 'pointer',
                   opacity: isOut ? 0.45 : 1,
                   transition: 'all 0.12s',
-                  boxShadow: inCart ? '0 0 0 2px rgba(16,120,90,0.15)' : 'none',
+                  boxShadow: inCart ? '0 0 0 2px rgba(83,125,20,0.15)' : 'none',
                 }}
                 onMouseEnter={e => { if (!isOut) (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'none'; }}
@@ -2557,13 +2557,13 @@ export default function Sales() {
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#0a0e14', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{med.name}</div>
                 <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 10, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{med.dosage || '—'}</div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 99, background: isOut ? 'rgba(220,38,38,0.1)' : isLow ? 'rgba(245,158,11,0.12)' : 'rgba(5,150,105,0.1)', color: isOut ? '#dc2626' : isLow ? '#b45309' : '#059669' }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 99, background: isOut ? 'rgba(220,38,38,0.1)' : isLow ? 'rgba(245,158,11,0.12)' : 'rgba(83,125,20,0.1)', color: isOut ? '#dc2626' : isLow ? '#b45309' : '#537d14' }}>
                     {isOut ? 'Rupture' : `${med.quantity}`}
                   </span>
                   <span style={{ fontSize: 13, fontWeight: 700, color: '#0a0e14' }}>{(med.price || 0).toLocaleString('fr-FR')} F</span>
                 </div>
                 {inCart && (
-                  <div style={{ marginTop: 7, fontSize: 10, fontWeight: 700, color: '#10785a', textAlign: 'center', background: 'rgba(16,120,90,0.1)', borderRadius: 6, padding: '2px 0' }}>
+                  <div style={{ marginTop: 7, fontSize: 10, fontWeight: 700, color: '#537d14', textAlign: 'center', background: 'rgba(83,125,20,0.1)', borderRadius: 6, padding: '2px 0' }}>
                     × {inCart.quantity} dans le panier
                   </div>
                 )}
@@ -2584,7 +2584,7 @@ export default function Sales() {
             ? <BookOpen style={{ width: 44, height: 44, color: '#d97706', margin: '0 auto 8px' }} />
             : lastSale.is_insurance
               ? <Shield style={{ width: 44, height: 44, color: '#4f46e5', margin: '0 auto 8px' }} />
-              : <Receipt style={{ width: 44, height: 44, color: '#10785a', margin: '0 auto 8px' }} />
+              : <Receipt style={{ width: 44, height: 44, color: '#537d14', margin: '0 auto 8px' }} />
           }
           <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0a0e14', margin: 0 }}>
             {lastSale.is_credit ? 'Crédit enregistré' : lastSale.is_insurance ? 'Vente assurance' : 'Vente confirmée'}
@@ -2618,7 +2618,7 @@ export default function Sales() {
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 17, fontWeight: 700, borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: 8 }}>
             <span style={{ color: '#0a0e14' }}>Total</span>
-            <span style={{ color: lastSale.is_insurance ? '#4f46e5' : '#10785a' }}>
+            <span style={{ color: lastSale.is_insurance ? '#4f46e5' : '#537d14' }}>
               {Math.round(lastSale.grand_total).toLocaleString('fr-FR')} F
             </span>
           </div>
@@ -2652,10 +2652,10 @@ export default function Sales() {
                   <span style={{ fontWeight: 700, color: '#3730a3' }}>{Math.round(lastSale.insurance_amount).toLocaleString('fr-FR')} F</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5 }}>
-                  <span style={{ color: lastSale.patient_amount_insurance > 0 ? '#b45309' : '#059669', fontWeight: 600 }}>
+                  <span style={{ color: lastSale.patient_amount_insurance > 0 ? '#b45309' : '#537d14', fontWeight: 600 }}>
                     Part patient{lastSale.insurance_residual_method ? ` (${lastSale.insurance_residual_method})` : ''}
                   </span>
-                  <span style={{ fontWeight: 700, color: lastSale.patient_amount_insurance > 0 ? '#b45309' : '#059669' }}>
+                  <span style={{ fontWeight: 700, color: lastSale.patient_amount_insurance > 0 ? '#b45309' : '#537d14' }}>
                     {Math.round(lastSale.patient_amount_insurance).toLocaleString('fr-FR')} F
                   </span>
                 </div>
@@ -2671,7 +2671,7 @@ export default function Sales() {
         <div style={{ display: 'flex', gap: 10 }}>
           <button
             onClick={() => setShowReceipt(false)}
-            style={{ flex: 1, padding: '13px 0', borderRadius: 12, fontSize: 14, fontWeight: 700, background: '#10785a', color: '#fff', border: 'none', cursor: 'pointer' }}
+            style={{ flex: 1, padding: '13px 0', borderRadius: 12, fontSize: 14, fontWeight: 700, background: '#537d14', color: '#fff', border: 'none', cursor: 'pointer' }}
           >
             Nouvelle vente
           </button>
@@ -2735,12 +2735,12 @@ export default function Sales() {
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 8,
                 padding: '10px 14px', marginBottom: 12,
-                background: lastSale.is_credit ? 'rgba(217,119,6,0.08)' : lastSale.is_insurance ? 'rgba(79,70,229,0.08)' : 'rgba(16,120,90,0.08)',
-                border: `1px solid ${lastSale.is_credit ? 'rgba(217,119,6,0.2)' : lastSale.is_insurance ? 'rgba(79,70,229,0.2)' : 'rgba(16,120,90,0.2)'}`,
+                background: lastSale.is_credit ? 'rgba(217,119,6,0.08)' : lastSale.is_insurance ? 'rgba(79,70,229,0.08)' : 'rgba(83,125,20,0.08)',
+                border: `1px solid ${lastSale.is_credit ? 'rgba(217,119,6,0.2)' : lastSale.is_insurance ? 'rgba(79,70,229,0.2)' : 'rgba(83,125,20,0.2)'}`,
                 borderRadius: 12,
               }}>
-                <div style={{ width: 8, height: 8, borderRadius: 99, background: lastSale.is_credit ? '#d97706' : lastSale.is_insurance ? '#4f46e5' : '#10785a', flexShrink: 0 }} />
-                <span style={{ fontSize: 13, fontWeight: 700, color: lastSale.is_credit ? '#b45309' : lastSale.is_insurance ? '#3730a3' : '#10785a' }}>
+                <div style={{ width: 8, height: 8, borderRadius: 99, background: lastSale.is_credit ? '#d97706' : lastSale.is_insurance ? '#4f46e5' : '#537d14', flexShrink: 0 }} />
+                <span style={{ fontSize: 13, fontWeight: 700, color: lastSale.is_credit ? '#b45309' : lastSale.is_insurance ? '#3730a3' : '#537d14' }}>
                   {lastSale.is_credit ? 'Crédit enregistré' : lastSale.is_insurance ? `Assurance ${lastSale.insurance_org}` : 'Vente confirmée'}
                 </span>
                 <span style={{ fontSize: 11, color: '#9ca3af', marginLeft: 'auto' }}>
@@ -2786,14 +2786,14 @@ export default function Sales() {
             <div data-tour="sales-fond" style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               padding: '10px 14px',
-              background: fondDuJour >= 0 ? 'rgba(16,120,90,0.07)' : 'rgba(234,179,8,0.08)',
+              background: fondDuJour >= 0 ? 'rgba(83,125,20,0.07)' : 'rgba(234,179,8,0.08)',
               borderRadius: 12,
-              border: `1px solid ${fondDuJour >= 0 ? 'rgba(16,120,90,0.2)' : 'rgba(234,179,8,0.3)'}`,
+              border: `1px solid ${fondDuJour >= 0 ? 'rgba(83,125,20,0.2)' : 'rgba(234,179,8,0.3)'}`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Banknote size={15} color={fondDuJour >= 0 ? '#10785a' : '#b45309'} />
+                <Banknote size={15} color={fondDuJour >= 0 ? '#537d14' : '#b45309'} />
                 <div>
-                  <div style={{ fontSize: 10, color: fondDuJour >= 0 ? '#10785a' : '#b45309', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                  <div style={{ fontSize: 10, color: fondDuJour >= 0 ? '#537d14' : '#b45309', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
                     Fond de caisse
                   </div>
                   <div style={{ fontSize: 15, fontWeight: 700, color: fondDuJour >= 0 ? '#0a0e14' : '#b45309', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
@@ -2809,9 +2809,9 @@ export default function Sales() {
                 style={{
                   display: 'flex', alignItems: 'center', gap: 5,
                   fontSize: 11, fontWeight: 600,
-                  color: fondDuJour >= 0 ? '#10785a' : '#b45309',
-                  background: fondDuJour >= 0 ? 'rgba(16,120,90,0.1)' : 'rgba(234,179,8,0.15)',
-                  border: `1px solid ${fondDuJour >= 0 ? 'rgba(16,120,90,0.25)' : 'rgba(234,179,8,0.35)'}`,
+                  color: fondDuJour >= 0 ? '#537d14' : '#b45309',
+                  background: fondDuJour >= 0 ? 'rgba(83,125,20,0.1)' : 'rgba(234,179,8,0.15)',
+                  border: `1px solid ${fondDuJour >= 0 ? 'rgba(83,125,20,0.25)' : 'rgba(234,179,8,0.35)'}`,
                   borderRadius: 7, padding: '5px 10px', cursor: 'pointer',
                 }}
               >
@@ -2826,12 +2826,12 @@ export default function Sales() {
             {/* Header panier */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'rgba(255,255,255,0.7)', borderRadius: 14, border: '1px solid rgba(255,255,255,0.55)', backdropFilter: 'blur(20px)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <ShoppingCart style={{ width: 16, height: 16, color: '#10785a' }} />
+                <ShoppingCart style={{ width: 16, height: 16, color: '#537d14' }} />
                 <span style={{ fontSize: 14, fontWeight: 700, color: '#0a0e14' }}>
                   Panier
                 </span>
                 {cart.length > 0 && (
-                  <span style={{ fontSize: 11, fontWeight: 700, background: '#10785a', color: '#fff', padding: '1px 7px', borderRadius: 99 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, background: '#537d14', color: '#fff', padding: '1px 7px', borderRadius: 99 }}>
                     {cart.length}
                   </span>
                 )}
@@ -2841,7 +2841,7 @@ export default function Sales() {
                   data-tour="sales-rapportz"
                   onClick={() => setShowZReport(true)}
                   title="Rapport Z — Clôture de journée"
-                  style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#fff', fontWeight: 700, background: '#10785a', border: '1px solid #0d6349', borderRadius: 8, padding: '5px 12px', cursor: 'pointer', boxShadow: '0 1px 4px rgba(16,120,90,0.3)' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#fff', fontWeight: 700, background: '#537d14', border: '1px solid #0d6349', borderRadius: 8, padding: '5px 12px', cursor: 'pointer', boxShadow: '0 1px 4px rgba(83,125,20,0.3)' }}
                 >
                   <ClipboardCheck size={13} strokeWidth={2.5} />
                   Rapport Z
@@ -2869,12 +2869,12 @@ export default function Sales() {
                 : pendingJpScan.units;
 
               return (
-                <div style={{ background: 'rgba(255,255,255,0.95)', borderRadius: 14, border: '2px solid #10785a', padding: '14px 16px', flexShrink: 0, boxShadow: '0 4px 20px rgba(16,120,90,0.15)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ background: 'rgba(255,255,255,0.95)', borderRadius: 14, border: '2px solid #537d14', padding: '14px 16px', flexShrink: 0, boxShadow: '0 4px 20px rgba(83,125,20,0.15)', display: 'flex', flexDirection: 'column', gap: 10 }}>
 
                   {/* En-tête */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: '#10785a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#537d14', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                         📦 Choisir une boîte
                       </div>
                       <div style={{ fontSize: 12, fontWeight: 600, color: '#0a0e14', marginTop: 2 }}>
@@ -2908,12 +2908,12 @@ export default function Sales() {
                         if (e.key === 'Escape') setPendingJpScan(null);
                       }}
                       placeholder="Scannez ou filtrez par code…"
-                      style={{ flex: 1, height: 34, paddingLeft: 10, paddingRight: 8, borderRadius: 8, border: '1.5px solid rgba(16,120,90,0.3)', fontSize: 12, fontFamily: 'monospace', fontWeight: 600, outline: 'none', background: 'rgba(16,120,90,0.03)' }}
+                      style={{ flex: 1, height: 34, paddingLeft: 10, paddingRight: 8, borderRadius: 8, border: '1.5px solid rgba(83,125,20,0.3)', fontSize: 12, fontFamily: 'monospace', fontWeight: 600, outline: 'none', background: 'rgba(83,125,20,0.03)' }}
                       autoFocus
                     />
                     {pendingJpScan.jpInput && (
                       <button onClick={() => handleUnitEntry(pendingJpScan.jpInput)}
-                        style={{ height: 34, padding: '0 12px', borderRadius: 8, background: '#10785a', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>
+                        style={{ height: 34, padding: '0 12px', borderRadius: 8, background: '#537d14', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>
                         Ajouter
                       </button>
                     )}
@@ -2922,7 +2922,7 @@ export default function Sales() {
                   {/* Liste des boîtes */}
                   {pendingJpScan.loadingUnits ? (
                     <div style={{ display: 'flex', justifyContent: 'center', padding: '16px 0' }}>
-                      <div style={{ width: 18, height: 18, borderRadius: 99, border: '2px solid #10785a', borderTopColor: 'transparent', animation: 'spin 0.7s linear infinite' }} />
+                      <div style={{ width: 18, height: 18, borderRadius: 99, border: '2px solid #537d14', borderTopColor: 'transparent', animation: 'spin 0.7s linear infinite' }} />
                     </div>
                   ) : filtered.length === 0 ? (
                     <p style={{ fontSize: 11, color: '#9ca3af', textAlign: 'center', padding: '8px 0', margin: 0 }}>
@@ -2939,20 +2939,20 @@ export default function Sales() {
                             onClick={() => handleSelectUnit(u)}
                             style={{
                               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                              padding: '8px 10px', borderRadius: 8, border: `1px solid ${inCart ? 'rgba(16,120,90,0.15)' : 'rgba(16,120,90,0.2)'}`,
-                              background: inCart ? 'rgba(16,120,90,0.04)' : 'rgba(16,120,90,0.06)',
+                              padding: '8px 10px', borderRadius: 8, border: `1px solid ${inCart ? 'rgba(83,125,20,0.15)' : 'rgba(83,125,20,0.2)'}`,
+                              background: inCart ? 'rgba(83,125,20,0.04)' : 'rgba(83,125,20,0.06)',
                               cursor: inCart ? 'not-allowed' : 'pointer', textAlign: 'left', width: '100%',
                               opacity: inCart ? 0.5 : 1,
                               transition: '0.1s',
                             }}
                           >
-                            <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 700, color: '#10785a' }}>
+                            <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 700, color: '#537d14' }}>
                               {u.unit_code}
                             </span>
                             <span style={{
                               fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 99,
-                              background: inCart ? 'rgba(107,114,128,0.1)' : 'rgba(16,120,90,0.12)',
-                              color: inCart ? '#9ca3af' : '#10785a',
+                              background: inCart ? 'rgba(107,114,128,0.1)' : 'rgba(83,125,20,0.12)',
+                              color: inCart ? '#9ca3af' : '#537d14',
                             }}>
                               {inCart ? 'Dans le panier' : 'Choisir'}
                             </span>
@@ -3009,8 +3009,8 @@ export default function Sales() {
                       {item.units && item.units.length > 0 ? (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 6 }}>
                           {item.units.map((u) => (
-                            <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(16,120,90,0.05)', borderRadius: 7, padding: '4px 8px', border: '1px solid rgba(16,120,90,0.12)' }}>
-                              <span style={{ fontSize: 10, fontFamily: 'monospace', fontWeight: 700, color: '#10785a', flex: 1 }}>{u.unit_code}</span>
+                            <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(83,125,20,0.05)', borderRadius: 7, padding: '4px 8px', border: '1px solid rgba(83,125,20,0.12)' }}>
+                              <span style={{ fontSize: 10, fontFamily: 'monospace', fontWeight: 700, color: '#537d14', flex: 1 }}>{u.unit_code}</span>
                               {u.batch_number && <span style={{ fontSize: 9, color: '#9ca3af' }}>lot {u.batch_number}</span>}
                               {u.expiry_date && <span style={{ fontSize: 9, color: '#9ca3af' }}>exp. {new Date(u.expiry_date).toLocaleDateString('fr-FR', { month: '2-digit', year: '2-digit' })}</span>}
                               {/* × retire cette boîte précise */}
@@ -3035,7 +3035,7 @@ export default function Sales() {
                           {/* + Ajouter une boîte */}
                           <button
                             onClick={() => updateQuantity(item.medication.id, item.quantity + 1)}
-                            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 8px', borderRadius: 7, border: '1px dashed rgba(16,120,90,0.3)', background: 'transparent', cursor: 'pointer', fontSize: 10, color: '#10785a', fontWeight: 600 }}
+                            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 8px', borderRadius: 7, border: '1px dashed rgba(83,125,20,0.3)', background: 'transparent', cursor: 'pointer', fontSize: 10, color: '#537d14', fontWeight: 600 }}
                           >
                             <span style={{ fontSize: 13 }}>📱</span> Scanner une autre boîte
                           </button>
@@ -3052,7 +3052,7 @@ export default function Sales() {
                       )}
 
                       {/* Prix */}
-                      <div style={{ fontSize: 12, fontWeight: 600, color: '#10785a' }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: '#537d14' }}>
                         {(item.medication.price || 0).toLocaleString('fr-FR')} F × {item.quantity} = {((item.medication.price || 0) * item.quantity).toLocaleString('fr-FR')} F
                       </div>
                     </div>
@@ -3070,7 +3070,7 @@ export default function Sales() {
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 18, fontWeight: 700, borderTop: '1px solid rgba(0,0,0,0.07)', paddingTop: 10 }}>
                     <span style={{ color: '#0a0e14' }}>Total</span>
-                    <span style={{ color: '#10785a' }}>{Math.round(total).toLocaleString('fr-FR')} F</span>
+                    <span style={{ color: '#537d14' }}>{Math.round(total).toLocaleString('fr-FR')} F</span>
                   </div>
                 </div>
 
@@ -3100,7 +3100,7 @@ export default function Sales() {
         <button
           onClick={() => setShowZReport(true)}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-white text-xs font-bold active:scale-95 transition-all"
-          style={{ background: '#10785a', border: '1px solid #0d6349', boxShadow: '0 1px 4px rgba(16,120,90,0.3)' }}
+          style={{ background: '#537d14', border: '1px solid #0d6349', boxShadow: '0 1px 4px rgba(83,125,20,0.3)' }}
         >
           <ClipboardCheck className="w-3.5 h-3.5" />
           Rapport Z
@@ -3112,14 +3112,14 @@ export default function Sales() {
         onClick={() => setShowFondModal(true)}
         className="w-full flex items-center justify-between px-4 py-3 rounded-xl active:scale-[0.98] transition-all"
         style={{
-          background: fondDuJour >= 0 ? 'rgba(16,120,90,0.07)' : 'rgba(234,179,8,0.08)',
-          border: `1px solid ${fondDuJour >= 0 ? 'rgba(16,120,90,0.2)' : 'rgba(234,179,8,0.3)'}`,
+          background: fondDuJour >= 0 ? 'rgba(83,125,20,0.07)' : 'rgba(234,179,8,0.08)',
+          border: `1px solid ${fondDuJour >= 0 ? 'rgba(83,125,20,0.2)' : 'rgba(234,179,8,0.3)'}`,
         }}
       >
         <div className="flex items-center gap-3">
-          <Banknote size={17} color={fondDuJour >= 0 ? '#10785a' : '#b45309'} />
+          <Banknote size={17} color={fondDuJour >= 0 ? '#537d14' : '#b45309'} />
           <div className="text-left">
-            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: fondDuJour >= 0 ? '#10785a' : '#b45309' }}>
+            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: fondDuJour >= 0 ? '#537d14' : '#b45309' }}>
               Fond de caisse
             </div>
             <div style={{ fontSize: 16, fontWeight: 700, color: fondDuJour >= 0 ? '#0a0e14' : '#b45309', letterSpacing: '-0.02em' }}>
@@ -3127,7 +3127,7 @@ export default function Sales() {
             </div>
           </div>
         </div>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={fondDuJour >= 0 ? '#10785a' : '#b45309'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={fondDuJour >= 0 ? '#537d14' : '#b45309'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/>
         </svg>
@@ -3416,7 +3416,7 @@ export default function Sales() {
                 onFocus={() => setShowPatDrop(true)}
                 placeholder="Rechercher un patient…"
                 className="w-full pl-8 pr-8 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white"
-                style={{ borderColor: selectedPatientId ? 'rgba(16,120,90,0.4)' : '#d1d5db', background: selectedPatientId ? 'rgba(16,120,90,0.04)' : '#fff', fontWeight: selectedPatientId ? 600 : 400 }}
+                style={{ borderColor: selectedPatientId ? 'rgba(83,125,20,0.4)' : '#d1d5db', background: selectedPatientId ? 'rgba(83,125,20,0.04)' : '#fff', fontWeight: selectedPatientId ? 600 : 400 }}
               />
               {selectedPatientId && (
                 <button onClick={() => { setSelectedPatientId(null); setSelectedPatientName(''); setPatSearch(''); }} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 flex">
@@ -3429,7 +3429,7 @@ export default function Sales() {
                 {patSuggestions.map(p => (
                   <button key={p.id} onClick={() => { setSelectedPatientId(p.id); setSelectedPatientName(p.name); setPatSearch(''); setShowPatDrop(false); }}
                     className="flex items-center gap-2.5 w-full px-3 py-2.5 text-left border-b border-gray-100 last:border-b-0 hover:bg-gray-50 active:bg-gray-100">
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg,#10785a,#149a73)' }}>
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg,#537d14,#6a9e28)' }}>
                       <User className="w-3 h-3 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">

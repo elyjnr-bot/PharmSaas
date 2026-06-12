@@ -221,7 +221,7 @@ export function printThermalReceipt(data: ReceiptData): void {
   <div class="divider"></div>
 
   <div class="center" style="font-size:8.5px; color:#999; margin-top:2px">
-    🌿 <strong style="color:#10785a">JunglePharm</strong>
+    🌿 <strong style="color:#537d14">JunglePharm</strong>
   </div>
 
 

@@ -288,16 +288,16 @@ export default function CommandPalette({ onClose, onNavigate, isManager }: Comma
                         style={{
                           width: '100%', display: 'flex', alignItems: 'center', gap: 12,
                           padding: '8px 16px', border: 'none', textAlign: 'left', cursor: 'pointer',
-                          background: isActive ? 'rgba(16,120,90,0.08)' : 'transparent',
+                          background: isActive ? 'rgba(83,125,20,0.08)' : 'transparent',
                           transition: 'background 0.08s',
                         }}
                       >
                         {/* Icône */}
                         <div style={{
                           width: 32, height: 32, borderRadius: 8, flexShrink: 0,
-                          background: isActive ? 'rgba(16,120,90,0.12)' : 'rgba(0,0,0,0.05)',
+                          background: isActive ? 'rgba(83,125,20,0.12)' : 'rgba(0,0,0,0.05)',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          color: isActive ? '#10785a' : '#6b7280',
+                          color: isActive ? '#537d14' : '#6b7280',
                           transition: 'all 0.08s',
                         }}>
                           {item.icon}
@@ -324,7 +324,7 @@ export default function CommandPalette({ onClose, onNavigate, isManager }: Comma
 
                         {/* Flèche entrée si item actif */}
                         {isActive && (
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10785a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#537d14" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                             <polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/>
                           </svg>
                         )}

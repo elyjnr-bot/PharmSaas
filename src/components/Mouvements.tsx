@@ -22,8 +22,8 @@ import { useResponsive } from '../lib/useResponsive';
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const C = {
-  brand:    '#10785a',
-  brandBg:  'rgba(16,120,90,0.08)',
+  brand:    '#537d14',
+  brandBg:  'rgba(83,125,20,0.08)',
   ink:      '#0a0e14',
   inkSoft:  '#2c3138',
   inkMute:  '#6b7280',
@@ -35,8 +35,8 @@ const C = {
   redBg:    'rgba(200,30,30,0.07)',
   amber:    '#b75f06',
   amberBg:  'rgba(183,95,6,0.08)',
-  green:    '#059669',
-  greenBg:  'rgba(5,150,105,0.08)',
+  green:    '#537d14',
+  greenBg:  'rgba(83,125,20,0.08)',
 };
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -310,7 +310,7 @@ function ReceptionBL({ medications, onMedicationsUpdated, activeSeller, scanHand
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 860 }}>
       {success && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', background: C.greenBg, border: `1px solid rgba(5,150,105,0.25)`, borderRadius: 10, fontSize: 13, fontWeight: 600, color: C.green }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', background: C.greenBg, border: `1px solid rgba(83,125,20,0.25)`, borderRadius: 10, fontSize: 13, fontWeight: 600, color: C.green }}>
           <Check size={15} /> Réception enregistrée — stock mis à jour
         </div>
       )}
@@ -517,7 +517,7 @@ function InventairePhysique({ medications, onMedicationsUpdated, activeSeller }:
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 860 }}>
       {success && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', background: C.greenBg, border: `1px solid rgba(5,150,105,0.25)`, borderRadius: 10, fontSize: 13, fontWeight: 600, color: C.green }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', background: C.greenBg, border: `1px solid rgba(83,125,20,0.25)`, borderRadius: 10, fontSize: 13, fontWeight: 600, color: C.green }}>
           <Check size={15} /> Inventaire validé — {diffs.length} ajustement(s) enregistré(s)
         </div>
       )}
@@ -546,7 +546,7 @@ function InventairePhysique({ medications, onMedicationsUpdated, activeSeller }:
             <div style={{ fontSize: 11, fontWeight: 700, color: C.amber, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Écarts détectés</div>
             <div style={{ fontSize: 22, fontWeight: 800, color: C.ink, marginTop: 2 }}>{diffs.length}</div>
           </div>
-          <div style={{ flex: 1, background: 'rgba(5,150,105,0.07)', border: `1px solid rgba(5,150,105,0.2)`, borderRadius: 12, padding: '12px 16px' }}>
+          <div style={{ flex: 1, background: 'rgba(83,125,20,0.07)', border: `1px solid rgba(83,125,20,0.2)`, borderRadius: 12, padding: '12px 16px' }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: C.green, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Gain inventaire</div>
             <div style={{ fontSize: 22, fontWeight: 800, color: C.ink, marginTop: 2 }}>+{totalGain}</div>
           </div>
@@ -588,7 +588,7 @@ function InventairePhysique({ medications, onMedicationsUpdated, activeSeller }:
                 display: 'grid', gridTemplateColumns: '1fr 100px 100px 100px',
                 padding: '10px 16px', alignItems: 'center',
                 borderBottom: i < filtered.length - 1 ? `1px solid ${C.hairline}` : 'none',
-                background: hasDiff ? (diff! > 0 ? 'rgba(5,150,105,0.04)' : 'rgba(200,30,30,0.03)') : 'transparent',
+                background: hasDiff ? (diff! > 0 ? 'rgba(83,125,20,0.04)' : 'rgba(200,30,30,0.03)') : 'transparent',
               }}
             >
               <div>

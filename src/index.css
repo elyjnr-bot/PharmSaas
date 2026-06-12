@@ -7,14 +7,14 @@
 
 :root {
   /* Brand — Emerald palette */
-  --green-50:  #ecfdf5;
-  --green-100: #d1fae5;
-  --green-200: #a7f3d0;
-  --green-400: #34d399;
-  --green-500: #10b981;
-  --green-600: #059669;
-  --green-700: #047857;
-  --green-800: #065f46;
+  --green-50:  #f7fce8;
+  --green-100: #eef7cc;
+  --green-200: #d8ed96;
+  --green-400: #bcd96e;
+  --green-500: #96c244;
+  --green-600: #537d14;
+  --green-700: #5a8520;
+  --green-800: #253804;
 
   /* Amber — financial elements, alerts */
   --amber-50:  #fffbeb;
@@ -228,11 +228,11 @@
   .ios-btn-primary {
     background: var(--color-primary);
     color: #ffffff;
-    box-shadow: 0 1px 3px rgba(5, 150, 105, 0.25);
+    box-shadow: 0 1px 3px rgba(116, 171, 46, 0.25);
   }
   .ios-btn-primary:hover {
     background: var(--color-primary-hover);
-    box-shadow: 0 2px 6px rgba(5, 150, 105, 0.3);
+    box-shadow: 0 2px 6px rgba(116, 171, 46, 0.3);
   }
   .ios-btn-secondary {
     background: var(--slate-100);
@@ -288,7 +288,7 @@
   .ios-input:focus {
     background: var(--color-surface);
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.12);
+    box-shadow: 0 0 0 3px rgba(116, 171, 46, 0.12);
   }
   .ios-input::placeholder { color: var(--color-text-faint); }
   .ios-input-pill {
@@ -305,7 +305,7 @@
   .ios-input-pill:focus {
     background: var(--color-surface);
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.12);
+    box-shadow: 0 0 0 3px rgba(116, 171, 46, 0.12);
   }
   .ios-input-pill::placeholder { color: var(--color-text-faint); }
 

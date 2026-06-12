@@ -63,9 +63,9 @@ import { useTheme, THEMES } from '../lib/themeContext';
 
 // ── Couleurs ────────────────────────────────────────────────────────────────
 const C = {
-  brand:    '#10785a',
-  brandBg:  'rgba(16,120,90,0.08)',
-  brandBd:  'rgba(16,120,90,0.22)',
+  brand:    '#537d14',
+  brandBg:  'rgba(83,125,20,0.08)',
+  brandBd:  'rgba(83,125,20,0.22)',
   ink:      '#0a0e14',
   inkSoft:  '#2c3138',
   inkMute:  '#6b7280',
@@ -428,7 +428,7 @@ export default function OnboardingWizard({ onDismiss, onNavigate }: Props) {
                         {opt.pros.map(p => (
                           <span key={p} style={{
                             fontSize: 11, color: active ? C.brand : C.inkMute,
-                            background: active ? 'rgba(16,120,90,0.06)' : 'rgba(0,0,0,0.04)',
+                            background: active ? 'rgba(83,125,20,0.06)' : 'rgba(0,0,0,0.04)',
                             padding: '2px 7px', borderRadius: 99, fontWeight: 600,
                           }}>{p}</span>
                         ))}
@@ -581,7 +581,7 @@ export default function OnboardingWizard({ onDismiss, onNavigate }: Props) {
                         <span style={{
                           position: 'absolute', top: 6, right: 6,
                           fontSize: 9, fontWeight: 700,
-                          background: 'rgba(16,120,90,0.1)', color: C.brand,
+                          background: 'rgba(83,125,20,0.1)', color: C.brand,
                           padding: '1px 5px', borderRadius: 4,
                           letterSpacing: '0.04em', textTransform: 'uppercase',
                         }}>
@@ -765,15 +765,15 @@ function SummaryRow({ icon, label, value, done }: { icon: React.ReactNode; label
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8,
-      background: done ? 'rgba(16,120,90,0.05)' : '#f9fafb',
-      border: `1px solid ${done ? 'rgba(16,120,90,0.15)' : 'rgba(0,0,0,0.06)'}`,
+      background: done ? 'rgba(83,125,20,0.05)' : '#f9fafb',
+      border: `1px solid ${done ? 'rgba(83,125,20,0.15)' : 'rgba(0,0,0,0.06)'}`,
     }}>
       {icon}
       <div style={{ flex: 1, minWidth: 0 }}>
         <span style={{ fontSize: 12, color: '#6b7280', fontWeight: 600 }}>{label}</span>
-        <div style={{ fontSize: 13, fontWeight: 700, color: done ? '#10785a' : '#6b7280', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: done ? '#537d14' : '#6b7280', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</div>
       </div>
-      {done && <Check size={13} color="#10785a" strokeWidth={2.5} />}
+      {done && <Check size={13} color="#537d14" strokeWidth={2.5} />}
     </div>
   );
 }

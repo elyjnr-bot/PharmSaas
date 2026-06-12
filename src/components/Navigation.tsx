@@ -182,8 +182,8 @@ export default function Navigation({ activeTab, onTabChange, onScanClick, isMana
           borderRadius: '16px',
           bottom: '80px',
           right: '16px',
-          background: '#059669',
-          boxShadow: '0 4px 20px rgba(5, 150, 105, 0.35), 0 2px 8px rgba(0,0,0,0.1)',
+          background: '#537d14',
+          boxShadow: '0 4px 20px rgba(116, 171, 46, 0.35), 0 2px 8px rgba(0,0,0,0.1)',
           transform: isNavVisible ? 'translateY(0)' : 'translateY(160px)',
           transition: 'transform 0.28s cubic-bezier(0.25, 0.1, 0.25, 1), box-shadow 0.2s ease',
           zIndex: 60,
@@ -206,7 +206,7 @@ export default function Navigation({ activeTab, onTabChange, onScanClick, isMana
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             const isLocked = tab.managerOnly && !isManager;
-            const color = isLocked ? '#cbd5e1' : isActive ? '#059669' : '#94a3b8';
+            const color = isLocked ? '#cbd5e1' : isActive ? '#537d14' : '#94a3b8';
 
             return (
               <button
@@ -249,7 +249,7 @@ export default function Navigation({ activeTab, onTabChange, onScanClick, isMana
                       width: '24px',
                       height: '3px',
                       borderRadius: '0 0 4px 4px',
-                      background: '#059669',
+                      background: '#537d14',
                       transform: 'translateX(-50%)',
                     }}
                   />

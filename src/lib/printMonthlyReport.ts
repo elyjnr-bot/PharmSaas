@@ -101,9 +101,9 @@ export async function printMonthlyReport(year: number, month: number, pharmacyNa
       <tr>
         <td>${String(d.day).padStart(2, '0')}/${String(month + 1).padStart(2, '0')}</td>
         <td style="text-align:right">${d.transactions}</td>
-        <td style="text-align:right; color:#059669">${fmt(d.sales)} F</td>
+        <td style="text-align:right; color:#537d14">${fmt(d.sales)} F</td>
         <td style="text-align:right; color:#dc2626">${d.expenses > 0 ? fmt(d.expenses) + ' F' : '—'}</td>
-        <td style="text-align:right; font-weight:600; color:${d.sales - d.expenses >= 0 ? '#059669' : '#dc2626'}">${fmt(d.sales - d.expenses)} F</td>
+        <td style="text-align:right; font-weight:600; color:${d.sales - d.expenses >= 0 ? '#537d14' : '#dc2626'}">${fmt(d.sales - d.expenses)} F</td>
       </tr>
     `).join('');
 
@@ -112,7 +112,7 @@ export async function printMonthlyReport(year: number, month: number, pharmacyNa
       <td>${c.client_name}</td>
       <td style="text-align:right">${fmt(c.total_amount)} F</td>
       <td style="text-align:right">${fmt(c.amount_paid || 0)} F</td>
-      <td style="text-align:right; color:${c.status === 'paid' ? '#059669' : '#dc2626'}; font-weight:600">
+      <td style="text-align:right; color:${c.status === 'paid' ? '#537d14' : '#dc2626'}; font-weight:600">
         ${c.status === 'paid' ? '✓ Soldé' : fmt(c.total_amount - (c.amount_paid || 0)) + ' F'}
       </td>
     </tr>
@@ -131,7 +131,7 @@ export async function printMonthlyReport(year: number, month: number, pharmacyNa
       padding: 20mm 18mm;
     }
     h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 4px; }
-    h2 { font-size: 14px; font-weight: 700; color: #10785a; margin: 20px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #10785a; }
+    h2 { font-size: 14px; font-weight: 700; color: #537d14; margin: 20px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #537d14; }
     .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #e5e7eb; }
     .header-left .subtitle { font-size: 13px; color: #6b7280; margin-top: 4px; }
     .header-right { text-align: right; font-size: 11px; color: #6b7280; }
@@ -140,7 +140,7 @@ export async function printMonthlyReport(year: number, month: number, pharmacyNa
     .kpi .label { font-size: 10px; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
     .kpi .value { font-size: 20px; font-weight: 700; letter-spacing: -0.03em; }
     .kpi .unit { font-size: 11px; color: #6b7280; font-weight: 500; }
-    .kpi.green .value { color: #059669; }
+    .kpi.green .value { color: #537d14; }
     .kpi.red   .value { color: #dc2626; }
     .kpi.blue  .value { color: #2563eb; }
     table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin-bottom: 8px; }

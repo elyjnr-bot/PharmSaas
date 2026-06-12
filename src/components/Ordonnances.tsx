@@ -15,10 +15,10 @@ const C = {
   hairline:   'rgba(255,255,255,0.55)',
   border:     'rgba(15,15,20,0.06)',
   borderHi:   'rgba(15,15,20,0.10)',
-  brand:      '#10785a',
-  brandHi:    '#149a73',
-  brandLt:    'rgba(16,120,90,0.08)',
-  brandMid:   'rgba(16,120,90,0.16)',
+  brand:      '#537d14',
+  brandHi:    '#6a9e28',
+  brandLt:    'rgba(83,125,20,0.08)',
+  brandMid:   'rgba(83,125,20,0.16)',
   ink:        '#0a0e14',
   inkSoft:    '#2c3138',
   inkMute:    '#6b7280',
@@ -67,7 +67,7 @@ function Pill({ status, sm }: { status: OrdStatus; sm?: boolean }) {
 
 // ── Avatar initiales ──────────────────────────────────────────────────────────
 const GRADS = [
-  'linear-gradient(135deg,#10785a,#149a73)',
+  'linear-gradient(135deg,#537d14,#6a9e28)',
   'linear-gradient(135deg,#0651bc,#3b86e0)',
   'linear-gradient(135deg,#6e44b0,#9b6dd6)',
   'linear-gradient(135deg,#b75f06,#e08533)',
@@ -259,7 +259,7 @@ function OrdModal({
                 <div style={{ position: 'absolute', top: 60, left: 0, right: 0, background: C.panelSolid, border: `1px solid ${C.border}`, borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 20, overflow: 'hidden', maxHeight: 220, overflowY: 'auto' }}>
                   {patSuggestions.map(p => (
                     <button key={p.id} onClick={() => selectPatient(p)} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 14px', textAlign: 'left', background: 'transparent', border: 'none', cursor: 'pointer', borderBottom: `1px solid ${C.border}`, fontFamily: C.f }}>
-                      <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg,#10785a,#149a73)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10, fontWeight: 700, flexShrink: 0 }}>
+                      <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg,#537d14,#6a9e28)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10, fontWeight: 700, flexShrink: 0 }}>
                         {p.name.trim().split(/\s+/).map((w: string) => w[0]).slice(0, 2).join('').toUpperCase()}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
