@@ -1508,39 +1508,8 @@ export default function Stock({ initialFilter, onNavigateToSales }: { initialFil
                         fontVariantNumeric: 'tabular-nums',
                       }}>{totalRefs.toLocaleString('fr-FR')}</span>
                     </button>
-                    {categories.map(([cat, count]) => {
-                      const isActive = activeCat === cat;
-                      return (
-                        <button
-                          key={cat}
-                          onClick={() => setActiveCat(isActive ? 'Tous' : cat)}
-                          onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = '#f9fafb'; }}
-                          onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = '#ffffff'; }}
-                          style={{
-                            display: 'inline-flex', alignItems: 'center', gap: 8,
-                            padding: '8px 18px', borderRadius: 99,
-                            background: isActive ? '#0a0e14' : '#ffffff',
-                            border: isActive ? 'none' : '1px solid #e5e7eb',
-                            color: isActive ? '#fff' : '#0a0e14',
-                            fontSize: 14, fontWeight: 500, cursor: 'pointer',
-                            whiteSpace: 'nowrap', flexShrink: 0,
-                            letterSpacing: '-0.005em',
-                            boxShadow: isActive
-                              ? '0 1px 2px rgba(0,0,0,0.06)'
-                              : '0 1px 1px rgba(0,0,0,0.02)',
-                            transition: 'all 0.15s',
-                          }}
-                        >
-                          {cat} <span style={{
-                            fontWeight: 500, fontSize: 12.5,
-                            color: isActive ? 'rgba(255,255,255,0.55)' : '#9ca3af',
-                            fontVariantNumeric: 'tabular-nums',
-                          }}>{count.toLocaleString('fr-FR')}</span>
-                        </button>
-                      );
-                    })}
 
-                    {/* ── Tab Récents ── */}
+                    {/* ── Tab Récents — juste après "Tous" ── */}
                     {recentCount > 0 && (() => {
                       const isActive = activeCat === '__recent__';
                       return (
@@ -1576,6 +1545,39 @@ export default function Stock({ initialFilter, onNavigateToSales }: { initialFil
                         </button>
                       );
                     })()}
+
+                    {/* ── Catégories ── */}
+                    {categories.map(([cat, count]) => {
+                      const isActive = activeCat === cat;
+                      return (
+                        <button
+                          key={cat}
+                          onClick={() => setActiveCat(isActive ? 'Tous' : cat)}
+                          onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = '#f9fafb'; }}
+                          onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = '#ffffff'; }}
+                          style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 8,
+                            padding: '8px 18px', borderRadius: 99,
+                            background: isActive ? '#0a0e14' : '#ffffff',
+                            border: isActive ? 'none' : '1px solid #e5e7eb',
+                            color: isActive ? '#fff' : '#0a0e14',
+                            fontSize: 14, fontWeight: 500, cursor: 'pointer',
+                            whiteSpace: 'nowrap', flexShrink: 0,
+                            letterSpacing: '-0.005em',
+                            boxShadow: isActive
+                              ? '0 1px 2px rgba(0,0,0,0.06)'
+                              : '0 1px 1px rgba(0,0,0,0.02)',
+                            transition: 'all 0.15s',
+                          }}
+                        >
+                          {cat} <span style={{
+                            fontWeight: 500, fontSize: 12.5,
+                            color: isActive ? 'rgba(255,255,255,0.55)' : '#9ca3af',
+                            fontVariantNumeric: 'tabular-nums',
+                          }}>{count.toLocaleString('fr-FR')}</span>
+                        </button>
+                      );
+                    })}
                 </div>
               </>
             );
