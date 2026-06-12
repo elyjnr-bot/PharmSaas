@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X, ShoppingCart, Plus, ScanLine, Package, Layers, CheckCircle, AlertCircle, Loader2, RefreshCw, Printer } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { insertWithUserId } from '../lib/supabaseHelpers';
@@ -95,6 +95,9 @@ export default function AddMedicationModal({
 }: AddMedicationModalProps) {
   const { settings: userSettings, update: updateUserSettings } = useUserSettings();
   const [showScanner, setShowScanner] = useState(false);
+  const [eanInput, setEanInput] = useState('');
+  const eanInputRef = useRef<HTMLInputElement>(null);
+  const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
   const [productStatus, setProductStatus] = useState<ProductStatus>('idle');
   const [existingMed, setExistingMed] = useState<ExistingMedication | null>(null);
   const [selectedMode, setSelectedMode] = useState<GestionMode | null>(null);
@@ -119,6 +122,7 @@ export default function AddMedicationModal({
   useEffect(() => {
     if (isOpen) {
       setShowScanner(false);
+      setEanInput('');
       setProductStatus('idle');
       setExistingMed(null);
       setSelectedMode(null);
@@ -140,6 +144,11 @@ export default function AddMedicationModal({
 
       if (prefillData?.gtin) {
         searchByGtin(prefillData.gtin);
+      }
+
+      // Sur desktop : focus auto sur le champ EAN pour capturer le scanner HID
+      if (!isMobile) {
+        setTimeout(() => eanInputRef.current?.focus(), 120);
       }
     }
   }, [isOpen]);
@@ -281,6 +290,8 @@ export default function AddMedicationModal({
     setUpdatePriceInDB(false);
     setSuccessResult(null);
     setShowInternalPrint(false);
+    setEanInput('');
+    setShowScanner(false);
     setFormData({
       name: '',
       dosage: '',
@@ -547,7 +558,16 @@ export default function AddMedicationModal({
 
         <div className="sticky top-0 bg-white border-b border-gray-200 px-5 py-4 flex items-center justify-between z-10">
           <div>
-            <h2 className="text-lg font-bold text-gray-900">Entree en stock</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-bold text-gray-900">Entree en stock</h2>
+              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                effectiveMode === 'unit'
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-blue-100 text-blue-700'
+              }`}>
+                {effectiveMode === 'unit' ? 'Unitaire' : 'Global'}
+              </span>
+            </div>
             <p className="text-xs text-gray-500 mt-0.5">Reception & enregistrement produit</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
@@ -555,22 +575,48 @@ export default function AddMedicationModal({
           </button>
         </div>
 
-        <div className="px-5 pt-4 pb-2">
-          <button
-            type="button"
-            onClick={() => setShowScanner(v => !v)}
-            className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-all ${
-              showScanner
-                ? 'bg-blue-700 text-white'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
-          >
-            <ScanLine className="w-5 h-5" />
-            {showScanner ? 'Fermer le scanner' : 'Scanner DataMatrix / EAN'}
-          </button>
+        {/* ── Saisie EAN / Code produit ─────────────────────────────────── */}
+        <div className="px-5 pt-4 pb-2 space-y-2">
+          {/* Champ EAN : fonctionne avec scanner HID (desktop) et saisie manuelle */}
+          <div className="relative">
+            <ScanLine className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <input
+              ref={eanInputRef}
+              type="text"
+              inputMode="text"
+              placeholder={isMobile ? 'Saisir un code EAN / DataMatrix…' : 'Scanner physique ou saisir un code EAN…'}
+              value={eanInput}
+              onChange={(e) => setEanInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  const code = eanInput.trim();
+                  if (code) { handleScan(code); setEanInput(''); }
+                }
+              }}
+              className="w-full pl-9 pr-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-400 bg-gray-50 font-mono tracking-wide placeholder:font-sans placeholder:tracking-normal"
+            />
+          </div>
+
+          {/* Bouton caméra — mobile uniquement */}
+          {isMobile && (
+            <button
+              type="button"
+              onClick={() => setShowScanner(v => !v)}
+              className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm transition-all border-2 ${
+                showScanner
+                  ? 'border-blue-500 bg-blue-50 text-blue-700'
+                  : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600'
+              }`}
+            >
+              <ScanLine className="w-4 h-4" />
+              {showScanner ? 'Fermer la caméra' : 'Scanner avec la caméra'}
+            </button>
+          )}
         </div>
 
-        {showScanner && (
+        {/* Caméra — mobile uniquement */}
+        {isMobile && showScanner && (
           <div className="px-5 pb-3">
             <div className="rounded-xl overflow-hidden border-2 border-blue-200">
               <BarcodeScanner
