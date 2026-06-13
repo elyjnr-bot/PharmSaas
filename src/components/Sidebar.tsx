@@ -610,22 +610,29 @@ export default function Sidebar({ activeView, onNavigate, onSettingsClick, isMan
 
       {/* ── Settings ── */}
       <div style={{ padding: '8px 8px 0', borderTop: `1px solid ${C.hairline}` }}>
-        <button
-          onClick={onSettingsClick}
-          onMouseEnter={() => setHovered('settings')}
-          onMouseLeave={() => setHovered(null)}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 10,
-            padding: '7px 10px', borderRadius: 7, width: '100%',
-            background: hovered === 'settings' ? 'rgba(255,255,255,0.3)' : 'transparent',
-            border: 'none', cursor: 'pointer', textAlign: 'left',
-            transition: 'background 0.12s',
-          }}
-        >
-          <span style={{ flexShrink: 0, display: 'flex' }}><NavIcon name="settings" size={15} color={C.inkMute} /></span>
-          <span style={{ fontSize: 13, fontWeight: 450, color: C.inkSoft, letterSpacing: '-0.01em', flex: 1 }}>Réglages</span>
-          <Kbd>,</Kbd>
-        </button>
+        {(() => {
+          const isActive = activeView === 'settings';
+          return (
+            <button
+              onClick={onSettingsClick}
+              onMouseEnter={() => setHovered('settings')}
+              onMouseLeave={() => setHovered(null)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: '7px 10px', borderRadius: 7, width: '100%',
+                background: isActive ? C.activeBg : hovered === 'settings' ? 'rgba(255,255,255,0.3)' : 'transparent',
+                border: 'none', cursor: 'pointer', textAlign: 'left',
+                transition: 'background 0.12s',
+              }}
+            >
+              <span style={{ flexShrink: 0, display: 'flex' }}>
+                <NavIcon name="settings" size={15} color={isActive ? C.brand : C.inkMute} />
+              </span>
+              <span style={{ fontSize: 13, fontWeight: isActive ? 600 : 450, color: isActive ? C.brand : C.inkSoft, letterSpacing: '-0.01em', flex: 1 }}>Réglages</span>
+              <Kbd>,</Kbd>
+            </button>
+          );
+        })()}
       </div>
 
       {/* ── User card ── */}

@@ -342,7 +342,7 @@ export default function Settings() {
 
   // ── Render ────────────────────────────────────────────────────
   return (
-    <div style={{ fontFamily: FONT, minHeight: '100vh', background: C.bg }}>
+    <div style={{ fontFamily: FONT }}>
       {/* ── Header sticky ─────────────────────────────────────── */}
       <div style={{
         position: 'sticky', top: 0, zIndex: 10,

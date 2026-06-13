@@ -287,7 +287,6 @@ function AppContent() {
   // Supprimé : anciens états individuels remplacés par isManagerUnlocked()
   const [pendingOrderSupplier, setPendingOrderSupplier] = useState<string | undefined>(undefined);
   const [showScanner, setShowScanner] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
   const [hideNavigation, setHideNavigation] = useState(false);
   const [showPalette, setShowPalette] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -311,7 +310,6 @@ function AppContent() {
       setSessionStarted(false);
       sessionStorage.removeItem('jp_session_ok');
       initialTabSet.current = false;
-      setShowSettings(false);
       setShowScanner(false);
       return;
     }
@@ -330,7 +328,6 @@ function AppContent() {
   useEffect(() => {
     if (!loading && !initialTabSet.current && user && profile) {
       initialTabSet.current = true;
-      setShowSettings(false);
       setShowScanner(false);
       setActiveTab('dashboard');
 
@@ -392,7 +389,7 @@ function AppContent() {
         case 'o': handleTabChange('commandes'); break;
         case 'g': handleTabChange('rapports'); break;
         case 'f': handleTabChange('fournisseurs'); break;
-        case ',': setShowSettings(true); break;
+        case ',': handleTabChange('settings'); break;
       }
     };
 
@@ -456,9 +453,10 @@ function AppContent() {
         return <Fournisseurs onOrderSupplier={(name) => {
           setPendingOrderSupplier(name);
           handleTabChange('commandes');
-          // Reset après navigation pour éviter de ré-ouvrir le modal au retour
           setTimeout(() => setPendingOrderSupplier(undefined), 500);
         }} />;
+      case 'settings':
+        return <Settings />;
       default:
         return <Patients />;
     }
@@ -516,7 +514,7 @@ function AppContent() {
           <Sidebar
             activeView={activeTab}
             onNavigate={handleTabChange}
-            onSettingsClick={() => setShowSettings(true)}
+            onSettingsClick={() => handleTabChange('settings')}
             isManager={isManager}
           />
           {showPalette && (
@@ -548,6 +546,10 @@ function AppContent() {
               <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                 <React.Suspense fallback={<TabLoader />}>{renderContent()}</React.Suspense>
               </div>
+            ) : activeTab === 'settings' ? (
+              <div style={{ flex: 1, overflowY: 'auto' }} className="smooth-scroll scrollbar-thin">
+                <React.Suspense fallback={<TabLoader />}>{renderContent()}</React.Suspense>
+              </div>
             ) : (
               <div style={{ flex: 1, overflowY: 'auto' }} className="smooth-scroll scrollbar-thin">
                 <div style={{ padding: '16px 24px', maxWidth: 1600, margin: '0 auto' }}>
@@ -559,7 +561,7 @@ function AppContent() {
         </>
       ) : (
         <>
-          <Header onSettingsClick={() => setShowSettings(true)} />
+          <Header onSettingsClick={() => handleTabChange('settings')} />
           {activeTab === 'panier' ? (
             <div className="flex-1 flex flex-col overflow-hidden" style={{ paddingTop: '64px', paddingBottom: '72px' }}>
               <React.Suspense fallback={<TabLoader />}>{renderContent()}</React.Suspense>
@@ -611,25 +613,6 @@ function AppContent() {
         </div>
       )}
 
-      {showSettings && (
-        <div className="fixed inset-0 z-[100] bg-ios-bg">
-          <div
-            className="px-4 safe-area-top flex items-center justify-between bg-white"
-            style={{ borderBottom: '1px solid #e2e8f0', height: '56px' }}
-          >
-            <h1 className="text-[16px] font-bold text-ios-text" style={{ letterSpacing: '-0.02em' }}>Reglages</h1>
-            <button
-              onClick={() => setShowSettings(false)}
-              className="w-8 h-8 bg-ios-bg rounded-full flex items-center justify-center active:scale-[0.96] transition-all duration-150 border border-ios-border"
-            >
-              <X className="w-4 h-4 text-ios-secondary" strokeWidth={2} />
-            </button>
-          </div>
-          <div className="h-full overflow-y-auto pb-safe">
-            <Settings />
-          </div>
-        </div>
-      )}
 
       {/* Onboarding wizard — premier démarrage / stock vide */}
       {showOnboarding && (
@@ -647,7 +630,7 @@ function AppContent() {
         <TourHost
           activeTab={activeTab}
           userId={user?.id ?? null}
-          enabled={!showOnboarding && !showSettings && !showScanner && !!user && pinReady}
+          enabled={!showOnboarding && activeTab !== 'settings' && !showScanner && !!user && pinReady}
         />
       </React.Suspense>
     </div>
