@@ -7,7 +7,7 @@ import {
   User, Building2, LogOut, Upload, Percent,
   Check, AlertCircle, Truck, Phone, Plus, Trash2,
   Layers, ScanLine, AlertTriangle, RotateCcw, Key, Bell, ShieldAlert, Clock, HelpCircle, Sparkles,
-  Smartphone, Download, MapPin, CreditCard, Globe,
+  Smartphone, Download, MapPin, Globe,
 } from 'lucide-react';
 import { usePWAInstall } from '../lib/usePWAInstall';
 import { getManagerPin } from '../lib/sellerContext';
@@ -208,7 +208,6 @@ export default function Settings() {
   // Données locales
   const [pharmacyName,    setPharmacyName]    = useState('');
   const [defSupplier,     setDefSupplier]     = useState('');
-  const [licenseNumber,   setLicenseNumber]   = useState(() => localStorage.getItem('license_number') || '');
   const [currency,        setCurrency]        = useState(() => localStorage.getItem('currency') || 'CDF');
   const [pharmacyAddress, setPharmacyAddress] = useState(() => localStorage.getItem('pharmacy_address') || '');
   const [editingAddress,  setEditingAddress]  = useState(false);
@@ -261,7 +260,6 @@ export default function Settings() {
   const savePharmacy = async () => {
     await updateUserSettings({ pharmacy_name: pharmacyName, default_supplier: defSupplier });
     saveSettings({ pharmacy_name: pharmacyName });
-    localStorage.setItem('license_number', licenseNumber);
     localStorage.setItem('currency', currency);
     localStorage.setItem('pharmacy_address', pharmacyAddress);
     window.dispatchEvent(new Event('junglepharm:settings_updated'));
@@ -363,7 +361,7 @@ export default function Settings() {
         </button>
       </div>
 
-      <div style={{ padding: '24px 20px 100px', maxWidth: 740, margin: '0 auto' }}>
+      <div style={{ padding: '24px 16px 100px' }}>
 
         {/* ── Page title ────────────────────────────────────────── */}
         <h1 style={{ margin: '0 0 4px', fontSize: 28, fontWeight: 800, color: C.ink, letterSpacing: '-0.03em', lineHeight: 1.1 }}>
@@ -560,12 +558,6 @@ export default function Settings() {
                   value={pharmacyName}
                   onChange={setPharmacyName}
                   placeholder="Ex : Pharmacie du Centre"
-                />
-                <ChalkInput
-                  label="Numéro de licence"
-                  value={licenseNumber}
-                  onChange={setLicenseNumber}
-                  placeholder="Ex : PH-2024-00123"
                 />
 
                 {/* Adresse avec bouton Modifier */}
