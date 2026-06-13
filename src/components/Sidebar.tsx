@@ -1,5 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { Search, ChevronDown, MoreHorizontal } from 'lucide-react';
+import {
+  SquaresFour, ShoppingCartSimple, Package, User, Sparkle, Wallet,
+  Users, GearSix, Pill, CalendarCheck, Truck, ChartBar, ArrowsDownUp,
+  Buildings, Wrench,
+} from '@phosphor-icons/react';
 import { LogoIcon } from './LogoIcon';
 import { useAuth } from '../lib/auth';
 import { useSeller } from '../lib/sellerContext';
@@ -8,26 +13,29 @@ import SyncIndicator from './SyncIndicator';
 import { loadSettings } from '../lib/settings';
 import { getCachedSettings } from '../lib/userSettings';
 
-// ── Reference Chalk Premium icon set (line, 1.5 stroke) ──────────
+// ── Phosphor Icons Bold/Fill — icon set premium ───────────────────
 type IconName = 'home' | 'cart' | 'box' | 'person' | 'sparkles' | 'mone' | 'users' | 'settings' | 'rx' | 'calendar' | 'truck' | 'chart' | 'arrows' | 'building';
-function NavIcon({ name, size = 15, color = 'currentColor', sw = 1.5 }: { name: IconName; size?: number; color?: string; sw?: number }) {
-  const p = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: color, strokeWidth: sw, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
-  switch (name) {
-    case 'home':     return <svg {...p}><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1z" /></svg>;
-    case 'cart':     return <svg {...p}><circle cx="9" cy="20" r="1.2" /><circle cx="18" cy="20" r="1.2" /><path d="M3 4h2l3 11h11l2-7H7" /></svg>;
-    case 'box':      return <svg {...p}><path d="M3.5 8.5 12 4l8.5 4.5M3.5 8.5v7L12 20m-8.5-11.5L12 13m0 7 8.5-4.5v-7M12 13v7m0-7 8.5-4.5" /></svg>;
-    case 'person':   return <svg {...p}><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" /><path d="M15.5 14.5c1-.4 2.5-.5 3.5.5a3.5 3.5 0 0 1 1 2.5" strokeOpacity={0.45}/></svg>;
-    case 'sparkles': return <svg {...p}><path d="M5 3v4M3 5h4M19 11v4m-2-2h4M11 4l2.4 5.6L19 12l-5.6 2.4L11 20l-2.4-5.6L3 12l5.6-2.4z" /></svg>;
-    case 'mone':     return <svg {...p}><circle cx="12" cy="12" r="9" /><path d="M12 7v10M9 9.5c0-1.4 1.3-2.5 3-2.5s3 1.1 3 2.5-1.3 2.5-3 2.5-3 1.1-3 2.5 1.3 2.5 3 2.5 3-1.1 3-2.5" /></svg>;
-    case 'users':    return <svg {...p}><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 11.5a3 3 0 0 0 0-6m6 14.5a5.5 5.5 0 0 0-4-5.3" /></svg>;
-    case 'settings': return <svg {...p}><circle cx="12" cy="12" r="3" /><path d="M19 12c0 .8-.1 1.5-.3 2.2l2 1.5-2 3.5-2.4-.9c-1.1.9-2.4 1.6-3.9 1.9L12 23l-.7-2.8a8.5 8.5 0 0 1-3.9-1.9l-2.4.9-2-3.5 2-1.5A8.5 8.5 0 0 1 5 12c0-.8.1-1.5.3-2.2l-2-1.5 2-3.5 2.4.9c1.1-.9 2.4-1.6 3.9-1.9L12 1l.7 2.8c1.5.3 2.8 1 3.9 1.9l2.4-.9 2 3.5-2 1.5c.2.7.3 1.4.3 2.2" /></svg>;
-    case 'rx':       return <svg {...p}><path d="M3 3h8a4 4 0 0 1 0 8H3M3 11l8 10M14 11l6 10M17 11l6-8" /></svg>;
-    case 'calendar': return <svg {...p}><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01" strokeWidth={2}/></svg>;
-    case 'truck':    return <svg {...p}><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11v14H5z"/><path d="M14 3h4l3 4v7h-3M14 17h1"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="18.5" cy="17.5" r="1.5"/></svg>;
-    case 'chart':    return <svg {...p}><path d="M3 3v18h18M7 16l4-4 4 4 4-6" /></svg>;
-    case 'arrows':   return <svg {...p}><path d="M7 16V4m0 0L3 8m4-4 4 4M17 8v12m0 0 4-4m-4 4-4-4" /></svg>;
-    case 'building': return <svg {...p}><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 21V9h6v12M3 9h18M9 6h.01M15 6h.01"/></svg>;
-  }
+
+const PHOSPHOR_MAP: Record<IconName, React.ElementType> = {
+  home:     SquaresFour,
+  cart:     ShoppingCartSimple,
+  box:      Package,
+  person:   User,
+  sparkles: Sparkle,
+  mone:     Wallet,
+  users:    Users,
+  settings: GearSix,
+  rx:       Pill,
+  calendar: CalendarCheck,
+  truck:    Truck,
+  chart:    ChartBar,
+  arrows:   ArrowsDownUp,
+  building: Buildings,
+};
+
+function NavIcon({ name, size = 15, color = 'currentColor', active = false }: { name: IconName; size?: number; color?: string; active?: boolean }) {
+  const Icon = PHOSPHOR_MAP[name];
+  return <Icon size={size} color={color} weight={active ? 'fill' : 'bold'} />;
 }
 
 // ── Chalk Premium design tokens ──────────────────────────────────
@@ -324,7 +332,7 @@ export default function Sidebar({ activeView, onNavigate, onSettingsClick, isMan
               }}
             >
               <span style={{ flexShrink: 0, display: 'flex', transition: 'color 0.12s' }}>
-                <NavIcon name={icon} size={15} sw={isActive ? 1.8 : 1.5} color={isActive ? C.brand : C.inkMute} />
+                <NavIcon name={icon} size={15} active={isActive} color={isActive ? C.brand : C.inkMute} />
               </span>
               <span style={{
                 fontSize: 13,
@@ -359,11 +367,13 @@ export default function Sidebar({ activeView, onNavigate, onSettingsClick, isMan
               transform: pressed === '__gestion' ? 'scale(0.97)' : 'scale(1)',
             }}
           >
-            {/* Icône boîte à outils */}
+            {/* Icône outils Phosphor */}
             <span style={{ flexShrink: 0, display: 'flex' }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={gestionIds.includes(activeView) ? C.brand : C.inkMute} strokeWidth={gestionIds.includes(activeView) ? 1.8 : 1.5} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-              </svg>
+              <Wrench
+                size={15}
+                color={gestionIds.includes(activeView) ? C.brand : C.inkMute}
+                weight={gestionIds.includes(activeView) ? 'fill' : 'bold'}
+              />
             </span>
             <span style={{
               fontSize: 13, flex: 1,
@@ -419,7 +429,7 @@ export default function Sidebar({ activeView, onNavigate, onSettingsClick, isMan
                       <span style={{ width: 1, height: 14, background: isActive ? C.brand : 'rgba(15,15,20,0.12)', borderRadius: 1 }} />
                     </span>
                     <span style={{ flexShrink: 0, display: 'flex' }}>
-                      <NavIcon name={icon} size={14} sw={isActive ? 1.8 : 1.5} color={isActive ? C.brand : C.inkMute} />
+                      <NavIcon name={icon} size={14} active={isActive} color={isActive ? C.brand : C.inkMute} />
                     </span>
                     <span style={{
                       fontSize: 12.5, fontWeight: isActive ? 600 : 450,
@@ -620,13 +630,14 @@ export default function Sidebar({ activeView, onNavigate, onSettingsClick, isMan
               style={{
                 display: 'flex', alignItems: 'center', gap: 10,
                 padding: '7px 10px', borderRadius: 7, width: '100%',
-                background: isActive ? C.activeBg : hovered === 'settings' ? 'rgba(255,255,255,0.3)' : 'transparent',
+                background: isActive ? C.panel : hovered === 'settings' ? 'rgba(255,255,255,0.12)' : 'transparent',
+                boxShadow: isActive ? `0 1px 0 ${C.hairline}, 0 0 0 1px ${C.hairline}` : 'none',
                 border: 'none', cursor: 'pointer', textAlign: 'left',
                 transition: 'background 0.12s',
               }}
             >
               <span style={{ flexShrink: 0, display: 'flex' }}>
-                <NavIcon name="settings" size={15} color={isActive ? C.brand : C.inkMute} />
+                <NavIcon name="settings" size={15} active={isActive} color={isActive ? C.brand : C.inkMute} />
               </span>
               <span style={{ fontSize: 13, fontWeight: isActive ? 600 : 450, color: isActive ? C.brand : C.inkSoft, letterSpacing: '-0.01em', flex: 1 }}>Réglages</span>
               <Kbd>,</Kbd>

@@ -23,30 +23,32 @@ import ApiKeysManager from './ApiKeysManager';
 import { resetTour } from './ProductTour';
 import { TAB_TOURS } from '../lib/tourRegistry';
 
-// ── Chalk Premium tokens ──────────────────────────────────────────
+// ── Chalk Premium tokens (adaptive via CSS custom props) ──────────
+// Brand/accent colors are constant; surface/text tokens are CSS vars
+// set on the root div and resolved per active theme (light vs dark).
 const C = {
   brand:    '#537d14',
   brandHi:  '#6a9e28',
   brandLt:  'rgba(83,125,20,0.08)',
   brandBd:  'rgba(83,125,20,0.20)',
-  ink:      '#0a0e14',
-  inkSoft:  '#2c3138',
-  inkMute:  '#6b7280',
-  inkFaint: '#9aa0a8',
-  bg:       '#f8fafc',
-  surface:  '#ffffff',
+  ink:      'var(--st-ink)',
+  inkSoft:  'var(--st-ink-soft)',
+  inkMute:  'var(--st-ink-mute)',
+  inkFaint: 'var(--st-ink-faint)',
+  bg:       'var(--st-bg)',
+  surface:  'var(--st-surface)',
   panel:    'rgba(255,255,255,0.72)',
-  hairline: 'rgba(15,15,20,0.07)',
+  hairline: 'var(--st-hairline)',
   red:      '#c81e1e',
-  redBg:    'rgba(200,30,30,0.06)',
-  redBd:    'rgba(200,30,30,0.18)',
+  redBg:    'var(--st-red-bg)',
+  redBd:    'var(--st-red-bd)',
   amber:    '#b75f06',
-  amberBg:  'rgba(183,95,6,0.08)',
-  amberBd:  'rgba(183,95,6,0.20)',
+  amberBg:  'var(--st-amber-bg)',
+  amberBd:  'var(--st-amber-bd)',
   blue:     '#0651bc',
-  blueBg:   'rgba(6,81,188,0.07)',
+  blueBg:   'var(--st-blue-bg)',
   violet:   '#6e44b0',
-  violetBg: 'rgba(110,68,176,0.07)',
+  violetBg: 'var(--st-violet-bg)',
 };
 
 const FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Display", Inter, sans-serif';
@@ -341,14 +343,31 @@ export default function Settings() {
   const taxLabel = TAX_OPTIONS.find(t => t.value === taxRate)?.label ?? `${(taxRate * 100).toFixed(1)} %`;
 
   // ── Render ────────────────────────────────────────────────────
+  const isDark = theme.dark;
   return (
-    <div style={{ fontFamily: FONT }}>
+    <div style={{
+      fontFamily: FONT,
+      // ── CSS custom props — resolved by C.* tokens throughout ──
+      '--st-ink':       isDark ? '#dce3ec'             : '#0a0e14',
+      '--st-ink-soft':  isDark ? '#a8b4c4'             : '#2c3138',
+      '--st-ink-mute':  isDark ? '#6e7d90'             : '#6b7280',
+      '--st-ink-faint': isDark ? '#46535f'             : '#9aa0a8',
+      '--st-bg':        isDark ? 'rgba(255,255,255,0.05)' : '#f8fafc',
+      '--st-surface':   isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.88)',
+      '--st-hairline':  isDark ? 'rgba(255,255,255,0.12)' : 'rgba(15,15,20,0.07)',
+      '--st-red-bg':    isDark ? 'rgba(200,30,30,0.18)'  : 'rgba(200,30,30,0.06)',
+      '--st-red-bd':    isDark ? 'rgba(200,30,30,0.32)'  : 'rgba(200,30,30,0.18)',
+      '--st-amber-bg':  isDark ? 'rgba(183,95,6,0.20)'   : 'rgba(183,95,6,0.08)',
+      '--st-amber-bd':  isDark ? 'rgba(183,95,6,0.32)'   : 'rgba(183,95,6,0.20)',
+      '--st-blue-bg':   isDark ? 'rgba(6,81,188,0.22)'   : 'rgba(6,81,188,0.07)',
+      '--st-violet-bg': isDark ? 'rgba(110,68,176,0.22)' : 'rgba(110,68,176,0.07)',
+    } as React.CSSProperties}>
       {/* ── Header sticky ─────────────────────────────────────── */}
       <div style={{
         position: 'sticky', top: 0, zIndex: 10,
-        background: 'rgba(248,250,252,0.90)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
+        background: isDark ? 'rgba(14,20,30,0.88)' : 'rgba(248,250,252,0.88)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
         borderBottom: `1px solid ${C.hairline}`,
         padding: '12px 20px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
