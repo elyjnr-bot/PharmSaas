@@ -11,7 +11,9 @@ import {
   User, Building2, LogOut, Upload, Percent, ChevronDown,
   Check, AlertCircle, Truck, Phone, Plus, X, Trash2,
   Layers, ScanLine, AlertTriangle, RotateCcw, Key, Bell, ShieldAlert, Clock, HelpCircle, Sparkles,
+  Smartphone, Download,
 } from 'lucide-react';
+import { usePWAInstall } from '../lib/usePWAInstall';
 import { getManagerPin } from '../lib/sellerContext';
 import { useTheme, THEMES } from '../lib/themeContext';
 import { useAuth } from '../lib/auth';
@@ -247,6 +249,9 @@ export default function Settings() {
   const [notifPerm, setNotifPerm] = useState<NotificationPermission | 'unsupported'>(() =>
     ('Notification' in window) ? Notification.permission : 'unsupported'
   );
+
+  // PWA install
+  const { state: pwaState, install: installPWA } = usePWAInstall();
 
   // Feedback
   const [savedSection, setSavedSection] = useState<string | null>(null);
@@ -756,6 +761,64 @@ export default function Settings() {
                 onClick={async () => { const p = await Notification.requestPermission(); setNotifPerm(p); }}
                 color={C.amber}
               />
+            </div>
+          )}
+        </Section>
+
+        {/* ── 5b. Installer l'application ─────────────────── */}
+        <Section
+          id="pwa" open={open.has('pwa')} onToggle={() => toggle('pwa')}
+          icon={<Smartphone size={17} color={C.brand} strokeWidth={1.8} />}
+          iconBg={C.brandLt} title="Installer l'application"
+          value={pwaState === 'installed' ? 'Déjà installée ✅' : pwaState === 'installable' ? 'Disponible' : pwaState === 'ios' ? 'iOS — manuel' : 'Non disponible'}
+        >
+          {pwaState === 'installed' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px', background: C.brandLt, borderRadius: 10 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Check size={18} color={C.brand} strokeWidth={2.5} />
+              </div>
+              <div>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: C.ink }}>JunglePharm est installée</div>
+                <div style={{ fontSize: 12, color: C.inkMute, marginTop: 2 }}>Accessible depuis votre écran d'accueil, fonctionne hors connexion.</div>
+              </div>
+            </div>
+          )}
+          {pwaState === 'installable' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <p style={{ fontSize: 13, color: C.inkSoft, lineHeight: 1.55, margin: 0 }}>
+                Installez JunglePharm comme application native — accès direct depuis l'écran d'accueil ou le bureau, fonctionne sans connexion.
+              </p>
+              <ChalkButton
+                label="Installer JunglePharm"
+                icon={<Download size={15} />}
+                onClick={installPWA}
+                color={C.brand}
+              />
+            </div>
+          )}
+          {pwaState === 'ios' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+              <p style={{ fontSize: 13, color: C.inkSoft, lineHeight: 1.55, margin: '0 0 12px' }}>
+                Sur Safari iOS, installez l'app en 3 étapes :
+              </p>
+              {[
+                { icon: '⬆️', text: 'Appuyez sur le bouton Partager en bas de l\'écran Safari' },
+                { icon: '➕', text: 'Sélectionnez "Sur l\'écran d\'accueil"' },
+                { icon: '✅', text: 'Appuyez sur "Ajouter" pour confirmer' },
+              ].map((step, i, arr) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '10px 0', borderBottom: i < arr.length - 1 ? `1px solid ${C.hairline}` : 'none' }}>
+                  <div style={{ width: 30, height: 30, borderRadius: 8, background: C.brandLt, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>{step.icon}</div>
+                  <span style={{ fontSize: 13, color: C.ink, lineHeight: 1.4, paddingTop: 6 }}>{step.text}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {pwaState === 'unsupported' && (
+            <div style={{ padding: '12px 14px', background: 'rgba(0,0,0,0.03)', border: `1px solid ${C.hairline}`, borderRadius: 10 }}>
+              <p style={{ fontSize: 13, color: C.inkMute, margin: 0, lineHeight: 1.55 }}>
+                Votre navigateur actuel ne supporte pas l'installation PWA.<br />
+                Ouvrez JunglePharm dans <strong style={{ color: C.ink }}>Chrome</strong> ou <strong style={{ color: C.ink }}>Edge</strong> pour pouvoir l'installer.
+              </p>
             </div>
           )}
         </Section>
