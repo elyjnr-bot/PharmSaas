@@ -65,6 +65,19 @@ const DEFAULT_WHOLESALERS: Wholesaler[] = [
   { name: 'Cophadom',      phone: '+242 05 XXX XXXX' },
 ];
 
+// ── Métadonnées visuelles par thème (mini-preview) ───────────────
+const THEME_META: Record<string, { desc: string; sidebar: string; card: string }> = {
+  aurora:   { desc: 'Vert naturel + rose chaud · vivant',       sidebar: 'rgba(90,150,110,0.28)',  card: 'rgba(255,255,255,0.60)' },
+  sky:      { desc: 'Bleu ciel + lilas · calme et aérien',      sidebar: 'rgba(110,150,220,0.26)', card: 'rgba(255,255,255,0.60)' },
+  sunset:   { desc: 'Pêche + rose · chaleureux et lumineux',    sidebar: 'rgba(220,130,90,0.26)',  card: 'rgba(255,255,255,0.60)' },
+  mint:     { desc: 'Vert mer + cyan · ambiance médicale',      sidebar: 'rgba(90,190,150,0.30)',  card: 'rgba(255,255,255,0.60)' },
+  lavender: { desc: 'Lavande + rose · délicat et élégant',      sidebar: 'rgba(160,130,220,0.26)', card: 'rgba(255,255,255,0.60)' },
+  cream:    { desc: 'Ivoire + doré · chaud et sobre',           sidebar: 'rgba(180,150,70,0.20)',  card: 'rgba(255,255,255,0.60)' },
+  neutral:  { desc: 'Gris perle quasi-monochrome · sobre',      sidebar: 'rgba(140,150,160,0.20)', card: 'rgba(255,255,255,0.68)' },
+  charcoal: { desc: 'Mode sombre atténué · élégant',            sidebar: 'rgba(0,0,0,0.50)',       card: 'rgba(255,255,255,0.07)' },
+  dark:     { desc: 'Mode nuit · noir profond + accents',       sidebar: 'rgba(0,0,0,0.62)',       card: 'rgba(255,255,255,0.05)' },
+};
+
 const CURRENCIES = [
   { value: 'CDF', label: 'CDF — Franc congolais' },
   { value: 'XAF', label: 'XAF — Franc CFA' },
@@ -427,58 +440,96 @@ export default function Settings() {
           {/* ═══ APPARENCE — full width ═══════════════════════════ */}
           <FlatCard
             title="Apparence"
-            subtitle={`${theme.label} · ${theme.dark ? 'Sombre' : 'Clair'}`}
+            subtitle="Personnalise l'arrière-plan de l'application"
             icon={
               <div style={{ width: 17, height: 17, borderRadius: 5, background: theme.preview ?? theme.bg, border: '2px solid rgba(255,255,255,0.7)', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
             }
             iconBg="rgba(0,0,0,0.04)"
           >
-            <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: C.inkFaint, letterSpacing: '0.07em', textTransform: 'uppercase' }}>
+            <p style={{ margin: '0 0 14px', fontSize: 11, fontWeight: 700, color: C.inkFaint, letterSpacing: '0.07em', textTransform: 'uppercase' }}>
               THÈME D'ARRIÈRE-PLAN
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 3 : 4}, 1fr)`, gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(3, 1fr)', gap: 12 }}>
               {THEMES.map(t => {
                 const active = t.id === themeId;
+                const meta = THEME_META[t.id] ?? { desc: '', sidebar: 'rgba(0,0,0,0.15)', card: 'rgba(255,255,255,0.60)' };
                 return (
                   <button
                     key={t.id}
                     onClick={() => setThemeId(t.id)}
-                    title={t.label}
                     style={{
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
-                      background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, fontFamily: FONT,
-                    }}
-                  >
-                    <div style={{
-                      width: '100%', aspectRatio: '4/3',
-                      borderRadius: 12,
+                      position: 'relative',
                       background: t.bg,
                       border: active ? `2.5px solid ${C.brand}` : `2px solid ${C.hairline}`,
+                      borderRadius: 14,
+                      overflow: 'hidden',
+                      cursor: 'pointer',
                       boxShadow: active
-                        ? `0 0 0 3px ${C.brandLt}, 0 6px 16px rgba(0,0,0,0.14)`
-                        : '0 2px 6px rgba(0,0,0,0.08)',
+                        ? `0 0 0 3px ${C.brandLt}, 0 4px 16px rgba(0,0,0,0.12)`
+                        : '0 2px 8px rgba(0,0,0,0.07)',
                       transition: 'all 0.2s',
-                      position: 'relative', overflow: 'hidden',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      {active && (
-                        <div style={{
-                          width: 22, height: 22, borderRadius: 99,
-                          background: 'rgba(255,255,255,0.95)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
-                        }}>
-                          <Check size={12} color={C.brand} strokeWidth={3} />
+                      textAlign: 'left',
+                      fontFamily: FONT,
+                      padding: 0,
+                    }}
+                  >
+                    {/* Checkmark top-right */}
+                    {active && (
+                      <div style={{
+                        position: 'absolute', top: 10, right: 10, zIndex: 3,
+                        width: 22, height: 22, borderRadius: 99,
+                        background: C.brand,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+                      }}>
+                        <Check size={11} color="#fff" strokeWidth={3} />
+                      </div>
+                    )}
+
+                    {/* Mini UI preview */}
+                    <div style={{ position: 'relative', height: 110, overflow: 'hidden' }}>
+                      {/* Sidebar strip */}
+                      <div style={{
+                        position: 'absolute', left: 0, top: 0, bottom: 0, width: '30%',
+                        background: meta.sidebar,
+                        borderRight: '1px solid rgba(255,255,255,0.15)',
+                      }}>
+                        {/* Logo placeholder */}
+                        <div style={{ margin: '14px 10px 10px', height: 5, borderRadius: 3, background: t.dark ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.55)' }} />
+                        {/* Nav items */}
+                        {[1, 1, 0.65, 0.65].map((op, i) => (
+                          <div key={i} style={{ margin: '0 10px 7px', height: 4, borderRadius: 2, background: t.dark ? `rgba(255,255,255,${op * 0.16})` : `rgba(255,255,255,${op * 0.45})` }} />
+                        ))}
+                      </div>
+
+                      {/* Content area */}
+                      <div style={{ position: 'absolute', left: '32%', right: 0, top: 0, bottom: 0, padding: '10px 10px 0' }}>
+                        {/* Header bar */}
+                        <div style={{ height: 18, borderRadius: 5, background: meta.card, marginBottom: 7 }} />
+                        {/* 2 card blocks */}
+                        <div style={{ display: 'flex', gap: 5, marginBottom: 6 }}>
+                          <div style={{ flex: 1, height: 26, borderRadius: 5, background: meta.card }} />
+                          <div style={{ flex: 1, height: 26, borderRadius: 5, background: meta.card }} />
                         </div>
-                      )}
+                        {/* Footer bar */}
+                        <div style={{ height: 14, borderRadius: 4, background: meta.card, width: '72%' }} />
+                      </div>
                     </div>
-                    <span style={{
-                      fontSize: 11.5, fontWeight: active ? 700 : 500,
-                      color: active ? C.brand : C.inkMute,
-                      letterSpacing: '-0.005em', lineHeight: 1,
+
+                    {/* Label inside card — bottom */}
+                    <div style={{
+                      padding: '9px 12px 11px',
+                      background: t.dark ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.35)',
+                      backdropFilter: 'blur(4px)',
+                      borderTop: `1px solid ${t.dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
                     }}>
-                      {t.label}
-                    </span>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: t.dark ? '#fff' : C.ink, letterSpacing: '-0.01em' }}>
+                        {t.label}
+                      </div>
+                      <div style={{ fontSize: 11, color: t.dark ? 'rgba(255,255,255,0.55)' : C.inkMute, marginTop: 2, lineHeight: 1.3 }}>
+                        {meta.desc}
+                      </div>
+                    </div>
                   </button>
                 );
               })}
