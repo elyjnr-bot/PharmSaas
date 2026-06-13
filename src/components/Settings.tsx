@@ -23,32 +23,32 @@ import ApiKeysManager from './ApiKeysManager';
 import { resetTour } from './ProductTour';
 import { TAB_TOURS } from '../lib/tourRegistry';
 
-// ── Chalk Premium tokens (adaptive via CSS custom props) ──────────
-// Brand/accent colors are constant; surface/text tokens are CSS vars
-// set on the root div and resolved per active theme (light vs dark).
+// ── Tokens Chalk — 100% pilotés par les CSS custom props du thème actif ─────
+// Modifier les couleurs ? Aller dans index.css, bloc [data-theme="X"].
 const C = {
-  brand:    '#537d14',
-  brandHi:  '#6a9e28',
-  brandLt:  'rgba(83,125,20,0.08)',
-  brandBd:  'rgba(83,125,20,0.20)',
-  ink:      'var(--st-ink)',
-  inkSoft:  'var(--st-ink-soft)',
-  inkMute:  'var(--st-ink-mute)',
-  inkFaint: 'var(--st-ink-faint)',
-  bg:       'var(--st-bg)',
-  surface:  'var(--st-surface)',
-  panel:    'rgba(255,255,255,0.72)',
-  hairline: 'var(--st-hairline)',
-  red:      '#c81e1e',
-  redBg:    'var(--st-red-bg)',
-  redBd:    'var(--st-red-bd)',
-  amber:    '#b75f06',
-  amberBg:  'var(--st-amber-bg)',
-  amberBd:  'var(--st-amber-bd)',
-  blue:     '#0651bc',
-  blueBg:   'var(--st-blue-bg)',
+  brand:    'var(--brand-primary)',
+  brandHi:  'var(--brand-hi)',
+  brandLt:  'var(--brand-lt)',
+  brandBd:  'var(--brand-bd)',
+  brandGlow:'var(--brand-glow)',
+  ink:      'var(--text-primary)',
+  inkSoft:  'var(--text-secondary)',
+  inkMute:  'var(--text-muted)',
+  inkFaint: 'var(--text-faint)',
+  bg:       'var(--bg-surface-2)',
+  surface:  'var(--bg-surface)',
+  panel:    'var(--bg-elevated)',
+  hairline: 'var(--border-primary)',
+  red:      'var(--danger)',
+  redBg:    'var(--danger-bg)',
+  redBd:    'var(--danger-bd)',
+  amber:    'var(--warning)',
+  amberBg:  'var(--warning-bg)',
+  amberBd:  'var(--warning-bd)',
+  blue:     'var(--info)',
+  blueBg:   'var(--info-bg)',
   violet:   '#6e44b0',
-  violetBg: 'var(--st-violet-bg)',
+  violetBg: 'rgba(110,68,176,0.07)',
 };
 
 const FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Display", Inter, sans-serif';
@@ -67,17 +67,11 @@ const DEFAULT_WHOLESALERS: Wholesaler[] = [
   { name: 'Cophadom',      phone: '+242 05 XXX XXXX' },
 ];
 
-// ── Métadonnées visuelles par thème (mini-preview) ───────────────
+// ── Métadonnées visuelles — 3 piliers seulement ──────────────────
 const THEME_META: Record<string, { desc: string; sidebar: string; card: string }> = {
-  aurora:   { desc: 'Vert naturel + rose chaud · vivant',       sidebar: 'rgba(90,150,110,0.28)',  card: 'rgba(255,255,255,0.60)' },
-  sky:      { desc: 'Bleu ciel + lilas · calme et aérien',      sidebar: 'rgba(110,150,220,0.26)', card: 'rgba(255,255,255,0.60)' },
-  sunset:   { desc: 'Pêche + rose · chaleureux et lumineux',    sidebar: 'rgba(220,130,90,0.26)',  card: 'rgba(255,255,255,0.60)' },
-  mint:     { desc: 'Vert mer + cyan · ambiance médicale',      sidebar: 'rgba(90,190,150,0.30)',  card: 'rgba(255,255,255,0.60)' },
-  lavender: { desc: 'Lavande + rose · délicat et élégant',      sidebar: 'rgba(160,130,220,0.26)', card: 'rgba(255,255,255,0.60)' },
-  cream:    { desc: 'Ivoire + doré · chaud et sobre',           sidebar: 'rgba(180,150,70,0.20)',  card: 'rgba(255,255,255,0.60)' },
-  neutral:  { desc: 'Gris perle quasi-monochrome · sobre',      sidebar: 'rgba(140,150,160,0.20)', card: 'rgba(255,255,255,0.68)' },
-  charcoal: { desc: 'Mode sombre atténué · élégant',            sidebar: 'rgba(0,0,0,0.50)',       card: 'rgba(255,255,255,0.07)' },
-  dark:     { desc: 'Mode nuit · noir profond + accents',       sidebar: 'rgba(0,0,0,0.62)',       card: 'rgba(255,255,255,0.05)' },
+  neutral: { desc: 'Gris perle · sobre et professionnel',   sidebar: 'rgba(140,150,160,0.22)', card: 'rgba(255,255,255,0.68)' },
+  soft:    { desc: 'Bleu ciel doux · apaisant et lisible',  sidebar: 'rgba(100,150,220,0.24)', card: 'rgba(255,255,255,0.72)' },
+  dark:    { desc: 'Noir pur · mode nuit style iPhone',     sidebar: 'rgba(0,0,0,0.88)',       card: 'rgba(28,28,30,1.00)'    },
 };
 
 const CURRENCIES = [
@@ -343,29 +337,12 @@ export default function Settings() {
   const taxLabel = TAX_OPTIONS.find(t => t.value === taxRate)?.label ?? `${(taxRate * 100).toFixed(1)} %`;
 
   // ── Render ────────────────────────────────────────────────────
-  const isDark = theme.dark;
   return (
-    <div style={{
-      fontFamily: FONT,
-      // ── CSS custom props — resolved by C.* tokens throughout ──
-      '--st-ink':       isDark ? '#dce3ec'             : '#0a0e14',
-      '--st-ink-soft':  isDark ? '#a8b4c4'             : '#2c3138',
-      '--st-ink-mute':  isDark ? '#6e7d90'             : '#6b7280',
-      '--st-ink-faint': isDark ? '#46535f'             : '#9aa0a8',
-      '--st-bg':        isDark ? 'rgba(255,255,255,0.05)' : '#f8fafc',
-      '--st-surface':   isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.88)',
-      '--st-hairline':  isDark ? 'rgba(255,255,255,0.12)' : 'rgba(15,15,20,0.07)',
-      '--st-red-bg':    isDark ? 'rgba(200,30,30,0.18)'  : 'rgba(200,30,30,0.06)',
-      '--st-red-bd':    isDark ? 'rgba(200,30,30,0.32)'  : 'rgba(200,30,30,0.18)',
-      '--st-amber-bg':  isDark ? 'rgba(183,95,6,0.20)'   : 'rgba(183,95,6,0.08)',
-      '--st-amber-bd':  isDark ? 'rgba(183,95,6,0.32)'   : 'rgba(183,95,6,0.20)',
-      '--st-blue-bg':   isDark ? 'rgba(6,81,188,0.22)'   : 'rgba(6,81,188,0.07)',
-      '--st-violet-bg': isDark ? 'rgba(110,68,176,0.22)' : 'rgba(110,68,176,0.07)',
-    } as React.CSSProperties}>
+    <div style={{ fontFamily: FONT }}>
       {/* ── Header sticky ─────────────────────────────────────── */}
       <div style={{
         position: 'sticky', top: 0, zIndex: 10,
-        background: isDark ? 'rgba(14,20,30,0.88)' : 'rgba(248,250,252,0.88)',
+        background: 'var(--bg-topbar)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
         borderBottom: `1px solid ${C.hairline}`,
@@ -415,7 +392,7 @@ export default function Settings() {
               width: 48, height: 48, borderRadius: 13, flexShrink: 0,
               background: `linear-gradient(135deg, ${C.brand}, ${C.brandHi})`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: `0 4px 12px ${C.brand}44`,
+              boxShadow: `0 4px 12px ${C.brandGlow}`,
             }}>
               <User size={20} color="#fff" strokeWidth={1.8} />
             </div>
@@ -468,7 +445,7 @@ export default function Settings() {
             <p style={{ margin: '0 0 14px', fontSize: 11, fontWeight: 700, color: C.inkFaint, letterSpacing: '0.07em', textTransform: 'uppercase' }}>
               THÈME D'ARRIÈRE-PLAN
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(3, 1fr)', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
               {THEMES.map(t => {
                 const active = t.id === themeId;
                 const meta = THEME_META[t.id] ?? { desc: '', sidebar: 'rgba(0,0,0,0.15)', card: 'rgba(255,255,255,0.60)' };

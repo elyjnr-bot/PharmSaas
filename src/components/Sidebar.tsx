@@ -38,21 +38,22 @@ function NavIcon({ name, size = 15, color = 'currentColor', active = false }: { 
   return <Icon size={size} color={color} weight={active ? 'fill' : 'bold'} />;
 }
 
-// ── Chalk Premium design tokens ──────────────────────────────────
+// ── Design tokens — pilotés par les CSS custom props du thème actif ──────────
 const C = {
-  panel:    'rgba(255,255,255,0.62)',
-  panel2:   'rgba(255,255,255,0.40)',
-  hairline: 'rgba(255,255,255,0.55)',
-  border:   'rgba(15,15,20,0.06)',
-  brand:    '#537d14',
-  brandHi:  '#6a9e28',
-  brandLt:  'rgba(83,125,20,0.08)',
-  ink:      '#0a0e14',
-  inkSoft:  '#2c3138',
-  inkMute:  '#6b7280',
-  inkFaint: '#9aa0a8',
-  red:      '#c81e1e',
-  amber:    '#b75f06',
+  panel:    'var(--bg-sidebar)',
+  panel2:   'var(--bg-elevated)',
+  hairline: 'var(--border-primary)',
+  border:   'var(--border-strong)',
+  brand:    'var(--brand-primary)',
+  brandHi:  'var(--brand-hi)',
+  brandLt:  'var(--brand-lt)',
+  activeBg: 'var(--brand-lt)',
+  ink:      'var(--text-primary)',
+  inkSoft:  'var(--text-secondary)',
+  inkMute:  'var(--text-muted)',
+  inkFaint: 'var(--text-faint)',
+  red:      'var(--danger)',
+  amber:    'var(--warning)',
 };
 
 // Keyboard shortcut badge
@@ -630,7 +631,7 @@ export default function Sidebar({ activeView, onNavigate, onSettingsClick, isMan
               style={{
                 display: 'flex', alignItems: 'center', gap: 10,
                 padding: '7px 10px', borderRadius: 7, width: '100%',
-                background: isActive ? C.panel : hovered === 'settings' ? 'rgba(255,255,255,0.12)' : 'transparent',
+                background: isActive ? C.activeBg : hovered === 'settings' ? 'rgba(255,255,255,0.12)' : 'transparent',
                 boxShadow: isActive ? `0 1px 0 ${C.hairline}, 0 0 0 1px ${C.hairline}` : 'none',
                 border: 'none', cursor: 'pointer', textAlign: 'left',
                 transition: 'background 0.12s',
